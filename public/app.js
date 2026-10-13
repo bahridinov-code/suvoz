@@ -70,6 +70,7 @@ async function loadMe() {
     const j = await r.json();
     if (!r.ok) throw new Error(errText(j, 'Could not load your account.'));
     plan = j.plan || 'free';
+    $('manage').hidden = plan === 'free' || !config.payOn;
     trialChars = j.trialChars;
     $('who').textContent = j.email || '';
     $('who').hidden = !j.email;
@@ -200,8 +201,54 @@ document.addEventListener('langchange', () => {
   refresh();
 });
 
+const PLAN_KEYS = ['starter', 'creator', 'pro', 'business'];
+
+// A plan picked on the pricing page is remembered for a day, so it survives sign-up and the email link.
+function rememberPlan() {
+  try {
+    const q = new URLSearchParams(location.search).get('plan');
+    if (q && PLAN_KEYS.includes(q)) {
+      localStorage.setItem('suvoz_plan', JSON.stringify({ plan: q, t: Date.now() }));
+      history.replaceState(null, '', location.pathname + location.hash);
+    }
+  } catch (e) {}
+}
+
+async function goPay(plan) {
+  setStatus('app.pay.go');
+  try {
+    const r = await fetch('/api/checkout', { method: 'POST', headers: await headers(), body: JSON.stringify({ plan }) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.url) throw new Error(errText(j, 'Could not start the payment.'));
+    location.href = j.url;
+  } catch (e) {
+    if (e.message !== 'login') setStatus(null, true, e.message);
+  }
+}
+
+async function startPendingPlan() {
+  let p = null;
+  try { p = JSON.parse(localStorage.getItem('suvoz_plan') || 'null'); localStorage.removeItem('suvoz_plan'); } catch (e) {}
+  if (!p || !PLAN_KEYS.includes(p.plan) || Date.now() - p.t > 24 * 3600 * 1000) return;
+  if (plan !== 'free') return;
+  await goPay(p.plan);
+}
+
+async function afterPayment() {
+  if (new URLSearchParams(location.search).get('paid') !== '1') return false;
+  history.replaceState(null, '', location.pathname);
+  setStatus('app.paid');
+  for (let i = 0; i < 8 && plan === 'free'; i++) {
+    await new Promise((r) => setTimeout(r, 3000));
+    await loadMe();
+  }
+  if (plan !== 'free') setStatus(null);
+  return true;
+}
+
 (async function init() {
   initLang();
+  rememberPlan();
   try { config = await (await fetch('/api/config')).json(); } catch (e) {}
   $('max').textContent = config.maxChars;
   if (config.authOn) {
@@ -210,8 +257,17 @@ document.addEventListener('langchange', () => {
     if (!(await Auth.session())) return location.replace('/login');
     $('logout').hidden = false;
     $('logout').onclick = async () => { await Auth.signOut(); location.replace('/'); };
+    $('manage').onclick = async () => {
+      try {
+        const r = await fetch('/api/portal', { method: 'POST', headers: await headers(), body: '{}' });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok || !j.url) throw new Error(errText(j, 'Could not open your plan page.'));
+        location.href = j.url;
+      } catch (e) { if (e.message !== 'login') setStatus(null, true, e.message); }
+    };
     await loadMe();
     loadVoices();
+    if (!(await afterPayment())) await startPendingPlan();
   } else if (config.requiresCode) {
     $('codeBox').hidden = false;
     setStatus('app.entercode');

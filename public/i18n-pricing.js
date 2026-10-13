@@ -12,7 +12,9 @@ Object.assign(T.en, {
   'price.x.n': 'Custom', 'price.x.big': 'Custom', 'price.x.m': 'More than 3,000 minutes', 'price.x.d': 'Tell us what you need and we will build a plan.',
   'price.cta.sales': 'Talk to sales',
   'price.off.s': '50% off the first month', 'price.off.c': '41% off the first month', 'price.off.p': '37% off the first month',
-  'price.note': 'Discounts apply to the first month only. Paid plans open soon. Start with the free trial now.',
+  'price.note': 'Discounts apply to the first month only. Prices are in US dollars.',
+  'price.cta.buy': 'Subscribe', 'app.plans': 'Plans', 'app.manage': 'Manage plan', 'app.paid': 'Payment received. Your minutes will appear in a moment.', 'app.pay.go': 'Taking you to the secure payment page…',
+  'err.pay_off': 'Payments open soon. Please try again later.', 'err.already_subscribed': 'You already have a plan.',
 });
 Object.assign(T.ar, {
   'app.plan': 'خطة {plan}: يتبقى نحو {m} دقيقة', 'err.credits_over': 'استخدمت كل دقائقك. تواصل معنا لإضافة المزيد.',
@@ -27,7 +29,9 @@ Object.assign(T.ar, {
   'price.x.n': 'مخصص', 'price.x.big': 'مخصص', 'price.x.m': 'أكثر من 3000 دقيقة', 'price.x.d': 'أخبرنا بما تحتاجه وسنصمم لك خطة.',
   'price.cta.sales': 'تحدث إلى المبيعات',
   'price.off.s': 'خصم 50٪ على الشهر الأول', 'price.off.c': 'خصم 41٪ على الشهر الأول', 'price.off.p': 'خصم 37٪ على الشهر الأول',
-  'price.note': 'الخصومات تسري على الشهر الأول فقط. الخطط المدفوعة قريبًا. ابدأ الآن بالتجربة المجانية.',
+  'price.note': 'الخصومات تسري على الشهر الأول فقط. الأسعار بالدولار الأمريكي.',
+  'price.cta.buy': 'اشترك', 'app.plans': 'الخطط', 'app.manage': 'إدارة الخطة', 'app.paid': 'تم استلام الدفعة. ستظهر دقائقك بعد لحظات.', 'app.pay.go': 'جارٍ نقلك إلى صفحة الدفع الآمنة…',
+  'err.pay_off': 'الدفع سيتاح قريبًا. حاول لاحقًا.', 'err.already_subscribed': 'لديك خطة بالفعل.',
 });
 Object.assign(T.ru, {
   'app.plan': 'Тариф {plan}: осталось около {m} мин', 'err.credits_over': 'Минуты закончились. Свяжитесь с нами, чтобы добавить ещё.',
@@ -42,7 +46,9 @@ Object.assign(T.ru, {
   'price.x.n': 'Индивидуальный', 'price.x.big': 'Индивидуально', 'price.x.m': 'Больше 3000 минут', 'price.x.d': 'Расскажите, что нужно, и мы подберём план.',
   'price.cta.sales': 'Связаться с отделом продаж',
   'price.off.s': 'Скидка 50% на первый месяц', 'price.off.c': 'Скидка 41% на первый месяц', 'price.off.p': 'Скидка 37% на первый месяц',
-  'price.note': 'Скидки действуют только на первый месяц. Платные тарифы скоро откроются. Начните с бесплатной пробы.',
+  'price.note': 'Скидки действуют только на первый месяц. Цены указаны в долларах США.',
+  'price.cta.buy': 'Подписаться', 'app.plans': 'Тарифы', 'app.manage': 'Управление тарифом', 'app.paid': 'Оплата получена. Ваши минуты появятся через мгновение.', 'app.pay.go': 'Переходим на страницу безопасной оплаты…',
+  'err.pay_off': 'Оплата скоро откроется. Попробуйте позже.', 'err.already_subscribed': 'У вас уже есть тариф.',
 });
 Object.assign(T.tg, {
   'app.plan': 'Нақшаи {plan}: тақрибан {m} дақиқа монд', 'err.credits_over': 'Ҳамаи дақиқаҳои шумо тамом шуд. Барои илова бо мо тамос гиред.',
@@ -57,7 +63,9 @@ Object.assign(T.tg, {
   'price.x.n': 'Фардӣ', 'price.x.big': 'Фардӣ', 'price.x.m': 'Зиёда аз 3000 дақиқа', 'price.x.d': 'Ба мо бигӯед, ки чӣ лозим аст, ва мо нақша месозем.',
   'price.cta.sales': 'Бо фурӯш тамос гиред',
   'price.off.s': 'Тахфифи 50% барои моҳи аввал', 'price.off.c': 'Тахфифи 41% барои моҳи аввал', 'price.off.p': 'Тахфифи 37% барои моҳи аввал',
-  'price.note': 'Тахфифҳо танҳо барои моҳи аввал аст. Нақшаҳои пулакӣ ба зудӣ кушода мешаванд. Аввал озмоиши ройгонро санҷед.',
+  'price.note': 'Тахфифҳо танҳо барои моҳи аввал аст. Нархҳо бо доллари ИМА.',
+  'price.cta.buy': 'Обуна шудан', 'app.plans': 'Нақшаҳо', 'app.manage': 'Идораи нақша', 'app.paid': 'Пардохт қабул шуд. Дақиқаҳои шумо баъди лаҳзае пайдо мешаванд.', 'app.pay.go': 'Шуморо ба саҳифаи пардохти бехатар мебарем…',
+  'err.pay_off': 'Пардохт ба зудӣ кушода мешавад. Баъдтар кӯшиш кунед.', 'err.already_subscribed': 'Шумо аллакай нақша доред.',
 });
 Object.assign(T.uz, {
   'app.plan': '{plan} tarifi: taxminan {m} daqiqa qoldi', 'err.credits_over': 'Daqiqalaringiz tugadi. Qo‘shish uchun biz bilan bog‘laning.',
@@ -72,5 +80,7 @@ Object.assign(T.uz, {
   'price.x.n': 'Maxsus', 'price.x.big': 'Maxsus', 'price.x.m': '3000 daqiqadan ko‘p', 'price.x.d': 'Nima kerakligini ayting, biz tarif tuzamiz.',
   'price.cta.sales': 'Sotuv bilan bog‘lanish',
   'price.off.s': 'Birinchi oyga 50% chegirma', 'price.off.c': 'Birinchi oyga 41% chegirma', 'price.off.p': 'Birinchi oyga 37% chegirma',
-  'price.note': 'Chegirmalar faqat birinchi oyga amal qiladi. Pullik tariflar tez orada ochiladi. Hozircha bepul sinovdan boshlang.',
+  'price.note': 'Chegirmalar faqat birinchi oyga amal qiladi. Narxlar AQSh dollarida.',
+  'price.cta.buy': 'Obuna bo‘lish', 'app.plans': 'Tariflar', 'app.manage': 'Tarifni boshqarish', 'app.paid': 'To‘lov qabul qilindi. Daqiqalaringiz bir zumda paydo bo‘ladi.', 'app.pay.go': 'Xavfsiz to‘lov sahifasiga o‘tkazilmoqda…',
+  'err.pay_off': 'To‘lov tez orada ochiladi. Keyinroq urinib ko‘ring.', 'err.already_subscribed': 'Sizda allaqachon tarif bor.',
 });
