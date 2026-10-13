@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Suvoz – Log in</title>
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="/" aria-label="Suvoz">
+      <svg width="28" height="28" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#3b3fe0"/><g stroke-linecap="round" stroke-width="3.2"><path d="M9 13v6" stroke="#fff"/><path d="M14.5 8v16" stroke="#fff"/><path d="M20 11v10" stroke="#7fe3dd"/><path d="M25 14.5v3" stroke="#7fe3dd"/></g></svg>
+      <span data-brand>Suvoz</span>
+    </a>
+    <div class="top-right"><select id="langSel" class="lang" aria-label="Language"></select></div>
+  </div>
+</header>
+
+<main class="auth">
+  <div class="tabs" id="tabs" role="tablist">
+    <button type="button" id="tabSignup" role="tab" data-i18n="auth.tab.signup"></button>
+    <button type="button" id="tabLogin" role="tab" data-i18n="auth.tab.login"></button>
+  </div>
+  <h1 id="title"></h1>
+  <p class="lead" id="sub"></p>
+
+  <form id="form" class="stack" novalidate>
+    <label id="emailBox"><span data-i18n="auth.email"></span>
+      <input id="email" class="field" type="email" autocomplete="email" inputmode="email" dir="ltr">
+    </label>
+    <label id="passBox"><span data-i18n="auth.password"></span>
+      <input id="pass" class="field" type="password" dir="ltr">
+      <small id="hint" class="meta" data-i18n="auth.password.hint"></small>
+    </label>
+    <button id="submit" class="btn" type="submit"></button>
+    <button id="forgot" class="linkbtn" type="button" data-i18n="auth.forgot"></button>
+    <button id="back" class="linkbtn" type="button" data-i18n="auth.back"></button>
+  </form>
+
+  <div id="msg" class="amsg" role="status" aria-live="polite"></div>
+</main>
+
+<script src="/i18n.js"></script>
+<script src="/i18n-auth.js"></script>
+<script src="/auth.js"></script>
+<script src="/login.js"></script>
+</body>
+</html>
