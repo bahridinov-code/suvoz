@@ -1,6 +1,6 @@
 // Brand + translations for every page. Change the brand in ONE place: BRAND.
 // Tajik (tg) and Uzbek (uz) texts should be checked by a native speaker before launch.
-const BRAND = { name: 'Suvoz', domain: 'suvoz.io', legalName: 'Your Company Name' };
+const BRAND = { name: 'Suvoz', domain: 'suvoz.io', legalName: 'HORIZON GATE COMMERCE FZE LLC' };
 
 const LANGS = [
   { code: 'en', label: 'English', dir: 'ltr' },
