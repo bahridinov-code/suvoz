@@ -7,6 +7,7 @@ const choice = {};
 let lastKey = '';
 let edited = false;          // true once the visitor changes the example script
 let statusKey = null;
+let plan = 'free';
 let trialChars = null;       // free-trial characters left (null when not using accounts)        // remembers which message is showing so it can be re-translated
 
 function parse(text) {
@@ -58,7 +59,9 @@ function renderTrial() {
   const out = trialChars <= 0;
   el.className = 'pill' + (out ? ' out' : '');
   const m = Math.round((trialChars / 900) * 10) / 10;
-  el.textContent = out ? t('app.trial.over') : t('app.trial', { m: String(m) });
+  const pk = { starter: 's', creator: 'c', pro: 'p', business: 'b' }[plan];
+  if (pk) el.textContent = out ? t('err.credits_over') : t('app.plan', { plan: t('price.' + pk + '.n'), m: String(m) });
+  else el.textContent = out ? t('app.trial.over') : t('app.trial', { m: String(m) });
 }
 
 async function loadMe() {
@@ -66,6 +69,7 @@ async function loadMe() {
     const r = await fetch('/api/me', { headers: await headers() });
     const j = await r.json();
     if (!r.ok) throw new Error(errText(j, 'Could not load your account.'));
+    plan = j.plan || 'free';
     trialChars = j.trialChars;
     $('who').textContent = j.email || '';
     $('who').hidden = !j.email;
