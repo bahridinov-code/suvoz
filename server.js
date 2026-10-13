@@ -18,6 +18,21 @@ const MAX_TURNS = 60;
 const MAX_SPEAKERS = 4;
 const PORT = process.env.PORT || 3000;
 
+// ---- Stripe (payments). All optional: without STRIPE_SECRET_KEY the Subscribe button says "opening soon". ----
+const STRIPE_KEY = process.env.STRIPE_SECRET_KEY || '';
+const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
+const STRIPE_BASE = (process.env.STRIPE_BASE || 'https://api.stripe.com').replace(/\/$/, '');
+const SUPABASE_SECRET = process.env.SUPABASE_SECRET_KEY || '';   // server only. Never put this in the browser.
+const SITE_URL = (process.env.SITE_URL || 'https://suvoz.io').replace(/\/$/, '');
+const PAY_ON = !!(STRIPE_KEY && STRIPE_WEBHOOK_SECRET && SUPABASE_SECRET && SUPABASE_URL);
+// Prices in US cents. firstOff = amount taken off the first month only (new customers).
+const PLANS = {
+  starter:  { name: 'Suvoz Starter',  cents: 900,   firstOff: 450 },
+  creator:  { name: 'Suvoz Creator',  cents: 2900,  firstOff: 1201 },
+  pro:      { name: 'Suvoz Pro',      cents: 7900,  firstOff: 2901 },
+  business: { name: 'Suvoz Business', cents: 49900, firstOff: 0 },
+};
+
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const TYPES = {
   '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8',
@@ -308,6 +323,132 @@ async function handleGenerate(req, res) {
   }
 }
 
+
+// ---- Stripe + Supabase admin helpers ----
+function formEncode(obj, prefix, out = []) {
+  for (const [k, v] of Object.entries(obj)) {
+    if (v === undefined || v === null) continue;
+    const key = prefix ? `${prefix}[${k}]` : k;
+    if (typeof v === 'object') formEncode(v, key, out);
+    else out.push(encodeURIComponent(key) + '=' + encodeURIComponent(String(v)));
+  }
+  return out;
+}
+async function stripe(method, pathname, params) {
+  const r = await fetch(STRIPE_BASE + pathname, {
+    method,
+    headers: { Authorization: 'Bearer ' + STRIPE_KEY, 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: method === 'GET' ? undefined : formEncode(params || {}).join('&'),
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) { const e = new Error('stripe ' + pathname + ' ' + r.status + ' ' + ((j.error && j.error.message) || '')); e.stripe = j.error || {}; throw e; }
+  return j;
+}
+async function admin(fn, args) {
+  const headers = { apikey: SUPABASE_SECRET, 'Content-Type': 'application/json' };
+  if (SUPABASE_SECRET.startsWith('eyJ')) headers.Authorization = 'Bearer ' + SUPABASE_SECRET;
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, { method: 'POST', headers, body: JSON.stringify(args || {}) });
+  if (!r.ok) throw new Error('admin ' + fn + ' ' + r.status + ' ' + (await r.text().catch(() => '')).slice(0, 200));
+  return r.json();
+}
+function readRaw(req, limit = 1024 * 1024) {
+  return new Promise((resolve, reject) => {
+    const chunks = []; let size = 0;
+    req.on('data', (c) => { size += c.length; if (size > limit) { reject(new Error('too large')); req.destroy(); } else chunks.push(c); });
+    req.on('end', () => resolve(Buffer.concat(chunks)));
+    req.on('error', reject);
+  });
+}
+// Checks that a webhook really comes from Stripe.
+function verifyStripe(raw, header) {
+  const parts = Object.fromEntries(String(header || '').split(',').map((x) => x.trim().split('=')));
+  const t = parts.t, sig = parts.v1;
+  if (!t || !sig) return false;
+  if (Math.abs(Date.now() / 1000 - Number(t)) > 300) return false;
+  const want = crypto.createHmac('sha256', STRIPE_WEBHOOK_SECRET).update(t + '.' + raw.toString('utf8')).digest('hex');
+  const a = Buffer.from(want), b = Buffer.from(sig);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
+async function handleCheckout(req, res) {
+  const who = await getUser(req);
+  if (!who) return sendJson(res, 401, { code: 'auth_required', error: 'Please log in.' });
+  if (!PAY_ON) return sendJson(res, 503, { code: 'pay_off', error: 'Payments open soon.' });
+  let body;
+  try { body = await readJson(req); } catch (e) { return sendJson(res, 400, { error: 'Bad request.' }); }
+  const plan = PLANS[String(body.plan || '')];
+  if (!plan) return sendJson(res, 400, { error: 'Unknown plan.' });
+  try {
+    const info = await admin('sub_info', { p_user: who.user.id });
+    if (info.active) return sendJson(res, 409, { code: 'already_subscribed', error: 'You already have a plan.' });
+    const params = {
+      mode: 'subscription',
+      success_url: SITE_URL + '/app?paid=1',
+      cancel_url: SITE_URL + '/#pricing',
+      client_reference_id: who.user.id,
+      line_items: { 0: { quantity: 1, price_data: { currency: 'usd', unit_amount: plan.cents, recurring: { interval: 'month' }, product_data: { name: plan.name } } } },
+      subscription_data: { metadata: { user_id: who.user.id, plan: String(body.plan) } },
+      metadata: { user_id: who.user.id, plan: String(body.plan) },
+    };
+    if (info.customer) params.customer = info.customer; else params.customer_email = who.user.email;
+    if (!info.exists && plan.firstOff > 0) {
+      const id = 'suvoz-first-' + body.plan + '-' + plan.firstOff;
+      try { await stripe('POST', '/v1/coupons', { id, amount_off: plan.firstOff, currency: 'usd', duration: 'once', name: 'First month' }); }
+      catch (e) { if (!(e.stripe && e.stripe.code === 'resource_already_exists')) throw e; }
+      params.discounts = { 0: { coupon: id } };
+    }
+    const s = await stripe('POST', '/v1/checkout/sessions', params);
+    return sendJson(res, 200, { url: s.url });
+  } catch (e) {
+    console.error(e.message);
+    return sendJson(res, 502, { error: 'Could not start the payment. Please try again.' });
+  }
+}
+
+async function handlePortal(req, res) {
+  const who = await getUser(req);
+  if (!who) return sendJson(res, 401, { code: 'auth_required', error: 'Please log in.' });
+  if (!PAY_ON) return sendJson(res, 503, { code: 'pay_off', error: 'Payments open soon.' });
+  try {
+    const info = await admin('sub_info', { p_user: who.user.id });
+    if (!info.customer) return sendJson(res, 404, { error: 'No plan found.' });
+    const s = await stripe('POST', '/v1/billing_portal/sessions', { customer: info.customer, return_url: SITE_URL + '/app' });
+    return sendJson(res, 200, { url: s.url });
+  } catch (e) {
+    console.error(e.message);
+    return sendJson(res, 502, { error: 'Could not open your plan page. Please try again.' });
+  }
+}
+
+async function handleStripeWebhook(req, res) {
+  let raw;
+  try { raw = await readRaw(req); } catch (e) { return sendJson(res, 400, { error: 'Bad request.' }); }
+  if (!PAY_ON || !verifyStripe(raw, req.headers['stripe-signature'])) return sendJson(res, 400, { error: 'Bad signature.' });
+  let ev;
+  try { ev = JSON.parse(raw.toString('utf8')); } catch (e) { return sendJson(res, 400, { error: 'Bad json.' }); }
+  try {
+    const obj = ev.data && ev.data.object;
+    if (ev.type === 'invoice.paid') {
+      const subId = obj.subscription || (obj.parent && obj.parent.subscription_details && obj.parent.subscription_details.subscription);
+      const line = obj.lines && obj.lines.data && obj.lines.data[0];
+      if (subId && line && line.period) {
+        const sub = await stripe('GET', '/v1/subscriptions/' + encodeURIComponent(subId));
+        const m = sub.metadata || {};
+        if (m.user_id && PLANS[m.plan]) {
+          const end = new Date((line.period.end + 86400) * 1000).toISOString();   // one day of grace for late renewals
+          await admin('activate_plan', { p_user: m.user_id, p_plan: m.plan, p_customer: sub.customer, p_sub: subId, p_period_end: end });
+        } else console.error('webhook: subscription without Suvoz metadata', subId);
+      }
+    } else if (ev.type === 'customer.subscription.deleted') {
+      await admin('end_plan', { p_sub: obj.id });
+    }
+    return sendJson(res, 200, { received: true });
+  } catch (e) {
+    console.error(e.message);
+    return sendJson(res, 500, { error: 'Could not process.' });   // Stripe will try again
+  }
+}
+
 const server = http.createServer(async (req, res) => {
   try {
     const p = new URL(req.url, 'http://localhost').pathname;
@@ -332,10 +473,14 @@ const server = http.createServer(async (req, res) => {
         maxChars: MAX_CHARS,
         maxSpeakers: MAX_SPEAKERS,
         configured: !!API_KEY,
+        payOn: PAY_ON,
       });
     }
     if (req.method === 'GET' && p === '/api/voices') return await handleVoices(req, res);
     if (req.method === 'POST' && p === '/api/generate') return await handleGenerate(req, res);
+    if (req.method === 'POST' && p === '/api/checkout') return await handleCheckout(req, res);
+    if (req.method === 'POST' && p === '/api/portal') return await handlePortal(req, res);
+    if (req.method === 'POST' && p === '/api/stripe-webhook') return await handleStripeWebhook(req, res);
     if (req.method === 'GET' && !p.startsWith('/api/') && serveStatic(req, res, p)) return;
     sendJson(res, 404, { error: 'Not found.' });
   } catch (e) {
