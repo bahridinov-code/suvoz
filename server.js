@@ -249,13 +249,17 @@ async function handleGenerate(req, res) {
     return sendJson(res, 429, { code: 'daily_limit', error: 'Daily limit reached. Please try again tomorrow.' });
   }
   if (AUTH_ON) {
-    // Use the free-trial characters first. (Paid credits come later.)
+    // Paid minutes first, otherwise the free trial.
     try {
-      const left = await rpc(who.token, 'trial_use', { n: chars });
-      if (left < 0) return sendJson(res, 402, { code: 'trial_over', error: 'Your free trial is used up.' });
+      const left = await rpc(who.token, 'credits_use', { n: chars });
+      if (left < 0) {
+        const me = await rpc(who.token, 'credits_left');
+        if (me && me.plan !== 'free') return sendJson(res, 402, { code: 'credits_over', error: 'You have used all your minutes.' });
+        return sendJson(res, 402, { code: 'trial_over', error: 'Your free trial is used up.' });
+      }
     } catch (e) {
       console.error(e.message);
-      return sendJson(res, 502, { error: 'Could not check your trial. Please try again.' });
+      return sendJson(res, 502, { error: 'Could not check your minutes. Please try again.' });
     }
   }
 
@@ -312,8 +316,8 @@ const server = http.createServer(async (req, res) => {
       const a = await getUser(req);
       if (!a) return sendJson(res, 401, { code: 'auth_required', error: 'Please log in.' });
       try {
-        const left = await rpc(a.token, 'trial_left');
-        return sendJson(res, 200, { auth: true, email: a.user.email, trialChars: left });
+        const me = await rpc(a.token, 'credits_left');
+        return sendJson(res, 200, { auth: true, email: a.user.email, plan: me.plan, trialChars: me.left });
       } catch (e) {
         console.error(e.message);
         return sendJson(res, 502, { error: 'Could not load your account.' });
