@@ -1,6 +1,7 @@
 // Extra text for sign-up, login and the account bar. Loaded after i18n.js.
 // Tajik (tg) and Uzbek (uz) texts should be checked by a native speaker before launch.
 Object.assign(T.en, {
+  'auth.google': 'Continue with Google', 'auth.or': 'or',
   'auth.code.link': 'Email me a code instead',
   'auth.code.title': 'Log in with a code',
   'auth.code.sub': 'Enter your email and we will send you a code.',
@@ -47,6 +48,7 @@ Object.assign(T.en, {
   'err.bad_code': 'Wrong or missing access code.',
 });
 Object.assign(T.ar, {
+  'auth.google': 'المتابعة باستخدام Google', 'auth.or': 'أو',
   'auth.code.link': 'أرسل لي رمزًا بدلًا من ذلك',
   'auth.code.title': 'تسجيل الدخول برمز',
   'auth.code.sub': 'أدخل بريدك الإلكتروني وسنرسل لك رمزًا.',
@@ -93,6 +95,7 @@ Object.assign(T.ar, {
   'err.bad_code': 'رمز الدخول خاطئ أو مفقود.',
 });
 Object.assign(T.ru, {
+  'auth.google': 'Продолжить через Google', 'auth.or': 'или',
   'auth.code.link': 'Отправить код на почту',
   'auth.code.title': 'Вход по коду',
   'auth.code.sub': 'Введите почту, и мы отправим вам код.',
@@ -139,6 +142,7 @@ Object.assign(T.ru, {
   'err.bad_code': 'Неверный или пустой код доступа.',
 });
 Object.assign(T.tg, {
+  'auth.google': 'Идома бо Google', 'auth.or': 'ё',
   'auth.code.link': 'Ба ҷои он рамз ба почта фиристед',
   'auth.code.title': 'Воридшавӣ бо рамз',
   'auth.code.sub': 'Почтаи электрониро ворид кунед, мо ба шумо рамз мефиристем.',
@@ -185,6 +189,7 @@ Object.assign(T.tg, {
   'err.bad_code': 'Рамзи дастрасӣ нодуруст аст ё ворид нашудааст.',
 });
 Object.assign(T.uz, {
+  'auth.google': 'Google orqali davom etish', 'auth.or': 'yoki',
   'auth.code.link': 'Buning o‘rniga kodni pochtaga yuboring',
   'auth.code.title': 'Kod bilan kirish',
   'auth.code.sub': 'Elektron pochtangizni kiriting, biz sizga kod yuboramiz.',

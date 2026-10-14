@@ -111,6 +111,11 @@ const Auth = (() => {
       if (!s) throw new Error('no session');
       await call('/auth/v1/user', { data }, s.access_token, 'PUT');
     },
+    // Sends the visitor to Google; they come back to /app already logged in.
+    async google() {
+      const c = await config();
+      location.href = c.supabaseUrl + '/auth/v1/authorize?provider=google&redirect_to=' + encodeURIComponent(location.origin + '/app');
+    },
     async recover(email) {
       await call('/auth/v1/recover?redirect_to=' + encodeURIComponent(location.origin + '/login'), { email });
     },

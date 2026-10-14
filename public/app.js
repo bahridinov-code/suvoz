@@ -253,6 +253,7 @@ async function ensureProfile() {
   if (!prof || prof.age) return;
   const d = $('profileDlg'), f = $('profileForm'), err = $('pErr');
   if (!d.showModal) return;
+  if (prof.full_name || prof.name) f.name.value = String(prof.full_name || prof.name).slice(0, 80);   // Google already gives us a name
   d.addEventListener('cancel', (e) => e.preventDefault());   // it can not be closed without answering
   await new Promise((done) => {
     f.addEventListener('submit', async (e) => {

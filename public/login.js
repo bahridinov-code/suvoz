@@ -20,6 +20,8 @@ function render() {
   $('tabLogin').setAttribute('aria-selected', m === 'login');
   show($('form'), true);
   show($('emailBox'), m === 'signup' || m === 'login' || m === 'forgot' || m === 'codeemail');
+  show($('google'), m === 'signup' || m === 'login');
+  show($('or'), m === 'signup' || m === 'login');
   show($('codeBox'), m === 'codeverify');
   show($('codeLink'), m === 'signup' || m === 'login');
   show($('resend'), m === 'codeverify');
@@ -43,6 +45,7 @@ function go(next) { mode = next; setMsg(null); render(); }
 $('tabSignup').onclick = () => go('signup');
 $('tabLogin').onclick = () => go('login');
 $('forgot').onclick = () => go('forgot');
+$('google').onclick = () => Auth.google();
 $('codeLink').onclick = () => go('codeemail');
 $('resend').onclick = async () => {
   if (busy) return;
