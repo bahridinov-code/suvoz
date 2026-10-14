@@ -132,15 +132,30 @@
   </div>
 </footer>
 
-<dialog id="salesDlg" class="sdlg"><h3 data-i18n="sales.title"></h3><p data-i18n="sales.sub"></p><div class="saddr">sales@suvoz.io</div>
-<div class="sbtns"><button type="button" class="btn small" id="sCopy" data-i18n="sales.copy"></button><a class="btn small ghost" target="_blank" rel="noopener" href="https://mail.google.com/mail/?view=cm&fs=1&to=sales@suvoz.io" data-i18n="sales.gmail"></a><a class="btn small ghost" href="mailto:sales@suvoz.io" data-i18n="sales.app"></a></div>
+<dialog id="salesDlg" class="sdlg"><h3 data-i18n="sales.title"></h3><p data-i18n="sales.sub"></p>
+<form id="salesForm" novalidate>
+<input name="name" maxlength="120" autocomplete="name" data-i18n-ph="sales.name" required>
+<input name="email" type="email" maxlength="200" autocomplete="email" data-i18n-ph="sales.email" required>
+<textarea name="message" rows="4" maxlength="4000" data-i18n-ph="sales.msg" required></textarea>
+<input name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+<button class="btn" type="submit" id="sSend" data-i18n="sales.send"></button>
+<p class="serr" id="sErr" hidden></p>
+</form>
+<div id="sDone" hidden><p class="sthanks" data-i18n="sales.thanks"></p></div>
 <button type="button" class="linkbtn" id="sClose" data-i18n="sales.close"></button></dialog>
 <script>
 (function(){var d=document.getElementById('salesDlg'),b=document.getElementById('salesBtn');if(!d||!b)return;
-b.addEventListener('click',function(e){if(d.showModal){e.preventDefault();d.showModal();}});
+var f=document.getElementById('salesForm'),done=document.getElementById('sDone'),err=document.getElementById('sErr'),send=document.getElementById('sSend');
+function tr(k){try{return t(k);}catch(x){return '';}}
+b.addEventListener('click',function(e){if(d.showModal){e.preventDefault();f.hidden=false;done.hidden=true;err.hidden=true;d.showModal();}});
 document.getElementById('sClose').onclick=function(){d.close();};
 d.addEventListener('click',function(e){if(e.target===d)d.close();});
-document.getElementById('sCopy').onclick=function(){var t=this,o=t.textContent;try{navigator.clipboard.writeText('sales@suvoz.io');t.textContent='\u2713';setTimeout(function(){t.textContent=o;},1500);}catch(x){}};})();
+f.addEventListener('submit',function(e){e.preventDefault();err.hidden=true;
+var v={name:f.name.value.trim(),email:f.email.value.trim(),message:f.message.value.trim(),website:f.website.value};
+if(!v.name||!v.message||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.email)){err.textContent=tr('sales.bad');err.hidden=false;return;}
+send.disabled=true;
+fetch('/api/sales',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(v)}).then(function(r){
+if(!r.ok)throw new Error(r.status);f.hidden=true;done.hidden=false;f.reset();}).catch(function(){err.textContent=tr('sales.fail');err.hidden=false;}).then(function(){send.disabled=false;});});})();
 </script>
 <script src="/i18n.js"></script>
 <script src="/i18n-auth.js"></script>

@@ -1,6 +1,6 @@
 // Pricing section texts. Loaded after i18n.js. Tajik (tg) and Uzbek (uz) need a native-speaker check before launch.
 Object.assign(T.en, {
-  'sales.title': 'Talk to sales', 'sales.sub': 'Write to us and we will reply soon.', 'sales.copy': 'Copy address', 'sales.gmail': 'Open Gmail', 'sales.app': 'Open email app', 'sales.close': 'Close',
+  'sales.title': 'Talk to sales', 'sales.sub': 'Tell us what you need and we will reply soon.', 'sales.name': 'Full name', 'sales.email': 'Email', 'sales.msg': 'What do you need?', 'sales.send': 'Send', 'sales.thanks': 'Thank you! We will reply soon.', 'sales.bad': 'Please fill in your name, a valid email and a message.', 'sales.fail': 'Could not send. Please try again.', 'sales.close': 'Close',
   'app.plan': '{plan} plan: about {m} min left', 'err.credits_over': 'You have used all your minutes. Contact us to add more.',
   'nav.pricing': 'Pricing',
   'price.title': 'Simple pricing.', 'price.sub': 'Start free. Pay only when you need more audio.', 'price.mo': '/ month',
@@ -18,7 +18,7 @@ Object.assign(T.en, {
   'err.pay_off': 'Payments open soon. Please try again later.', 'err.already_subscribed': 'You already have a plan.',
 });
 Object.assign(T.ar, {
-  'sales.title': 'تحدث إلى المبيعات', 'sales.sub': 'اكتب لنا وسنرد عليك قريبًا.', 'sales.copy': 'نسخ العنوان', 'sales.gmail': 'فتح Gmail', 'sales.app': 'فتح تطبيق البريد', 'sales.close': 'إغلاق',
+  'sales.title': 'تحدث إلى المبيعات', 'sales.sub': 'أخبرنا بما تحتاجه وسنرد عليك قريبًا.', 'sales.name': 'الاسم الكامل', 'sales.email': 'البريد الإلكتروني', 'sales.msg': 'ماذا تحتاج؟', 'sales.send': 'إرسال', 'sales.thanks': 'شكرًا لك! سنرد عليك قريبًا.', 'sales.bad': 'يرجى إدخال اسمك وبريد إلكتروني صحيح ورسالتك.', 'sales.fail': 'تعذر الإرسال. حاول مرة أخرى.', 'sales.close': 'إغلاق',
   'app.plan': 'خطة {plan}: يتبقى نحو {m} دقيقة', 'err.credits_over': 'استخدمت كل دقائقك. تواصل معنا لإضافة المزيد.',
   'nav.pricing': 'الأسعار',
   'price.title': 'أسعار بسيطة.', 'price.sub': 'ابدأ مجانًا، وادفع فقط عندما تحتاج إلى مزيد من الصوت.', 'price.mo': '/ شهريًا',
@@ -36,7 +36,7 @@ Object.assign(T.ar, {
   'err.pay_off': 'الدفع سيتاح قريبًا. حاول لاحقًا.', 'err.already_subscribed': 'لديك خطة بالفعل.',
 });
 Object.assign(T.ru, {
-  'sales.title': 'Связаться с отделом продаж', 'sales.sub': 'Напишите нам, и мы скоро ответим.', 'sales.copy': 'Скопировать адрес', 'sales.gmail': 'Открыть Gmail', 'sales.app': 'Открыть почтовое приложение', 'sales.close': 'Закрыть',
+  'sales.title': 'Связаться с отделом продаж', 'sales.sub': 'Расскажите, что вам нужно, и мы скоро ответим.', 'sales.name': 'Полное имя', 'sales.email': 'Эл. почта', 'sales.msg': 'Что вам нужно?', 'sales.send': 'Отправить', 'sales.thanks': 'Спасибо! Мы скоро ответим.', 'sales.bad': 'Укажите имя, корректную почту и сообщение.', 'sales.fail': 'Не удалось отправить. Попробуйте ещё раз.', 'sales.close': 'Закрыть',
   'app.plan': 'Тариф {plan}: осталось около {m} мин', 'err.credits_over': 'Минуты закончились. Свяжитесь с нами, чтобы добавить ещё.',
   'nav.pricing': 'Цены',
   'price.title': 'Простые цены.', 'price.sub': 'Начните бесплатно. Платите, только когда нужно больше звука.', 'price.mo': '/ мес.',
@@ -54,7 +54,7 @@ Object.assign(T.ru, {
   'err.pay_off': 'Оплата скоро откроется. Попробуйте позже.', 'err.already_subscribed': 'У вас уже есть тариф.',
 });
 Object.assign(T.tg, {
-  'sales.title': 'Бо фурӯш тамос гиред', 'sales.sub': 'Ба мо нависед, мо ба зудӣ ҷавоб медиҳем.', 'sales.copy': 'Нусхабардории суроға', 'sales.gmail': 'Кушодани Gmail', 'sales.app': 'Кушодани барномаи почта', 'sales.close': 'Пӯшидан',
+  'sales.title': 'Бо фурӯш тамос гиред', 'sales.sub': 'Ба мо бигӯед, ки чӣ лозим аст, ва мо ба зудӣ ҷавоб медиҳем.', 'sales.name': 'Номи пурра', 'sales.email': 'Почтаи электронӣ', 'sales.msg': 'Шуморо чӣ лозим аст?', 'sales.send': 'Фиристодан', 'sales.thanks': 'Ташаккур! Мо ба зудӣ ҷавоб медиҳем.', 'sales.bad': 'Лутфан ном, почтаи дуруст ва паёмро ворид кунед.', 'sales.fail': 'Фиристода нашуд. Боз кӯшиш кунед.', 'sales.close': 'Пӯшидан',
   'app.plan': 'Нақшаи {plan}: тақрибан {m} дақиқа монд', 'err.credits_over': 'Ҳамаи дақиқаҳои шумо тамом шуд. Барои илова бо мо тамос гиред.',
   'nav.pricing': 'Нархҳо',
   'price.title': 'Нархҳои оддӣ.', 'price.sub': 'Бо озмоиши ройгон оғоз кунед. Танҳо вақте пардохт кунед, ки садои бештар лозим шавад.', 'price.mo': '/ моҳ',
@@ -72,7 +72,7 @@ Object.assign(T.tg, {
   'err.pay_off': 'Пардохт ба зудӣ кушода мешавад. Баъдтар кӯшиш кунед.', 'err.already_subscribed': 'Шумо аллакай нақша доред.',
 });
 Object.assign(T.uz, {
-  'sales.title': 'Sotuv bilan bog‘lanish', 'sales.sub': 'Bizga yozing, tez orada javob beramiz.', 'sales.copy': 'Manzilni nusxalash', 'sales.gmail': 'Gmail ochish', 'sales.app': 'Pochta ilovasini ochish', 'sales.close': 'Yopish',
+  'sales.title': 'Sotuv bilan bog‘lanish', 'sales.sub': 'Nima kerakligini ayting, tez orada javob beramiz.', 'sales.name': 'To‘liq ism', 'sales.email': 'Elektron pochta', 'sales.msg': 'Sizga nima kerak?', 'sales.send': 'Yuborish', 'sales.thanks': 'Rahmat! Tez orada javob beramiz.', 'sales.bad': 'Ism, to‘g‘ri pochta va xabarni kiriting.', 'sales.fail': 'Yuborib bo‘lmadi. Qayta urinib ko‘ring.', 'sales.close': 'Yopish',
   'app.plan': '{plan} tarifi: taxminan {m} daqiqa qoldi', 'err.credits_over': 'Daqiqalaringiz tugadi. Qo‘shish uchun biz bilan bog‘laning.',
   'nav.pricing': 'Narxlar',
   'price.title': 'Oddiy narxlar.', 'price.sub': 'Bepul boshlang. Ko‘proq ovoz kerak bo‘lgandagina to‘lang.', 'price.mo': '/ oyiga',

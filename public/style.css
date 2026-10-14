@@ -216,10 +216,15 @@ textarea.field { min-height: 210px; resize: vertical; line-height: 1.55; }
 .flinks a:hover { color: var(--ink); }
 
 /* Sales contact popup */
-.sdlg { border: 0; border-radius: 18px; padding: 28px; max-width: 420px; width: calc(100% - 32px); box-shadow: 0 20px 60px rgba(0,0,0,.25); text-align: center; }
+.sdlg { border: 0; border-radius: 18px; padding: 28px; max-width: 440px; width: calc(100% - 32px); box-shadow: 0 20px 60px rgba(0,0,0,.25); text-align: center; }
 .sdlg::backdrop { background: rgba(20,20,40,.45); }
 .sdlg h3 { font-size: 22px; letter-spacing: -0.02em; }
-.sdlg p { color: var(--muted); margin-top: 8px; }
-.sdlg .saddr { margin: 18px 0; font-weight: 700; font-size: 18px; user-select: all; }
-.sdlg .sbtns { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
-.sdlg .linkbtn { margin-top: 16px; }
+.sdlg > p { color: var(--muted); margin-top: 8px; }
+.sdlg form { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; text-align: start; }
+.sdlg input, .sdlg textarea { font: inherit; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: #fff; width: 100%; box-sizing: border-box; }
+.sdlg textarea { resize: vertical; min-height: 96px; }
+.sdlg input:focus, .sdlg textarea:focus { outline: 2px solid var(--indigo); outline-offset: 0; border-color: transparent; }
+.sdlg .hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.sdlg .serr { color: #c0392b; font-size: 14px; }
+.sdlg .sthanks { color: var(--ink); font-size: 18px; font-weight: 600; margin: 28px 0 12px; }
+.sdlg .linkbtn { margin-top: 14px; }
