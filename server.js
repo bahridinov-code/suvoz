@@ -3,6 +3,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const mailer = require('./email');
 
 // ---- Settings (all come from environment variables) ----
 const API_KEY = process.env.ELEVENLABS_API_KEY || '';
@@ -31,10 +32,10 @@ const SALES_TO = process.env.SALES_TO || 'sales@suvoz.io';
 const PAY_ON = !!(STRIPE_KEY && STRIPE_WEBHOOK_SECRET && SUPABASE_SECRET && SUPABASE_URL);
 // Prices in US cents. firstOff = amount taken off the first month only (new customers).
 const PLANS = {
-  starter:  { name: 'Suvoz Starter',  cents: 900,   firstOff: 450 },
-  creator:  { name: 'Suvoz Creator',  cents: 2900,  firstOff: 1201 },
-  pro:      { name: 'Suvoz Pro',      cents: 7900,  firstOff: 2901 },
-  business: { name: 'Suvoz Business', cents: 49900, firstOff: 0 },
+  starter:  { name: 'Suvoz Starter',  minutes: 30,   cents: 900,   firstOff: 450 },
+  creator:  { name: 'Suvoz Creator',  minutes: 120,  cents: 2900,  firstOff: 1201 },
+  pro:      { name: 'Suvoz Pro',      minutes: 400,  cents: 7900,  firstOff: 2901 },
+  business: { name: 'Suvoz Business', minutes: 3000, cents: 49900, firstOff: 0 },
 };
 
 const PUBLIC_DIR = path.join(__dirname, 'public');
@@ -397,21 +398,11 @@ async function handleSales(req, res) {
   if (!SUPABASE_SECRET || !SUPABASE_URL) return sendJson(res, 503, { error: 'sales_off' });
   let saved = false, mailed = false;
   try { await admin('add_lead', { p_name: name, p_email: email, p_message: message }); saved = true; } catch (e) { console.error(e.message); }
-  if (RESEND_KEY) {
-    try {
-      const r = await fetch(RESEND_BASE + '/emails', {
-        method: 'POST',
-        headers: { Authorization: 'Bearer ' + RESEND_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          from: MAIL_FROM, to: [SALES_TO], reply_to: email,
-          subject: 'Suvoz sales: ' + name,
-          html: '<p><b>Name:</b> ' + escHtml(name) + '<br><b>Email:</b> ' + escHtml(email) + '</p><p style="white-space:pre-wrap">' + escHtml(message) + '</p>',
-        }),
-      });
-      mailed = r.ok;
-      if (!r.ok) console.error('resend ' + r.status + ' ' + (await r.text().catch(() => '')).slice(0, 200));
-    } catch (e) { console.error('resend ' + e.message); }
-  }
+  mailed = await sendMail({
+    to: SALES_TO, replyTo: email, subject: 'Suvoz sales: ' + name,
+    html: '<p><b>Name:</b> ' + escHtml(name) + '<br><b>Email:</b> ' + escHtml(email) + '</p><p style="white-space:pre-wrap">' + escHtml(message) + '</p>',
+    text: 'Name: ' + name + '\nEmail: ' + email + '\n\n' + message,
+  });
   if (!saved && !mailed) return sendJson(res, 500, { error: 'failed' });
   sendJson(res, 200, { ok: true });
 }
@@ -466,6 +457,23 @@ async function handlePortal(req, res) {
   }
 }
 
+// Sends one email through Resend. Never throws: a failed email must not break a payment.
+async function sendMail({ to, subject, html, text, replyTo }) {
+  if (!RESEND_KEY || !to) return false;
+  try {
+    const r = await fetch(RESEND_BASE + '/emails', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + RESEND_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: MAIL_FROM, to: [to], subject, html, text, reply_to: replyTo || undefined }),
+    });
+    if (!r.ok) console.error('resend ' + r.status + ' ' + (await r.text().catch(() => '')).slice(0, 200));
+    return r.ok;
+  } catch (e) { console.error('resend ' + e.message); return false; }
+}
+async function customerEmail(id) {
+  try { return ((await stripe('GET', '/v1/customers/' + encodeURIComponent(id))).email) || ''; } catch (e) { console.error(e.message); return ''; }
+}
+
 async function handleStripeWebhook(req, res) {
   let raw;
   try { raw = await readRaw(req); } catch (e) { return sendJson(res, 400, { error: 'Bad request.' }); }
@@ -483,10 +491,32 @@ async function handleStripeWebhook(req, res) {
         if (m.user_id && PLANS[m.plan]) {
           const end = new Date((line.period.end + 86400) * 1000).toISOString();   // one day of grace for late renewals
           await admin('activate_plan', { p_user: m.user_id, p_plan: m.plan, p_customer: sub.customer, p_sub: subId, p_period_end: end });
+          if (obj.amount_paid > 0) {
+            const to = obj.customer_email || (await customerEmail(sub.customer));
+            const mail = mailer.receiptEmail({
+              planName: PLANS[m.plan].name, minutes: PLANS[m.plan].minutes, amount: obj.amount_paid, currency: obj.currency,
+              renewal: obj.billing_reason === 'subscription_cycle', until: mailer.dateText(line.period.end),
+            });
+            await sendMail({ to, subject: mail.subject, html: mail.html, text: mail.text });
+          }
         } else console.error('webhook: subscription without Suvoz metadata', subId);
       }
     } else if (ev.type === 'customer.subscription.deleted') {
       await admin('end_plan', { p_sub: obj.id });
+    } else if (ev.type === 'customer.subscription.updated') {
+      // Customer pressed cancel (the plan stays active until the period ends): send one confirmation email.
+      const prev = (ev.data && ev.data.previous_attributes) || {};
+      const cancelling = ('cancel_at_period_end' in prev && !prev.cancel_at_period_end && obj.cancel_at_period_end) || ('cancel_at' in prev && !prev.cancel_at && obj.cancel_at);
+      const plan = obj.metadata && PLANS[obj.metadata.plan];
+      if (cancelling && plan) {
+        const item = obj.items && obj.items.data && obj.items.data[0];
+        const endTs = obj.cancel_at || (item && item.current_period_end) || obj.current_period_end;
+        const to = await customerEmail(obj.customer);
+        if (endTs) {
+          const mail = mailer.cancelEmail({ planName: plan.name, until: mailer.dateText(endTs) });
+          await sendMail({ to, subject: mail.subject, html: mail.html, text: mail.text });
+        }
+      }
     }
     return sendJson(res, 200, { received: true });
   } catch (e) {
