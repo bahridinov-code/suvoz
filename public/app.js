@@ -217,7 +217,7 @@ function rememberPlan() {
 async function goPay(plan) {
   setStatus('app.pay.go');
   try {
-    const r = await fetch('/api/checkout', { method: 'POST', headers: await headers(), body: JSON.stringify({ plan }) });
+    const r = await fetch('/api/checkout', { method: 'POST', headers: await headers(), body: JSON.stringify({ plan, lang: currentLang }) });
     const j = await r.json().catch(() => ({}));
     if (!r.ok || !j.url) throw new Error(errText(j, 'Could not start the payment.'));
     location.href = j.url;
@@ -259,7 +259,7 @@ async function afterPayment() {
     $('logout').onclick = async () => { await Auth.signOut(); location.replace('/'); };
     $('manage').onclick = async () => {
       try {
-        const r = await fetch('/api/portal', { method: 'POST', headers: await headers(), body: '{}' });
+        const r = await fetch('/api/portal', { method: 'POST', headers: await headers(), body: JSON.stringify({ lang: currentLang }) });
         const j = await r.json().catch(() => ({}));
         if (!r.ok || !j.url) throw new Error(errText(j, 'Could not open your plan page.'));
         location.href = j.url;
