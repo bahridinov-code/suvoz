@@ -24,6 +24,10 @@ const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
 const STRIPE_BASE = (process.env.STRIPE_BASE || 'https://api.stripe.com').replace(/\/$/, '');
 const SUPABASE_SECRET = process.env.SUPABASE_SECRET_KEY || '';   // server only. Never put this in the browser.
 const SITE_URL = (process.env.SITE_URL || 'https://suvoz.io').replace(/\/$/, '');
+const RESEND_KEY = process.env.RESEND_API_KEY || '';          // lets the server send emails (sales messages)
+const MAIL_FROM = process.env.MAIL_FROM || 'Suvoz <support@suvoz.io>';
+const RESEND_BASE = (process.env.RESEND_BASE || 'https://api.resend.com').replace(/\/$/, '');
+const SALES_TO = process.env.SALES_TO || 'sales@suvoz.io';
 const PAY_ON = !!(STRIPE_KEY && STRIPE_WEBHOOK_SECRET && SUPABASE_SECRET && SUPABASE_URL);
 // Prices in US cents. firstOff = amount taken off the first month only (new customers).
 const PLANS = {
@@ -370,6 +374,48 @@ function verifyStripe(raw, header) {
   return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 
+
+// ---- Talk to sales form: saved in Supabase, and emailed to SALES_TO when RESEND_API_KEY is set ----
+const leadHits = new Map();
+function leadLimited(ip) {
+  if (leadHits.size > 2000) leadHits.clear();
+  const now = Date.now();
+  const arr = (leadHits.get(ip) || []).filter((t) => now - t < 60 * 60 * 1000);
+  if (arr.length >= 5) { leadHits.set(ip, arr); return true; }
+  arr.push(now); leadHits.set(ip, arr); return false;
+}
+const escHtml = (x) => String(x).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+async function handleSales(req, res) {
+  let b;
+  try { b = JSON.parse((await readRaw(req, 20 * 1024)).toString('utf8')); } catch (e) { return sendJson(res, 400, { error: 'bad_request' }); }
+  if (b.website) return sendJson(res, 200, { ok: true });            // hidden field: only bots fill it
+  const name = String(b.name || '').trim().slice(0, 120);
+  const email = String(b.email || '').trim().slice(0, 200);
+  const message = String(b.message || '').trim().slice(0, 4000);
+  if (!name || !message || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return sendJson(res, 400, { error: 'invalid' });
+  if (leadLimited(clientIp(req))) return sendJson(res, 429, { error: 'slow_down' });
+  if (!SUPABASE_SECRET || !SUPABASE_URL) return sendJson(res, 503, { error: 'sales_off' });
+  let saved = false, mailed = false;
+  try { await admin('add_lead', { p_name: name, p_email: email, p_message: message }); saved = true; } catch (e) { console.error(e.message); }
+  if (RESEND_KEY) {
+    try {
+      const r = await fetch(RESEND_BASE + '/emails', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + RESEND_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          from: MAIL_FROM, to: [SALES_TO], reply_to: email,
+          subject: 'Suvoz sales: ' + name,
+          html: '<p><b>Name:</b> ' + escHtml(name) + '<br><b>Email:</b> ' + escHtml(email) + '</p><p style="white-space:pre-wrap">' + escHtml(message) + '</p>',
+        }),
+      });
+      mailed = r.ok;
+      if (!r.ok) console.error('resend ' + r.status + ' ' + (await r.text().catch(() => '')).slice(0, 200));
+    } catch (e) { console.error('resend ' + e.message); }
+  }
+  if (!saved && !mailed) return sendJson(res, 500, { error: 'failed' });
+  sendJson(res, 200, { ok: true });
+}
+
 async function handleCheckout(req, res) {
   const who = await getUser(req);
   if (!who) return sendJson(res, 401, { code: 'auth_required', error: 'Please log in.' });
@@ -478,6 +524,7 @@ const server = http.createServer(async (req, res) => {
     }
     if (req.method === 'GET' && p === '/api/voices') return await handleVoices(req, res);
     if (req.method === 'POST' && p === '/api/generate') return await handleGenerate(req, res);
+    if (req.method === 'POST' && p === '/api/sales') return await handleSales(req, res);
     if (req.method === 'POST' && p === '/api/checkout') return await handleCheckout(req, res);
     if (req.method === 'POST' && p === '/api/portal') return await handlePortal(req, res);
     if (req.method === 'POST' && p === '/api/stripe-webhook') return await handleStripeWebhook(req, res);
