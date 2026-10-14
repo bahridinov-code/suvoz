@@ -90,7 +90,7 @@ const Auth = (() => {
     },
     // Login with a code sent by email. New emails get an account too.
     async sendCode(email) {
-      await call('/auth/v1/otp', { email, create_user: true });
+      await call('/auth/v1/otp', { email, create_user: true, data: { signup_via: 'code' } });
     },
     async verifyCode(email, token) {
       let last = null;
