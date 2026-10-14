@@ -57,6 +57,14 @@
   </div>
 </main>
 
+<dialog id="profileDlg" class="sdlg"><h3 data-i18n="profile.title"></h3><p data-i18n="profile.sub"></p>
+<form id="profileForm" novalidate>
+<input name="name" maxlength="80" autocomplete="name" data-i18n-ph="profile.name" required>
+<input name="age" type="number" inputmode="numeric" min="1" max="120" data-i18n-ph="profile.age" required>
+<button class="btn" type="submit" id="pSend" data-i18n="profile.go"></button>
+<p class="serr" id="pErr" hidden></p>
+</form></dialog>
+
 <script src="/i18n.js"></script>
 <script src="/i18n-auth.js"></script>
 <script src="/i18n-pricing.js"></script>

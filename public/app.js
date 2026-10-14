@@ -246,6 +246,28 @@ async function afterPayment() {
   return true;
 }
 
+// First visit: ask for name and age once, then carry on.
+async function ensureProfile() {
+  let prof = null;
+  try { prof = await Auth.profile(); } catch (e) {}
+  if (!prof || prof.age) return;
+  const d = $('profileDlg'), f = $('profileForm'), err = $('pErr');
+  if (!d.showModal) return;
+  d.addEventListener('cancel', (e) => e.preventDefault());   // it can not be closed without answering
+  await new Promise((done) => {
+    f.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      err.hidden = true;
+      const name = f.name.value.trim(), age = parseInt(f.age.value, 10);
+      if (!name || !(age >= 1 && age <= 120)) { err.textContent = t('profile.err'); err.hidden = false; return; }
+      $('pSend').disabled = true;
+      try { await Auth.saveProfile({ full_name: name, age }); d.close(); done(); }
+      catch (x) { err.textContent = t('auth.err.generic'); err.hidden = false; $('pSend').disabled = false; }
+    });
+    d.showModal();
+  });
+}
+
 (async function init() {
   initLang();
   rememberPlan();
@@ -255,6 +277,7 @@ async function afterPayment() {
     if (/type=recovery/.test(location.hash)) return location.replace('/login' + location.hash);
     Auth.takeHash();   // the email confirmation link brings the login in the address
     if (!(await Auth.session())) return location.replace('/login');
+    await ensureProfile();
     $('logout').hidden = false;
     $('logout').onclick = async () => { await Auth.signOut(); location.replace('/'); };
     $('manage').onclick = async () => {

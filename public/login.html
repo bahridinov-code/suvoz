@@ -37,7 +37,12 @@
       <input id="pass" class="field" type="password" dir="ltr">
       <small id="hint" class="meta" data-i18n="auth.password.hint"></small>
     </label>
+    <label id="codeBox"><span data-i18n="auth.code.label"></span>
+      <input id="otp" class="field otp" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="10" dir="ltr">
+    </label>
     <button id="submit" class="btn" type="submit"></button>
+    <button id="codeLink" class="linkbtn" type="button" data-i18n="auth.code.link"></button>
+    <button id="resend" class="linkbtn" type="button" data-i18n="auth.code.resend"></button>
     <button id="forgot" class="linkbtn" type="button" data-i18n="auth.forgot"></button>
     <button id="back" class="linkbtn" type="button" data-i18n="auth.back"></button>
   </form>

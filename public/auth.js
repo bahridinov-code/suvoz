@@ -23,7 +23,8 @@ const Auth = (() => {
     const c = await config();
     const headers = { apikey: c.supabaseKey, 'Content-Type': 'application/json' };
     if (token) headers.Authorization = 'Bearer ' + token;
-    const r = await fetch(c.supabaseUrl + path, { method: method || 'POST', headers, body: JSON.stringify(body || {}) });
+    const m = method || 'POST';
+    const r = await fetch(c.supabaseUrl + path, { method: m, headers, body: m === 'GET' ? undefined : JSON.stringify(body || {}) });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) {
       const err = new Error(j.msg || j.error_description || j.message || 'error');
@@ -86,6 +87,29 @@ const Auth = (() => {
     },
     async signIn(email, password) {
       store(await call('/auth/v1/token?grant_type=password', { email, password }));
+    },
+    // Login with a code sent by email. New emails get an account too.
+    async sendCode(email) {
+      await call('/auth/v1/otp', { email, create_user: true });
+    },
+    async verifyCode(email, token) {
+      let last = null;
+      for (const type of ['email', 'signup', 'magiclink']) {   // Supabase uses a different type for new and old accounts
+        try { store(await call('/auth/v1/verify', { type, email, token })); return; } catch (e) { last = e; if (e.status === 429) break; }
+      }
+      throw last;
+    },
+    // The signed-in person's saved details (name and age live in user_metadata).
+    async profile() {
+      const s = await session();
+      if (!s) return null;
+      const j = await call('/auth/v1/user', null, s.access_token, 'GET').catch(() => null);
+      return (j && j.user_metadata) || {};
+    },
+    async saveProfile(data) {
+      const s = await session();
+      if (!s) throw new Error('no session');
+      await call('/auth/v1/user', { data }, s.access_token, 'PUT');
     },
     async recover(email) {
       await call('/auth/v1/recover?redirect_to=' + encodeURIComponent(location.origin + '/login'), { email });

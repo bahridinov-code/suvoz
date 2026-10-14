@@ -228,3 +228,5 @@ textarea.field { min-height: 210px; resize: vertical; line-height: 1.55; }
 .sdlg .serr { color: #c0392b; font-size: 14px; }
 .sdlg .sthanks { color: var(--ink); font-size: 18px; font-weight: 600; margin: 28px 0 12px; }
 .sdlg .linkbtn { margin-top: 14px; }
+
+.field.otp { font-size: 22px; letter-spacing: 0.35em; text-align: center; font-weight: 600; }
