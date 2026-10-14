@@ -102,7 +102,7 @@
       <div class="plan hot"><span class="pop" data-i18n="price.pop"></span><h3 data-i18n="price.c.n"></h3><div class="amt"><s>$29</s> $16.99<small data-i18n="price.mo"></small></div><p class="disc" data-i18n="price.off.c"></p><p class="pm" data-i18n="price.c.m"></p><p data-i18n="price.c.d"></p><a class="btn small" href="/app?plan=creator" data-i18n="price.cta.buy"></a></div>
       <div class="plan"><h3 data-i18n="price.p.n"></h3><div class="amt"><s>$79</s> $49.99<small data-i18n="price.mo"></small></div><p class="disc" data-i18n="price.off.p"></p><p class="pm" data-i18n="price.p.m"></p><p data-i18n="price.p.d"></p><a class="btn small" href="/app?plan=pro" data-i18n="price.cta.buy"></a></div>
       <div class="plan"><h3 data-i18n="price.b.n"></h3><div class="amt">$499<small data-i18n="price.mo"></small></div><p class="pm" data-i18n="price.b.m"></p><p data-i18n="price.b.d"></p><a class="btn small" href="/app?plan=business" data-i18n="price.cta.buy"></a></div>
-      <div class="plan"><h3 data-i18n="price.x.n"></h3><div class="amt" data-i18n="price.x.big"></div><p class="pm" data-i18n="price.x.m"></p><p data-i18n="price.x.d"></p><a class="btn small ghost" href="mailto:sales@suvoz.io" data-i18n="price.cta.sales"></a></div>
+      <div class="plan"><h3 data-i18n="price.x.n"></h3><div class="amt" data-i18n="price.x.big"></div><p class="pm" data-i18n="price.x.m"></p><p data-i18n="price.x.d"></p><a id="salesBtn" class="btn small ghost" href="mailto:sales@suvoz.io" data-i18n="price.cta.sales"></a></div>
     </div>
     <p class="pnote" data-i18n="price.note"></p>
   </section>
@@ -132,6 +132,16 @@
   </div>
 </footer>
 
+<dialog id="salesDlg" class="sdlg"><h3 data-i18n="sales.title"></h3><p data-i18n="sales.sub"></p><div class="saddr">sales@suvoz.io</div>
+<div class="sbtns"><button type="button" class="btn small" id="sCopy" data-i18n="sales.copy"></button><a class="btn small ghost" target="_blank" rel="noopener" href="https://mail.google.com/mail/?view=cm&fs=1&to=sales@suvoz.io" data-i18n="sales.gmail"></a><a class="btn small ghost" href="mailto:sales@suvoz.io" data-i18n="sales.app"></a></div>
+<button type="button" class="linkbtn" id="sClose" data-i18n="sales.close"></button></dialog>
+<script>
+(function(){var d=document.getElementById('salesDlg'),b=document.getElementById('salesBtn');if(!d||!b)return;
+b.addEventListener('click',function(e){if(d.showModal){e.preventDefault();d.showModal();}});
+document.getElementById('sClose').onclick=function(){d.close();};
+d.addEventListener('click',function(e){if(e.target===d)d.close();});
+document.getElementById('sCopy').onclick=function(){var t=this,o=t.textContent;try{navigator.clipboard.writeText('sales@suvoz.io');t.textContent='\u2713';setTimeout(function(){t.textContent=o;},1500);}catch(x){}};})();
+</script>
 <script src="/i18n.js"></script>
 <script src="/i18n-auth.js"></script>
 <script src="/i18n-pricing.js"></script>

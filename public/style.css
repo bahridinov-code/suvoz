@@ -214,3 +214,12 @@ textarea.field { min-height: 210px; resize: vertical; line-height: 1.55; }
 .flinks { display: flex; gap: 22px; }
 .flinks a { color: var(--muted); }
 .flinks a:hover { color: var(--ink); }
+
+/* Sales contact popup */
+.sdlg { border: 0; border-radius: 18px; padding: 28px; max-width: 420px; width: calc(100% - 32px); box-shadow: 0 20px 60px rgba(0,0,0,.25); text-align: center; }
+.sdlg::backdrop { background: rgba(20,20,40,.45); }
+.sdlg h3 { font-size: 22px; letter-spacing: -0.02em; }
+.sdlg p { color: var(--muted); margin-top: 8px; }
+.sdlg .saddr { margin: 18px 0; font-weight: 700; font-size: 18px; user-select: all; }
+.sdlg .sbtns { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.sdlg .linkbtn { margin-top: 16px; }
