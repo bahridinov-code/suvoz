@@ -407,6 +407,8 @@ async function handleSales(req, res) {
   sendJson(res, 200, { ok: true });
 }
 
+// Stripe's own pages only speak some languages. Russian and English are covered; for Arabic, Tajik and Uzbek we use English.
+const stripeLocale = (lang) => (lang === 'ru' ? 'ru' : 'en');
 async function handleCheckout(req, res) {
   const who = await getUser(req);
   if (!who) return sendJson(res, 401, { code: 'auth_required', error: 'Please log in.' });
@@ -420,6 +422,7 @@ async function handleCheckout(req, res) {
     if (info.active) return sendJson(res, 409, { code: 'already_subscribed', error: 'You already have a plan.' });
     const params = {
       mode: 'subscription',
+      locale: stripeLocale(String(body.lang || '')),
       success_url: SITE_URL + '/app?paid=1',
       cancel_url: SITE_URL + '/#pricing',
       client_reference_id: who.user.id,
@@ -449,7 +452,9 @@ async function handlePortal(req, res) {
   try {
     const info = await admin('sub_info', { p_user: who.user.id });
     if (!info.customer) return sendJson(res, 404, { error: 'No plan found.' });
-    const s = await stripe('POST', '/v1/billing_portal/sessions', { customer: info.customer, return_url: SITE_URL + '/app' });
+    let body = {};
+    try { body = await readJson(req); } catch (e) {}
+    const s = await stripe('POST', '/v1/billing_portal/sessions', { customer: info.customer, return_url: SITE_URL + '/app', locale: stripeLocale(String((body && body.lang) || '')) });
     return sendJson(res, 200, { url: s.url });
   } catch (e) {
     console.error(e.message);
