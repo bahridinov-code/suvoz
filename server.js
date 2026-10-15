@@ -183,7 +183,13 @@ function rateLimited(ip) {
 }
 
 // Script format: one line per turn, "Name: text". Lines without a name
-// continue the previous turn.
+// continue the previous turn. Text that comes before any name (or a text with
+// no names at all) is read by one narrator voice.
+// KEEP IN SYNC with parse() in public/app.js (same rules, same character count).
+const NARRATOR = 'Narrator';
+function looksLikeName(s) {
+  return !/[!?,;"“”]/.test(s) && s.split(/\s+/).length <= 3;
+}
 function parseScript(text) {
   const turns = [];
   const LINE = /^\s*([^:：\n]{1,30}?)\s*[:：]\s*(.+)$/;
@@ -191,8 +197,14 @@ function parseScript(text) {
     const line = raw.trim();
     if (!line) continue;
     const m = line.match(LINE);
-    if (m) turns.push({ speaker: m[1].trim(), text: m[2].trim() });
-    else if (turns.length) turns[turns.length - 1].text += ' ' + line;
+    if (m && looksLikeName(m[1].trim())) {
+      turns.push({ speaker: m[1].trim(), text: m[2].trim() });
+    } else if (!turns.length) {
+      turns.push({ speaker: NARRATOR, text: line, implicit: true });
+    } else {
+      const last = turns[turns.length - 1];
+      last.text += (last.implicit ? '\n' : ' ') + line;
+    }
   }
   return turns;
 }
