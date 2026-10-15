@@ -12,19 +12,38 @@ let trialChars = null;       // free-trial characters left (null when not using 
 
 // KEEP IN SYNC with parseScript() in server.js (same rules, same character count).
 // Text before any "Name:" (or a text with no names) is read by one narrator voice.
+// "Sound: ..." lines are sound effects.
 const NARRATOR = 'Narrator';
+// "Sound: door slams, 3s" is a sound effect (not a speaker). 15 characters of balance per second.
+const SFX_WORDS = new Set(['sound', 'sfx', 'effect', 'звук', 'эффект', 'صوت', 'مؤثر', 'садо', 'овоз', 'tovush', 'ovoz', 'effekt']);
+const SFX_MAX_SECONDS = 10, SFX_DEFAULT_SECONDS = 3, SFX_CHARS_PER_SECOND = 15;
 function looksLikeName(s) {
   return !/[!?,;"“”]/.test(s) && s.split(/\s+/).length <= 3;
 }
+function parseSfx(rest) {
+  let text = rest.trim(), seconds = SFX_DEFAULT_SECONDS;
+  const m = text.match(/^(.*?)[\s,;]+(\d+(?:[.,]\d+)?)\s*(?:seconds|second|secs|sec|sek|s|секунды|секунда|секунд|сек|с|ثانية|ثواني|ثوان|ث)\.?$/i);
+  if (m && m[1].trim()) { text = m[1].trim(); seconds = parseFloat(m[2].replace(',', '.')); }
+  seconds = Math.round(Math.min(SFX_MAX_SECONDS, Math.max(0.5, seconds || SFX_DEFAULT_SECONDS)) * 10) / 10;
+  return { text: text.slice(0, 200), seconds };
+}
+function turnChars(t) {
+  return t.sfx ? Math.ceil(t.seconds * SFX_CHARS_PER_SECOND) : t.text.length;
+}
 function parse(text) {
   const turns = [];
+  const LINE = /^\s*([^:：\n]{1,30}?)\s*[:：]\s*(.+)$/;
   for (const raw of text.split(/\r?\n/)) {
     const line = raw.trim();
     if (!line) continue;
     const m = line.match(LINE);
-    if (m && looksLikeName(m[1].trim())) {
-      turns.push({ speaker: m[1].trim(), text: m[2].trim() });
-    } else if (!turns.length) {
+    const name = m ? m[1].trim() : '';
+    if (m && SFX_WORDS.has(name.toLowerCase())) {
+      const e = parseSfx(m[2]);
+      turns.push({ speaker: '', sfx: true, text: e.text, seconds: e.seconds });
+    } else if (m && looksLikeName(name)) {
+      turns.push({ speaker: name, text: m[2].trim() });
+    } else if (!turns.length || turns[turns.length - 1].sfx) {
       turns.push({ speaker: NARRATOR, text: line, implicit: true });
     } else {
       const last = turns[turns.length - 1];
@@ -95,12 +114,12 @@ async function loadMe() {
 
 function refresh() {
   const turns = parse($('script').value);
-  const chars = turns.reduce((n, x) => n + x.text.length, 0);
+  const chars = turns.reduce((n, x) => n + turnChars(x), 0);
   $('count').textContent = chars;
   const limit = trialChars === null ? config.maxChars : Math.min(config.maxChars, trialChars);
   $('max').textContent = limit;
   $('meta').className = 'meta' + (chars > limit ? ' over' : '');
-  const names = [...new Set(turns.map((x) => x.speaker))];
+  const names = [...new Set(turns.filter((x) => !x.sfx).map((x) => x.speaker))];
   const key = names.join('|') + '#' + voices.length + '#' + currentLang;
   if (key !== lastKey) { lastKey = key; renderSpeakers(names); }
   const ok = turns.length && voices.length && chars <= limit && names.length <= config.maxSpeakers;
@@ -170,7 +189,7 @@ async function loadVoices() {
 
 async function generate() {
   const turns = parse($('script').value);
-  const names = [...new Set(turns.map((x) => x.speaker))];
+  const names = [...new Set(turns.filter((x) => !x.sfx).map((x) => x.speaker))];
   const map = {};
   names.forEach((n) => (map[n] = choice[n]));
   $('go').disabled = true;
