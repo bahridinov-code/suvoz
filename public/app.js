@@ -10,14 +10,26 @@ let statusKey = null;
 let plan = 'free';
 let trialChars = null;       // free-trial characters left (null when not using accounts)        // remembers which message is showing so it can be re-translated
 
+// KEEP IN SYNC with parseScript() in server.js (same rules, same character count).
+// Text before any "Name:" (or a text with no names) is read by one narrator voice.
+const NARRATOR = 'Narrator';
+function looksLikeName(s) {
+  return !/[!?,;"“”]/.test(s) && s.split(/\s+/).length <= 3;
+}
 function parse(text) {
   const turns = [];
   for (const raw of text.split(/\r?\n/)) {
     const line = raw.trim();
     if (!line) continue;
     const m = line.match(LINE);
-    if (m) turns.push({ speaker: m[1].trim(), text: m[2].trim() });
-    else if (turns.length) turns[turns.length - 1].text += ' ' + line;
+    if (m && looksLikeName(m[1].trim())) {
+      turns.push({ speaker: m[1].trim(), text: m[2].trim() });
+    } else if (!turns.length) {
+      turns.push({ speaker: NARRATOR, text: line, implicit: true });
+    } else {
+      const last = turns[turns.length - 1];
+      last.text += (last.implicit ? '\n' : ' ') + line;
+    }
   }
   return turns;
 }
@@ -116,7 +128,7 @@ function renderSpeakers(names) {
     who.style.setProperty('--c', COLORS[i % COLORS.length]);
     const dot = document.createElement('i');
     const nm = document.createElement('span');
-    nm.textContent = name;
+    nm.textContent = name === NARRATOR ? t('app.narrator') : name;
     who.append(dot, nm);
     const sel = document.createElement('select');
     sel.className = 'field';
