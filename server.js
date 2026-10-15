@@ -189,8 +189,21 @@ function rateLimited(ip) {
 // no names at all) is read by one narrator voice.
 // KEEP IN SYNC with parse() in public/app.js (same rules, same character count).
 const NARRATOR = 'Narrator';
+// "Sound: door slams, 3s" is a sound effect (not a speaker). 15 characters of balance per second.
+const SFX_WORDS = new Set(['sound', 'sfx', 'effect', 'звук', 'эффект', 'صوت', 'مؤثر', 'садо', 'овоз', 'tovush', 'ovoz', 'effekt']);
+const SFX_MAX_SECONDS = 10, SFX_DEFAULT_SECONDS = 3, SFX_CHARS_PER_SECOND = 15;
 function looksLikeName(s) {
   return !/[!?,;"“”]/.test(s) && s.split(/\s+/).length <= 3;
+}
+function parseSfx(rest) {
+  let text = rest.trim(), seconds = SFX_DEFAULT_SECONDS;
+  const m = text.match(/^(.*?)[\s,;]+(\d+(?:[.,]\d+)?)\s*(?:seconds|second|secs|sec|sek|s|секунды|секунда|секунд|сек|с|ثانية|ثواني|ثوان|ث)\.?$/i);
+  if (m && m[1].trim()) { text = m[1].trim(); seconds = parseFloat(m[2].replace(',', '.')); }
+  seconds = Math.round(Math.min(SFX_MAX_SECONDS, Math.max(0.5, seconds || SFX_DEFAULT_SECONDS)) * 10) / 10;
+  return { text: text.slice(0, 200), seconds };
+}
+function turnChars(t) {
+  return t.sfx ? Math.ceil(t.seconds * SFX_CHARS_PER_SECOND) : t.text.length;
 }
 function parseScript(text) {
   const turns = [];
@@ -199,9 +212,13 @@ function parseScript(text) {
     const line = raw.trim();
     if (!line) continue;
     const m = line.match(LINE);
-    if (m && looksLikeName(m[1].trim())) {
-      turns.push({ speaker: m[1].trim(), text: m[2].trim() });
-    } else if (!turns.length) {
+    const name = m ? m[1].trim() : '';
+    if (m && SFX_WORDS.has(name.toLowerCase())) {
+      const e = parseSfx(m[2]);
+      turns.push({ speaker: '', sfx: true, text: e.text, seconds: e.seconds });
+    } else if (m && looksLikeName(name)) {
+      turns.push({ speaker: name, text: m[2].trim() });
+    } else if (!turns.length || turns[turns.length - 1].sfx) {
       turns.push({ speaker: NARRATOR, text: line, implicit: true });
     } else {
       const last = turns[turns.length - 1];
@@ -265,11 +282,11 @@ async function handleGenerate(req, res) {
   if (turns.length > MAX_TURNS) {
     return sendJson(res, 400, { error: `Too many lines (max ${MAX_TURNS}).` });
   }
-  const speakers = [...new Set(turns.map((t) => t.speaker))];
+  const speakers = [...new Set(turns.filter((t) => !t.sfx).map((t) => t.speaker))];
   if (speakers.length > MAX_SPEAKERS) {
     return sendJson(res, 400, { error: `Too many speakers (max ${MAX_SPEAKERS}).` });
   }
-  const chars = turns.reduce((n, t) => n + t.text.length, 0);
+  const chars = turns.reduce((n, t) => n + turnChars(t), 0);
   if (chars > MAX_CHARS) {
     return sendJson(res, 400, { error: `Script is too long (${chars} characters, max ${MAX_CHARS}).` });
   }
@@ -300,21 +317,24 @@ async function handleGenerate(req, res) {
   try {
     const parts = [];
     for (const t of turns) {
-      const r = await fetch(
-        `${BASE}/v1/text-to-speech/${voiceMap[t.speaker]}?output_format=mp3_44100_128`,
-        {
-          method: 'POST',
-          headers: {
-            'xi-api-key': API_KEY,
-            'Content-Type': 'application/json',
-            Accept: 'audio/mpeg',
-          },
-          body: JSON.stringify({ text: t.text, model_id: MODEL_ID }),
-        }
-      );
+      const headers = { 'xi-api-key': API_KEY, 'Content-Type': 'application/json', Accept: 'audio/mpeg' };
+      const r = t.sfx
+        ? await fetch(`${BASE}/v1/sound-generation?output_format=mp3_44100_128`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ text: t.text, duration_seconds: t.seconds }),
+          })
+        : await fetch(`${BASE}/v1/text-to-speech/${voiceMap[t.speaker]}?output_format=mp3_44100_128`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ text: t.text, model_id: MODEL_ID }),
+          });
       if (!r.ok) {
         const errBody = await r.text().catch(() => '');
-        console.error('ElevenLabs error', r.status, errBody.slice(0, 300));
+        console.error('ElevenLabs error', t.sfx ? '(sound effect)' : '', r.status, errBody.slice(0, 300));
+        if (t.sfx && (r.status === 400 || r.status === 422)) {
+          return sendJson(res, 400, { code: 'sound_failed', error: 'That sound could not be created. Try describing it differently.' });
+        }
         const msg =
           r.status === 401
             ? 'Server API key was rejected by ElevenLabs.'
