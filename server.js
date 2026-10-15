@@ -257,6 +257,45 @@ async function handleVoices(req, res) {
   }
 }
 
+
+// ---- Joining audio pieces ----
+// Voice pieces and sound-effect pieces can differ (mono/stereo, headers), and some browsers stop
+// playing at the join. When a sound effect is present we re-encode everything into one clean MP3.
+const { spawn } = require('child_process');
+const os = require('os');
+const fsp = require('fs/promises');
+const pathMod = require('path');
+let FFMPEG = 'ffmpeg';
+try { FFMPEG = require('ffmpeg-static') || 'ffmpeg'; } catch (e) {}
+async function joinMp3(parts) {
+  if (parts.length < 2) return parts[0];
+  const dir = await fsp.mkdtemp(pathMod.join(os.tmpdir(), 'suvoz-'));
+  try {
+    const files = [];
+    for (let i = 0; i < parts.length; i++) {
+      const f = pathMod.join(dir, 'p' + i + '.mp3');
+      await fsp.writeFile(f, parts[i]);
+      files.push(f);
+    }
+    const out = pathMod.join(dir, 'out.mp3');
+    const args = ['-y', '-v', 'error'];
+    files.forEach((f) => args.push('-i', f));
+    const labels = files.map((_, i) => `[${i}:a]aresample=44100,aformat=channel_layouts=mono[a${i}];`).join('');
+    const ins = files.map((_, i) => `[a${i}]`).join('');
+    args.push('-filter_complex', `${labels}${ins}concat=n=${files.length}:v=0:a=1[o]`, '-map', '[o]', '-c:a', 'libmp3lame', '-b:a', '128k', out);
+    await new Promise((resolve, reject) => {
+      const p = spawn(FFMPEG, args, { stdio: ['ignore', 'ignore', 'pipe'] });
+      let err = '';
+      p.stderr.on('data', (d) => { err += d; });
+      p.on('error', reject);
+      p.on('close', (c) => (c === 0 ? resolve() : reject(new Error('ffmpeg ' + c + ' ' + err.slice(0, 200)))));
+    });
+    return await fsp.readFile(out);
+  } finally {
+    fsp.rm(dir, { recursive: true, force: true }).catch(() => {});
+  }
+}
+
 async function handleGenerate(req, res) {
   const who = await gate(req, res);
   if (!who) return;
@@ -349,7 +388,11 @@ async function handleGenerate(req, res) {
     }
     budgetUsed();
     budget.used += chars;
-    const audio = Buffer.concat(parts);
+    let audio;
+    if (turns.some((t) => t.sfx)) {
+      try { audio = await joinMp3(parts); }
+      catch (e) { console.error('join failed, using plain join:', e.message); audio = Buffer.concat(parts); }
+    } else audio = Buffer.concat(parts);
     res.writeHead(200, {
       'Content-Type': 'audio/mpeg',
       'Content-Length': audio.length,

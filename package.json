@@ -7,6 +7,9 @@
     "start": "node server.js",
     "dev": "node --env-file=.env server.js"
   },
+  "dependencies": {
+    "ffmpeg-static": "^5.2.0"
+  },
   "engines": {
     "node": ">=20"
   }
