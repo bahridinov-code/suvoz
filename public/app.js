@@ -286,6 +286,11 @@ async function ensureProfile() {
   rememberPlan();
   try { config = await (await fetch('/api/config')).json(); } catch (e) {}
   $('max').textContent = config.maxChars;
+  $('historyLink').hidden = !config.historyOn;
+  try {   // "Use this text again" from the History page
+    const again = sessionStorage.getItem('suvoz_reuse');
+    if (again) { sessionStorage.removeItem('suvoz_reuse'); $('script').value = again; edited = true; }
+  } catch (e) {}
   if (config.authOn) {
     if (/type=recovery/.test(location.hash)) return location.replace('/login' + location.hash);
     Auth.takeHash();   // the email confirmation link brings the login in the address
