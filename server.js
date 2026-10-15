@@ -205,6 +205,32 @@ function parseSfx(rest) {
 function turnChars(t) {
   return t.sfx ? Math.ceil(t.seconds * SFX_CHARS_PER_SECOND) : t.text.length;
 }
+function expandInline(turns) {
+  // A sound written in (brackets) inside a sentence becomes its own sound turn at that spot.
+  const out = [];
+  for (const t of turns) {
+    if (t.sfx || !t.text.includes('(')) { out.push(t); continue; }
+    let pos = 0;
+    const re = /\(([^()]{1,200})\)/g;
+    let m;
+    const pushText = (s) => {
+      s = s.trim();
+      if (s) out.push(t.implicit ? { speaker: t.speaker, text: s, implicit: true } : { speaker: t.speaker, text: s });
+    };
+    while ((m = re.exec(t.text))) {
+      let inner = m[1].trim();
+      const k = inner.match(/^([^:：]{1,12})[:：]\s*(.+)$/);
+      if (k && SFX_WORDS.has(k[1].trim().toLowerCase())) inner = k[2];
+      if (!inner) continue;
+      pushText(t.text.slice(pos, m.index));
+      const e = parseSfx(inner);
+      out.push({ speaker: '', sfx: true, text: e.text, seconds: e.seconds });
+      pos = m.index + m[0].length;
+    }
+    pushText(t.text.slice(pos));
+  }
+  return out;
+}
 function parseScript(text) {
   const turns = [];
   const LINE = /^\s*([^:：\n]{1,30}?)\s*[:：]\s*(.+)$/;
@@ -225,7 +251,7 @@ function parseScript(text) {
       last.text += (last.implicit ? '\n' : ' ') + line;
     }
   }
-  return turns;
+  return expandInline(turns);
 }
 
 // ---- Routes ----
