@@ -16,6 +16,7 @@ const SUPABASE_URL = (process.env.SUPABASE_URL || '').replace(/\/$/, '');
 const SUPABASE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY || '';   // the public key, safe in the browser
 const AUTH_ON = !!(SUPABASE_URL && SUPABASE_KEY);
 const MAX_TURNS = 60;
+const HISTORY_DAYS = 30;                       // how long finished audios are kept
 const MAX_SPEAKERS = 4;
 const PORT = process.env.PORT || 3000;
 
@@ -30,6 +31,7 @@ const MAIL_FROM = process.env.MAIL_FROM || 'Suvoz <support@suvoz.io>';
 const RESEND_BASE = (process.env.RESEND_BASE || 'https://api.resend.com').replace(/\/$/, '');
 const SALES_TO = process.env.SALES_TO || 'sales@suvoz.io';
 const PAY_ON = !!(STRIPE_KEY && STRIPE_WEBHOOK_SECRET && SUPABASE_SECRET && SUPABASE_URL);
+const HISTORY_ON = !!(AUTH_ON && SUPABASE_SECRET);   // saves each user's audios (needs supabase-history.sql)
 // Prices in US cents. firstOff = amount taken off the first month only (new customers).
 const PLANS = {
   starter:  { name: 'Suvoz Starter',  minutes: 30,   cents: 900,   firstOff: 450 },
@@ -45,7 +47,7 @@ const TYPES = {
   '.png': 'image/png', '.jpg': 'image/jpeg', '.ico': 'image/x-icon',
   '.mp3': 'audio/mpeg', '.woff2': 'font/woff2', '.txt': 'text/plain; charset=utf-8',
 };
-const PAGES = { '/': 'index.html', '/app': 'app.html', '/login': 'login.html', '/terms': 'terms.html', '/privacy': 'privacy.html', '/refunds': 'refunds.html' };
+const PAGES = { '/': 'index.html', '/app': 'app.html', '/login': 'login.html', '/terms': 'terms.html', '/privacy': 'privacy.html', '/refunds': 'refunds.html', '/history': 'history.html' };
 
 // Serves files from /public only. Blocks anything outside that folder.
 function serveStatic(req, res, pathname) {
@@ -334,6 +336,10 @@ async function handleGenerate(req, res) {
       'Cache-Control': 'no-store',
     });
     res.end(audio);
+    // Save a copy in the user's history. Never blocks or breaks the answer.
+    if (HISTORY_ON && who.user && who.user.id) {
+      saveHistory(who.user.id, script, chars, audio).catch((e) => console.error('history save failed:', e.message));
+    }
   } catch (e) {
     console.error(e.message);
     sendJson(res, 502, { error: 'Audio generation failed. Please try again.' });
@@ -366,8 +372,98 @@ async function admin(fn, args) {
   if (SUPABASE_SECRET.startsWith('eyJ')) headers.Authorization = 'Bearer ' + SUPABASE_SECRET;
   const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, { method: 'POST', headers, body: JSON.stringify(args || {}) });
   if (!r.ok) throw new Error('admin ' + fn + ' ' + r.status + ' ' + (await r.text().catch(() => '')).slice(0, 200));
-  return r.json();
+  const txt = await r.text();          // functions that return nothing may answer with an empty body
+  return txt ? JSON.parse(txt) : null;
 }
+
+// ---- History (saved audios) ----
+function sbAdminHeaders(extra) {
+  const h = { apikey: SUPABASE_SECRET, ...(extra || {}) };
+  if (SUPABASE_SECRET.startsWith('eyJ')) h.Authorization = 'Bearer ' + SUPABASE_SECRET;
+  return h;
+}
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+async function storageDelete(paths) {
+  if (!paths.length) return;
+  const r = await fetch(`${SUPABASE_URL}/storage/v1/object/audio`, {
+    method: 'DELETE',
+    headers: sbAdminHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ prefixes: paths }),
+  });
+  if (!r.ok) throw new Error('storage delete ' + r.status + ' ' + (await r.text().catch(() => '')).slice(0, 200));
+}
+async function saveHistory(userId, script, chars, audio) {
+  const id = crypto.randomUUID();
+  const file = `${userId}/${id}.mp3`;
+  const up = await fetch(`${SUPABASE_URL}/storage/v1/object/audio/${file}`, {
+    method: 'POST',
+    headers: sbAdminHeaders({ 'Content-Type': 'audio/mpeg' }),
+    body: audio,
+  });
+  if (!up.ok) throw new Error('storage upload ' + up.status + ' ' + (await up.text().catch(() => '')).slice(0, 200));
+  try {
+    await admin('history_add', { p_id: id, p_user: userId, p_script: script.slice(0, 12000), p_chars: chars, p_size: audio.length, p_path: file });
+  } catch (e) {
+    await storageDelete([file]).catch(() => {});   // do not leave a file without a row
+    throw e;
+  }
+}
+async function handleHistoryList(req, res) {
+  const who = await gate(req, res);
+  if (!who) return;
+  if (!HISTORY_ON) return sendJson(res, 200, { enabled: false, items: [] });
+  try {
+    const rows = await admin('history_list', { p_user: who.user.id, p_limit: 100 });
+    sendJson(res, 200, { enabled: true, days: HISTORY_DAYS, items: rows });
+  } catch (e) {
+    console.error(e.message);
+    sendJson(res, 502, { error: 'Could not load your history.' });
+  }
+}
+async function handleHistoryAudio(req, res, url) {
+  const who = await gate(req, res);
+  if (!who) return;
+  const id = url.searchParams.get('id') || '';
+  if (!HISTORY_ON || !UUID_RE.test(id)) return sendJson(res, 404, { error: 'Not found.' });
+  try {
+    const file = await admin('history_path', { p_user: who.user.id, p_id: id });   // only the owner gets a path
+    if (!file) return sendJson(res, 404, { error: 'Not found.' });
+    const r = await fetch(`${SUPABASE_URL}/storage/v1/object/audio/${file}`, { headers: sbAdminHeaders() });
+    if (!r.ok) throw new Error('storage read ' + r.status);
+    const audio = Buffer.from(await r.arrayBuffer());
+    res.writeHead(200, { 'Content-Type': 'audio/mpeg', 'Content-Length': audio.length, 'Cache-Control': 'no-store' });
+    res.end(audio);
+  } catch (e) {
+    console.error(e.message);
+    sendJson(res, 502, { error: 'Could not load this audio.' });
+  }
+}
+async function handleHistoryDelete(req, res, url) {
+  const who = await gate(req, res);
+  if (!who) return;
+  const id = url.searchParams.get('id') || '';
+  if (!HISTORY_ON || !UUID_RE.test(id)) return sendJson(res, 404, { error: 'Not found.' });
+  try {
+    const file = await admin('history_delete', { p_user: who.user.id, p_id: id });   // removes the row, returns the file name
+    if (file) await storageDelete([file]).catch((e) => console.error(e.message));
+    sendJson(res, 200, { ok: true });
+  } catch (e) {
+    console.error(e.message);
+    sendJson(res, 502, { error: 'Could not delete this item.' });
+  }
+}
+// Removes audios older than HISTORY_DAYS (files first, then the rows).
+async function expireHistory() {
+  for (let i = 0; i < 5; i++) {
+    const rows = await admin('history_expired', { p_days: HISTORY_DAYS, p_limit: 200 });
+    if (!rows.length) return;
+    await storageDelete(rows.map((r) => r.audio_path));
+    await admin('history_purge', { p_ids: rows.map((r) => r.id) });
+    console.log('history: removed', rows.length, 'old items');
+    if (rows.length < 200) return;
+  }
+}
+
 function readRaw(req, limit = 1024 * 1024) {
   return new Promise((resolve, reject) => {
     const chunks = []; let size = 0;
@@ -567,10 +663,16 @@ const server = http.createServer(async (req, res) => {
         maxSpeakers: MAX_SPEAKERS,
         configured: !!API_KEY,
         payOn: PAY_ON,
+        historyOn: HISTORY_ON,
       });
     }
     if (req.method === 'GET' && p === '/api/voices') return await handleVoices(req, res);
     if (req.method === 'POST' && p === '/api/generate') return await handleGenerate(req, res);
+    if (p === '/api/history') {
+      if (req.method === 'GET') return await handleHistoryList(req, res);
+      if (req.method === 'DELETE') return await handleHistoryDelete(req, res, new URL(req.url, 'http://localhost'));
+    }
+    if (req.method === 'GET' && p === '/api/history/audio') return await handleHistoryAudio(req, res, new URL(req.url, 'http://localhost'));
     if (req.method === 'POST' && p === '/api/sales') return await handleSales(req, res);
     if (req.method === 'POST' && p === '/api/checkout') return await handleCheckout(req, res);
     if (req.method === 'POST' && p === '/api/portal') return await handlePortal(req, res);
@@ -585,3 +687,8 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => console.log(`Suvoz running on port ${PORT}`));
+if (HISTORY_ON) {
+  const sweep = () => expireHistory().catch((e) => console.error('history cleanup failed:', e.message));
+  setTimeout(sweep, parseInt(process.env.HISTORY_SWEEP_FIRST_MS || '60000', 10));
+  setInterval(sweep, 6 * 60 * 60 * 1000);
+}
