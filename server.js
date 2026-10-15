@@ -364,6 +364,13 @@ async function handleGenerate(req, res) {
   if (budgetUsed() + chars > DAILY_CHAR_LIMIT) {
     return sendJson(res, 429, { code: 'daily_limit', error: 'Daily limit reached. Please try again tomorrow.' });
   }
+  let charged = false;
+  const refund = async () => {   // give the minutes back if the audio could not be made
+    if (!charged) return;
+    charged = false;
+    try { if (SUPABASE_SECRET && who.user && who.user.id) await admin('credits_refund', { p_user: who.user.id, n: chars }); }
+    catch (e) { console.error('refund failed:', e.message); }
+  };
   if (AUTH_ON) {
     // Paid minutes first, otherwise the free trial.
     try {
@@ -373,6 +380,7 @@ async function handleGenerate(req, res) {
         if (me && me.plan !== 'free') return sendJson(res, 402, { code: 'credits_over', error: 'You have used all your minutes.' });
         return sendJson(res, 402, { code: 'trial_over', error: 'Your free trial is used up.' });
       }
+      charged = true;
     } catch (e) {
       console.error(e.message);
       return sendJson(res, 502, { error: 'Could not check your minutes. Please try again.' });
@@ -397,6 +405,7 @@ async function handleGenerate(req, res) {
       if (!r.ok) {
         const errBody = await r.text().catch(() => '');
         console.error('ElevenLabs error', t.sfx ? '(sound effect)' : '', r.status, errBody.slice(0, 300));
+        await refund();
         if (t.sfx && (r.status === 400 || r.status === 422)) {
           return sendJson(res, 400, { code: 'sound_failed', error: 'That sound could not be created. Try describing it differently.' });
         }
@@ -431,6 +440,7 @@ async function handleGenerate(req, res) {
     }
   } catch (e) {
     console.error(e.message);
+    await refund();
     sendJson(res, 502, { error: 'Audio generation failed. Please try again.' });
   }
 }
