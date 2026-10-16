@@ -245,3 +245,26 @@ textarea.field { min-height: 210px; resize: vertical; line-height: 1.55; }
 .pbtn.danger { border-color: var(--err); color: var(--err); }
 .herr { color: var(--err); font-size: 14px; margin-top: 8px; }
 a.pbtn { text-decoration: none; }
+
+/* Start page */
+.hub h1 { text-align: center; }
+.hub .pill { display: block; width: fit-content; margin: 18px auto 0; }
+.tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 34px; }
+.tile { position: relative; display: flex; flex-direction: column; gap: 14px; padding: 22px; background: var(--white); border: 1px solid var(--line); border-radius: var(--radius); color: var(--ink); text-decoration: none; transition: border-color .15s, transform .15s, box-shadow .15s; }
+a.tile:hover { border-color: var(--indigo); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(59, 63, 224, .10); }
+.ticon { width: 50px; height: 50px; border-radius: 14px; display: grid; place-items: center; background: var(--indigo-soft); color: var(--indigo); }
+.c-teal .ticon { background: #e3f6f5; color: var(--teal); }
+.c-amber .ticon { background: #fbefe0; color: var(--amber); }
+.c-rose .ticon { background: #fbe8ef; color: var(--rose); }
+.c-gray .ticon { background: #efeff2; color: var(--muted); }
+.tbody strong { display: block; font-size: 17px; font-weight: 600; margin-bottom: 4px; }
+.tbody span { color: var(--muted); font-size: 14px; line-height: 1.45; }
+.tile.soon { opacity: .6; background: transparent; border-style: dashed; }
+.tile.soon .ticon { background: #efeff2; color: var(--muted); }
+.badge { position: absolute; top: 16px; inset-inline-end: 16px; font-style: normal; font-size: 12px; font-weight: 600; background: var(--indigo-soft); color: var(--indigo-deep); padding: 3px 10px; border-radius: 999px; }
+.hub-note { text-align: center; margin-top: 28px; }
+@media (max-width: 760px) { .tiles { grid-template-columns: 1fr 1fr; gap: 12px; } .tile { padding: 16px; } }
+@media (max-width: 460px) { .tiles { grid-template-columns: 1fr; } .tile { flex-direction: row; align-items: center; } }
+.ticon { flex: none; }
+@media (max-width: 520px) { .top .who-mail { display: none; } .top-right { gap: 6px; } .top-right .pbtn { padding: 8px 12px; white-space: nowrap; } .top-right .lang { max-width: 92px; } }
+@media (max-width: 440px) { .top .logo [data-brand] { display: none; } }

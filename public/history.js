@@ -80,7 +80,7 @@ function card(it) {
     }),
     button('hist.reuse', () => {
       try { sessionStorage.setItem('suvoz_reuse', it.script); } catch (e) {}
-      location.href = '/app';
+      location.href = '/dialogue';
     }),
     button('hist.delete', async (b) => {
       if (!b.dataset.sure) {   // first tap asks, second tap deletes
@@ -145,7 +145,7 @@ document.addEventListener('langchange', render);
   initLang();
   let config = {};
   try { config = await (await fetch('/api/config')).json(); } catch (e) {}
-  if (!config.authOn) return location.replace('/app');
+  if (!config.authOn) return location.replace('/dialogue');
   if (!(await Auth.session())) return location.replace('/login');
   $('logout').hidden = false;
   $('logout').onclick = async () => { await Auth.signOut(); location.replace('/'); };
