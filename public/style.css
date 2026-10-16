@@ -287,3 +287,19 @@ a.tile:hover { border-color: var(--indigo); transform: translateY(-2px); box-sha
 .consent { display: flex; gap: 10px; align-items: flex-start; margin-top: 14px; font-size: 14px; line-height: 1.5; cursor: pointer; }
 .consent input { margin-top: 4px; flex: none; }
 #vname { margin-top: 14px; }
+
+/* Dubbing */
+.dub-h { margin-top: 22px; }
+.opt { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border: 1px solid var(--line); border-radius: 14px; margin-top: 8px; cursor: pointer; }
+.opt:has(input:checked) { border-color: var(--indigo); background: var(--indigo-soft); }
+.opt input { margin-top: 4px; flex: none; }
+.opt strong { display: block; }
+.opt small { display: block; color: var(--muted); font-size: 13px; margin-top: 2px; }
+#costInfo { margin-top: 14px; font-weight: 600; }
+.job { border-top: 1px solid var(--line); padding: 14px 0; }
+.job:first-child { border-top: 0; }
+.job .jh { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 14px; }
+.job .jh span:last-child { color: var(--muted); }
+.job .jtext { white-space: pre-wrap; background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin-top: 10px; font-size: 14px; max-height: 220px; overflow: auto; }
+.job audio { width: 100%; margin-top: 10px; }
+.job .hact { margin-top: 10px; }

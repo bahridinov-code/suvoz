@@ -93,6 +93,7 @@ document.addEventListener('langchange', render);
   try { config = await (await fetch('/api/config')).json(); } catch (e) {}
   if (!config.authOn) return location.replace('/dialogue');
   historyOn = !!config.historyOn;
+  if (config.dubOn) { const u = TOOLS.find((x) => x.id === 'dub'); u.soon = false; u.href = '/dubbing'; u.color = 'amber'; }
   if (config.designOn) { const d = TOOLS.find((x) => x.id === 'design'); d.soon = false; d.href = '/voice-design'; d.color = 'indigo'; const c = TOOLS.find((x) => x.id === 'clone'); c.soon = false; c.href = '/voice-clone'; c.color = 'teal'; }
   $('historyLink').hidden = !historyOn;
   if (!(await Auth.session())) return location.replace('/login');
