@@ -1092,7 +1092,7 @@ async function handleVoiceClone(req, res) {
 
 
 // ---- Dubbing ----
-const DUB_ON = !!API_KEY && AUTH_ON && !!SUPABASE_SECRET && HISTORY_ON;
+const DUB_ON = !!API_KEY && AUTH_ON && !!SUPABASE_SECRET && HISTORY_ON && process.env.DUB_ENABLED === "1";   // closed to everyone until DUB_ENABLED=1 is set in Render
 const DUB_MAX_BYTES = Number(process.env.DUB_MAX_MB || 80) * 1024 * 1024;
 const DUB_MIN_SECONDS = 10, DUB_MAX_SECONDS = 600;            // longest file: 10 minutes
 const DUB_CONCURRENCY = 3;                                    // ElevenLabs allows 3 dubs at once
