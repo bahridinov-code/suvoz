@@ -1,6 +1,7 @@
 // Text for translation. Loaded after i18n.js.
 // Tajik (tg) and Uzbek (uz) texts should be checked by a native speaker before launch.
 Object.assign(T.en, {
+  'stt.translate': 'Translate this',
   'tr.title': 'Translate text',
   'tr.sub': 'Paste your text and get it in another language. Speaker names (like "Anna:") and sound or emotion tags stay as they are, so you can use the result in Dialogue.',
   'tr.ph': 'Paste or type your text here',
@@ -15,6 +16,7 @@ Object.assign(T.en, {
   'err.tr_failed': 'Translation failed. Please try again.',
 });
 Object.assign(T.ar, {
+  'stt.translate': 'ترجمة هذا النص',
   'tr.title': 'ترجمة النص',
   'tr.sub': 'الصق نصك واحصل عليه بلغة أخرى. تبقى أسماء المتحدثين (مثل "Anna:") ووسوم الصوت أو العاطفة كما هي، فيمكنك استخدام النتيجة في الحوار.',
   'tr.ph': 'الصق نصك هنا أو اكتبه',
@@ -29,6 +31,7 @@ Object.assign(T.ar, {
   'err.tr_failed': 'فشلت الترجمة. حاول مرة أخرى.',
 });
 Object.assign(T.ru, {
+  'stt.translate': 'Перевести этот текст',
   'tr.title': 'Перевод текста',
   'tr.sub': 'Вставьте текст и получите его на другом языке. Имена говорящих (например, «Anna:») и теги звуков или эмоций остаются как есть, так что результат можно использовать в диалоге.',
   'tr.ph': 'Вставьте или введите текст',
@@ -43,6 +46,7 @@ Object.assign(T.ru, {
   'err.tr_failed': 'Не удалось перевести. Попробуйте ещё раз.',
 });
 Object.assign(T.tg, {
+  'stt.translate': 'Ин матнро тарҷума кунед',
   'tr.title': 'Тарҷумаи матн',
   'tr.sub': 'Матнро гузоред ва онро ба забони дигар гиред. Номҳои гӯяндагон (масалан, «Anna:») ва тегҳои садо ё эҳсосот бетағйир мемонанд, бинобар ин натиҷаро дар Муколама истифода бурдан мумкин аст.',
   'tr.ph': 'Матнро ин ҷо гузоред ё нависед',
@@ -57,6 +61,7 @@ Object.assign(T.tg, {
   'err.tr_failed': 'Тарҷума нашуд. Лутфан боз кӯшиш кунед.',
 });
 Object.assign(T.uz, {
+  'stt.translate': 'Bu matnni tarjima qilish',
   'tr.title': 'Matn tarjimasi',
   'tr.sub': 'Matnni qoʻying va uni boshqa tilda oling. Soʻzlovchi nomlari (masalan, «Anna:») va tovush yoki his-tuygʻu teglari oʻzgarmaydi, shuning uchun natijani Dialogda ishlatish mumkin.',
   'tr.ph': 'Matnni shu yerga qoʻying yoki yozing',

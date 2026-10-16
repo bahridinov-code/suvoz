@@ -124,6 +124,10 @@ $('save').onclick = () => {
   a.download = 'suvoz-text.txt';
   document.body.appendChild(a); a.click(); a.remove();
 };
+$('tr').onclick = () => {
+  try { sessionStorage.setItem('suvoz_translate', $('out').value); } catch (e) {}
+  location.href = '/translate';
+};
 $('use').onclick = () => {
   try { sessionStorage.setItem('suvoz_reuse', $('out').value); } catch (e) {}
   location.href = '/dialogue';
@@ -141,6 +145,7 @@ document.addEventListener('langchange', () => {
   try { config = await (await fetch('/api/config')).json(); } catch (e) {}
   if (!config.authOn) return location.replace('/dialogue');
   if (!(await Auth.session())) return location.replace('/login');
+  $('tr').hidden = !config.translateOn;
   $('logout').hidden = false;
   $('logout').onclick = async () => { await Auth.signOut(); location.replace('/'); };
   loadMe();

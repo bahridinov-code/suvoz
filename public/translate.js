@@ -112,6 +112,10 @@ document.addEventListener('langchange', () => {
   if (!(await Auth.session())) return location.replace('/login');
   $('logout').hidden = false;
   $('logout').onclick = async () => { await Auth.signOut(); location.replace('/'); };
+  try {
+    const pre = sessionStorage.getItem('suvoz_translate');
+    if (pre) { $('src').value = pre; sessionStorage.removeItem('suvoz_translate'); }
+  } catch (e) {}
   renderCount();
   loadMe();
 })();
