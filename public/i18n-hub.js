@@ -6,7 +6,7 @@ Object.assign(T.en, {
   'hub.soon': 'Soon', 'nav.tools': 'All tools',
   'hub.dialogue': 'Dialogue', 'hub.dialogue.d': 'Write a conversation between people. Each person gets their own voice.',
   'hub.story': 'Story or narration', 'hub.story.d': 'Paste any text and hear it read aloud. No names needed.',
-  'hub.sound': 'Sound effects', 'hub.sound.d': 'Add thunder, doors, footsteps and more between or inside sentences.',
+  'hub.sound': 'Sound effects and emotions', 'hub.sound.d': 'Add sounds like thunder or a door in (brackets), and emotions like [whispers] or [laughs].',
   'hub.stt': 'Speech to text', 'hub.stt.d': 'Upload a recording and get the text, with speakers told apart.',
   'hub.history': 'My history', 'hub.history.d': 'Listen to and download your earlier audios.',
   'hub.translate': 'Translate', 'hub.translate.d': 'Turn text or a recording into another language.',
@@ -15,7 +15,7 @@ Object.assign(T.en, {
   'hub.dub': 'Dubbing', 'hub.dub.d': 'Translate a video into another language, keeping the voices.',
   'hub.ex.dialogue': 'Anna: Good morning! Did you sleep well?\nBen: Very well, thank you. And you?',
   'hub.ex.story': 'Once upon a time, in a small village by the sea, there lived an old fisherman.',
-  'hub.ex.sound': 'The night was quiet. A man opened the old door (door creaks, 2s) and walked in.',
+  'hub.ex.sound': 'Anna: [whispers] Who is there? (door creaks, 2s)\nBen: [laughs] Only me!',
 });
 Object.assign(T.ar, {
   'hub.title': 'ماذا تريد أن تنشئ؟',
@@ -23,7 +23,7 @@ Object.assign(T.ar, {
   'hub.soon': 'قريبًا', 'nav.tools': 'كل الأدوات',
   'hub.dialogue': 'حوار', 'hub.dialogue.d': 'اكتب محادثة بين أشخاص. لكل شخص صوته الخاص.',
   'hub.story': 'قصة أو سرد', 'hub.story.d': 'الصق أي نص واستمع إليه. لا حاجة لأسماء.',
-  'hub.sound': 'مؤثرات صوتية', 'hub.sound.d': 'أضف رعدًا وأبوابًا وخطوات وغيرها بين الجمل أو داخلها.',
+  'hub.sound': 'المؤثرات الصوتية والمشاعر', 'hub.sound.d': 'أضف أصواتًا مثل الرعد أو الباب بين (أقواس)، ومشاعر مثل [whispers] أو [laughs].',
   'hub.stt': 'تحويل الكلام إلى نص', 'hub.stt.d': 'ارفع تسجيلًا واحصل على النص مع التمييز بين المتحدثين.',
   'hub.history': 'سجلّي', 'hub.history.d': 'استمع إلى ملفاتك السابقة ونزّلها.',
   'hub.translate': 'ترجمة', 'hub.translate.d': 'حوّل نصًا أو تسجيلًا إلى لغة أخرى.',
@@ -32,7 +32,7 @@ Object.assign(T.ar, {
   'hub.dub': 'الدبلجة', 'hub.dub.d': 'ترجم فيديو إلى لغة أخرى مع الحفاظ على الأصوات.',
   'hub.ex.dialogue': 'Anna: صباح الخير! هل نمتِ جيدًا؟\nBen: نمت جيدًا، شكرًا. وأنتِ؟',
   'hub.ex.story': 'في قديم الزمان، في قرية صغيرة على شاطئ البحر، عاش صياد عجوز.',
-  'hub.ex.sound': 'كان الليل هادئًا. فتح رجل الباب القديم (صوت صرير الباب، 2s) ودخل.',
+  'hub.ex.sound': 'Anna: [whispers] مَن هناك؟ (صرير الباب، 2s)\nBen: [laughs] أنا فقط!',
 });
 Object.assign(T.ru, {
   'hub.title': 'Что вы хотите создать?',
@@ -40,7 +40,7 @@ Object.assign(T.ru, {
   'hub.soon': 'Скоро', 'nav.tools': 'Все инструменты',
   'hub.dialogue': 'Диалог', 'hub.dialogue.d': 'Напишите разговор людей. У каждого свой голос.',
   'hub.story': 'История или рассказ', 'hub.story.d': 'Вставьте любой текст и послушайте. Имена не нужны.',
-  'hub.sound': 'Звуковые эффекты', 'hub.sound.d': 'Добавьте гром, двери, шаги и другое между фразами или внутри них.',
+  'hub.sound': 'Звуковые эффекты и эмоции', 'hub.sound.d': 'Добавляйте звуки (гром, дверь) в (скобках) и эмоции вроде [whispers] или [laughs].',
   'hub.stt': 'Речь в текст', 'hub.stt.d': 'Загрузите запись и получите текст с разделением говорящих.',
   'hub.history': 'Моя история', 'hub.history.d': 'Слушайте и скачивайте прежние аудио.',
   'hub.translate': 'Перевод', 'hub.translate.d': 'Переведите текст или запись на другой язык.',
@@ -49,7 +49,7 @@ Object.assign(T.ru, {
   'hub.dub': 'Дубляж', 'hub.dub.d': 'Переведите видео на другой язык, сохранив голоса.',
   'hub.ex.dialogue': 'Анна: Доброе утро! Хорошо спали?\nБорис: Очень хорошо, спасибо. А вы?',
   'hub.ex.story': 'Жил-был в маленькой деревне у моря старый рыбак.',
-  'hub.ex.sound': 'Ночь была тихой. Мужчина открыл старую дверь (скрип двери, 2с) и вошёл.',
+  'hub.ex.sound': 'Анна: [whispers] Кто там? (скрип двери, 2с)\nБорис: [laughs] Это только я!',
 });
 Object.assign(T.tg, {
   'hub.title': 'Чӣ сохтан мехоҳед?',
@@ -57,7 +57,7 @@ Object.assign(T.tg, {
   'hub.soon': 'Ба зудӣ', 'nav.tools': 'Ҳамаи абзорҳо',
   'hub.dialogue': 'Муколама', 'hub.dialogue.d': 'Сӯҳбати одамонро нависед. Ҳар кас овози худро дорад.',
   'hub.story': 'Ҳикоя ё нақл', 'hub.story.d': 'Ҳар матнро гузоред ва гӯш кунед. Ном лозим нест.',
-  'hub.sound': 'Эффектҳои садоӣ', 'hub.sound.d': 'Раъд, дар, қадамҳо ва ғайраро миёни ҷумлаҳо ё дар дохили онҳо илова кунед.',
+  'hub.sound': 'Эффектҳои садоӣ ва эҳсосот', 'hub.sound.d': 'Садоҳоро (раъд, дар) дар (қавсайн) ва эҳсосотро мисли [whispers] ё [laughs] илова кунед.',
   'hub.stt': 'Нутқ ба матн', 'hub.stt.d': 'Сабтро бор кунед ва матнро бо ҷудо кардани гӯяндагон гиред.',
   'hub.history': 'Таърихи ман', 'hub.history.d': 'Аудиоҳои пештараро гӯш кунед ва зеркашӣ намоед.',
   'hub.translate': 'Тарҷума', 'hub.translate.d': 'Матн ё сабтро ба забони дигар табдил диҳед.',
@@ -66,7 +66,7 @@ Object.assign(T.tg, {
   'hub.dub': 'Дубляж', 'hub.dub.d': 'Видеоро ба забони дигар тарҷума кунед ва овозҳоро нигоҳ доред.',
   'hub.ex.dialogue': 'Анна: Субҳ ба хайр! Хуб хобидед?\nБоис: Хеле хуб, ташаккур. Шумо чӣ?',
   'hub.ex.story': 'Замоне дар деҳаи хурде назди баҳр як моҳигири пир зиндагӣ мекард.',
-  'hub.ex.sound': 'Шаб ором буд. Мард дари кӯҳнаро кушод (ғиҷиррос задани дар, 2с) ва даромад.',
+  'hub.ex.sound': 'Анна: [whispers] Он ҷо кист? (ғиҷиррос задани дар, 2с)\nБорис: [laughs] Танҳо ман!',
 });
 Object.assign(T.uz, {
   'hub.title': 'Nima yaratmoqchisiz?',
@@ -74,7 +74,7 @@ Object.assign(T.uz, {
   'hub.soon': 'Tez orada', 'nav.tools': 'Barcha vositalar',
   'hub.dialogue': 'Dialog', 'hub.dialogue.d': 'Odamlar suhbatini yozing. Har kimning oʻz ovozi boʻladi.',
   'hub.story': 'Hikoya yoki bayon', 'hub.story.d': 'Istalgan matnni qoʻying va tinglang. Ism shart emas.',
-  'hub.sound': 'Tovush effektlari', 'hub.sound.d': 'Momaqaldiroq, eshik, qadam tovushlarini gaplar orasiga yoki ichiga qoʻshing.',
+  'hub.sound': 'Tovush effektlari va hissiyotlar', 'hub.sound.d': 'Tovushlarni (momaqaldiroq, eshik) (qavs) ichida, hissiyotlarni [whispers] yoki [laughs] kabi qoʻshing.',
   'hub.stt': 'Nutqdan matnga', 'hub.stt.d': 'Yozuvni yuklang va matnni oling, soʻzlovchilar ajratiladi.',
   'hub.history': 'Tarixim', 'hub.history.d': 'Avvalgi audiolaringizni tinglang va yuklab oling.',
   'hub.translate': 'Tarjima', 'hub.translate.d': 'Matn yoki yozuvni boshqa tilga oʻgiring.',
@@ -83,5 +83,5 @@ Object.assign(T.uz, {
   'hub.dub': 'Dublyaj', 'hub.dub.d': 'Videoni boshqa tilga tarjima qiling, ovozlar saqlanadi.',
   'hub.ex.dialogue': 'Anna: Xayrli tong! Yaxshi uxladingizmi?\nBobur: Juda yaxshi, rahmat. Siz-chi?',
   'hub.ex.story': 'Qadim zamonda dengiz boʻyidagi kichik qishloqda bir qari baliqchi yashar edi.',
-  'hub.ex.sound': 'Tun sokin edi. Odam eski eshikni ochdi (eshik g\u02bbiyqillaydi, 2s) va kirdi.',
+  'hub.ex.sound': 'Anna: [whispers] U yerda kim bor? (eshik g\u02bbiyqillaydi, 2s)\nBobur: [laughs] Faqat men!',
 });
