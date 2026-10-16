@@ -143,3 +143,18 @@ const Auth = (() => {
     },
   };
 })();
+
+// The email in the top bar opens the account page.
+(function () {
+  const w = document.getElementById('who');
+  if (!w) return;
+  w.style.cursor = 'pointer';
+  w.setAttribute('role', 'link');
+  w.tabIndex = 0;
+  const go = () => { if (location.pathname !== '/account') location.href = '/account'; };
+  w.addEventListener('click', go);
+  w.addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
+  const title = () => { try { w.title = t('acct.title'); } catch (e) {} };
+  title();
+  document.addEventListener('langchange', title);
+})();

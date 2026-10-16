@@ -311,3 +311,9 @@ a.tile:hover { border-color: var(--indigo); transform: translateY(-2px); box-sha
 .btn.danger { background: var(--err); margin-top: 14px; }
 .btn.danger:disabled { opacity: .45; }
 .hub-note + .meta { margin-top: 6px; }
+
+.acct-link { margin-top: 18px; font-size: 13px; opacity: .7; }
+.acct-link a { color: inherit; }
+.who-mail[role="link"]:hover { color: var(--ink); text-decoration: underline; }
+.acct-del summary { cursor: pointer; font-weight: 600; color: var(--muted); }
+.acct-del[open] summary { color: var(--ink); margin-bottom: 12px; }
