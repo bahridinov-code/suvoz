@@ -47,7 +47,7 @@ const TYPES = {
   '.png': 'image/png', '.jpg': 'image/jpeg', '.ico': 'image/x-icon',
   '.mp3': 'audio/mpeg', '.woff2': 'font/woff2', '.txt': 'text/plain; charset=utf-8',
 };
-const PAGES = { '/': 'index.html', '/app': 'hub.html', '/dialogue': 'app.html', '/login': 'login.html', '/terms': 'terms.html', '/privacy': 'privacy.html', '/refunds': 'refunds.html', '/history': 'history.html', '/transcribe': 'transcribe.html', '/voice-design': 'voicedesign.html', '/voice-clone': 'voiceclone.html' };
+const PAGES = { '/': 'index.html', '/app': 'hub.html', '/dialogue': 'app.html', '/login': 'login.html', '/terms': 'terms.html', '/privacy': 'privacy.html', '/refunds': 'refunds.html', '/history': 'history.html', '/transcribe': 'transcribe.html', '/voice-design': 'voicedesign.html', '/voice-clone': 'voiceclone.html', '/dubbing': 'dubbing.html' };
 
 // Serves files from /public only. Blocks anything outside that folder.
 function serveStatic(req, res, pathname) {
@@ -302,6 +302,37 @@ const fsp = require('fs/promises');
 const pathMod = require('path');
 let FFMPEG = 'ffmpeg';
 try { FFMPEG = require('ffmpeg-static') || 'ffmpeg'; } catch (e) {}
+function ffmpegRun(args, wantStderr) {
+  return new Promise((resolve, reject) => {
+    const p = spawn(FFMPEG, args, { stdio: ['ignore', 'ignore', 'pipe'] });
+    let err = '';
+    p.stderr.on('data', (d) => { if (err.length < 200000) err += d; });
+    p.on('error', reject);
+    p.on('close', (c) => (c === 0 || wantStderr ? resolve(err) : reject(new Error('ffmpeg ' + c + ' ' + err.slice(0, 200)))));
+  });
+}
+async function withTempFile(buf, name, fn) {
+  const dir = await fsp.mkdtemp(pathMod.join(os.tmpdir(), 'suvoz-'));
+  try {
+    const f = pathMod.join(dir, name);
+    await fsp.writeFile(f, buf);
+    return await fn(f, dir);
+  } finally { fsp.rm(dir, { recursive: true, force: true }).catch(() => {}); }
+}
+async function probeSeconds(buf) {   // real length of an audio or video file, or null
+  try {
+    const err = await withTempFile(buf, 'in.bin', (f) => ffmpegRun(['-hide_banner', '-i', f], true));
+    const m = String(err).match(/Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)/);
+    return m ? Number(m[1]) * 3600 + Number(m[2]) * 60 + Number(m[3]) : null;
+  } catch (e) { return null; }
+}
+async function toMp3(buf) {
+  return withTempFile(buf, 'in.bin', async (f, dir) => {
+    const out = pathMod.join(dir, 'out.mp3');
+    await ffmpegRun(['-y', '-v', 'error', '-i', f, '-vn', '-c:a', 'libmp3lame', '-b:a', '128k', out]);
+    return await fsp.readFile(out);
+  });
+}
 async function joinMp3(parts) {
   if (parts.length < 2) return parts[0];
   const dir = await fsp.mkdtemp(pathMod.join(os.tmpdir(), 'suvoz-'));
@@ -521,12 +552,14 @@ async function saveHistory(userId, script, chars, audio) {
     await storageDelete([file]).catch(() => {});   // do not leave a file without a row
     throw e;
   }
+  return id;
 }
 async function handleHistoryList(req, res) {
   const who = await gate(req, res);
   if (!who) return;
   if (!HISTORY_ON) return sendJson(res, 200, { enabled: false, items: [] });
   try {
+    if (DUB_ON) { try { await advanceUserDubs(who.user.id); } catch (e) { console.error('dub advance failed:', e.message); } }
     const rows = await admin('history_list', { p_user: who.user.id, p_limit: 100 });
     sendJson(res, 200, { enabled: true, days: HISTORY_DAYS, items: rows });
   } catch (e) {
@@ -1057,6 +1090,176 @@ async function handleVoiceClone(req, res) {
   }
 }
 
+
+// ---- Dubbing ----
+const DUB_ON = !!API_KEY && AUTH_ON && !!SUPABASE_SECRET && HISTORY_ON;
+const DUB_MAX_BYTES = Number(process.env.DUB_MAX_MB || 80) * 1024 * 1024;
+const DUB_MIN_SECONDS = 10, DUB_MAX_SECONDS = 600;            // longest file: 10 minutes
+const DUB_CONCURRENCY = 3;                                    // ElevenLabs allows 3 dubs at once
+const DUB_USER_ACTIVE = 2;
+// minutes taken from the user per minute of audio dubbed
+const DUB_RATES = { standard: { model: 'dubbing_v1', perMin: 10 }, premium: { model: 'dubbing_v2', perMin: 40 } };
+const dubCost = (seconds, kind) => Math.max(1, Math.ceil(seconds * DUB_RATES[kind].perMin * 15));   // 900 chars = 1 minute
+const LANG_RE = /^[a-z]{2,3}(-[A-Za-z]{2,4})?$/;
+
+function vttToText(vtt) {
+  const out = [];
+  let cue = [];
+  const flush = () => { if (cue.length) out.push(cue.join(' ').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()); cue = []; };
+  for (const raw of String(vtt || '').split(/\r?\n/)) {
+    const l = raw.trim();
+    if (!l) { flush(); continue; }
+    if (/^WEBVTT/.test(l) || /^NOTE\b/.test(l) || l.includes('-->') || /^\d+$/.test(l)) continue;
+    cue.push(l);
+  }
+  flush();
+  return out.filter(Boolean).join('\n');
+}
+async function dubDownload(url, limit) {
+  const u = new URL(url);
+  const headers = u.origin === new URL(BASE).origin ? { 'xi-api-key': API_KEY } : {};
+  const r = await fetch(url, { headers });
+  if (!r.ok) throw new Error('dub download ' + r.status);
+  const buf = Buffer.from(await r.arrayBuffer());
+  if (buf.length > limit) throw new Error('dub file too large');
+  return buf;
+}
+async function dubRefund(userId, job) {
+  const first = await admin('dub_fail', { p_id: job.id });
+  if (first) {
+    try { await admin('credits_refund', { p_user: userId, n: job.cost }); } catch (e) { console.error('dub refund failed:', e.message); }
+  }
+}
+// Looks at ElevenLabs, and when the dub is ready saves it into the user's history.
+async function advanceDub(userId, job) {
+  if (job.status !== 'processing' && job.status !== 'finalizing') return job;
+  if (Date.now() - Date.parse(job.created_at) > 3 * 3600 * 1000) { await dubRefund(userId, job); return { ...job, status: 'failed' }; }
+  const eh = { 'xi-api-key': API_KEY };
+  const pr = await fetch(`${BASE}/v1/dubbing/project/${encodeURIComponent(job.project_id)}`, { headers: eh });
+  if (pr.status === 404) { await dubRefund(userId, job); return { ...job, status: 'failed' }; }
+  if (!pr.ok) return job;
+  const pj = await pr.json();
+  if (pj.status === 'failed') { console.error('dub project failed', JSON.stringify(pj.error || {}).slice(0, 300)); await dubRefund(userId, job); return { ...job, status: 'failed' }; }
+  const langId = Array.isArray(pj.language_ids) && pj.language_ids[0];
+  if (!langId) return job;
+  const lr = await fetch(`${BASE}/v1/dubbing/project/${encodeURIComponent(job.project_id)}/language/${encodeURIComponent(langId)}`, { headers: eh });
+  if (!lr.ok) return job;
+  const lg = await lr.json();
+  if (lg.status === 'failed') { console.error('dub language failed', JSON.stringify(lg.error || {}).slice(0, 300)); await dubRefund(userId, job); return { ...job, status: 'failed' }; }
+  if (lg.status !== 'completed' || !lg.outputs || !lg.outputs.lossless_audio) return job;
+  if (!(await admin('dub_claim', { p_id: job.id }))) return job;
+  try {
+    const audio = await dubDownload(lg.outputs.lossless_audio, 400 * 1024 * 1024);
+    let text = '';
+    if (lg.outputs.subtitles) { try { text = vttToText((await dubDownload(lg.outputs.subtitles, 5 * 1024 * 1024)).toString('utf8')); } catch (e) { console.error('subtitles:', e.message); } }
+    const mp3 = await toMp3(audio);
+    const hid = await saveHistory(userId, text || '(dubbed audio)', Math.ceil(job.seconds * 15), mp3);
+    await admin('dub_finish', { p_id: job.id, p_history: hid });
+    return { ...job, status: 'done', history_id: hid };
+  } catch (e) {
+    console.error('dub finish failed:', e.message);
+    try { await admin('dub_release', { p_id: job.id }); } catch (e2) {}
+    return job;
+  }
+}
+async function advanceUserDubs(userId) {
+  const jobs = (await admin('dub_list', { p_user: userId })) || [];
+  const pending = jobs.filter((j) => j.status === 'processing' || j.status === 'finalizing').slice(0, 3);
+  for (const j of pending) { try { await advanceDub(userId, j); } catch (e) { console.error('dub advance:', e.message); } }
+}
+const dubView = (j) => ({ id: j.id, target: j.target, kind: j.model === DUB_RATES.premium.model ? 'premium' : 'standard', seconds: j.seconds, cost: j.cost, status: j.status === 'finalizing' ? 'processing' : j.status, historyId: j.history_id || null, createdAt: j.created_at });
+
+async function handleDubList(req, res) {
+  if (!DUB_ON) return sendJson(res, 503, { code: 'dub_off', error: 'Dubbing is not available right now.' });
+  const who = await gate(req, res);
+  if (!who || !who.user) return;
+  try {
+    const me = await rpc(who.token, 'credits_left');
+    await advanceUserDubs(who.user.id);
+    const jobs = (await admin('dub_list', { p_user: who.user.id })) || [];
+    sendJson(res, 200, {
+      canDub: me.plan !== 'free', left: me.left, plan: me.plan,
+      rates: { standard: DUB_RATES.standard.perMin, premium: DUB_RATES.premium.perMin },
+      maxSeconds: DUB_MAX_SECONDS, maxMB: Math.round(DUB_MAX_BYTES / 1048576),
+      jobs: jobs.map(dubView),
+    });
+  } catch (e) {
+    console.error(e.message);
+    sendJson(res, 502, { error: 'Could not load your dubs.' });
+  }
+}
+async function handleDubStart(req, res) {
+  if (!DUB_ON) return sendJson(res, 503, { code: 'dub_off', error: 'Dubbing is not available right now.' });
+  const who = await gate(req, res);
+  if (!who || !who.user) return;
+  if (rateLimited(clientIp(req))) return sendJson(res, 429, { error: 'Too many requests. Please try again in a few minutes.' });
+  const kind = String(req.headers['x-quality'] || '');
+  const target = String(req.headers['x-target'] || '');
+  if (!DUB_RATES[kind] || !LANG_RE.test(target)) return sendJson(res, 400, { error: 'Bad request.' });
+  const declared = Number(req.headers['x-duration']);
+  if (!isFinite(declared) || declared < DUB_MIN_SECONDS - 1 || declared > DUB_MAX_SECONDS + 5) return sendJson(res, 400, { code: 'dub_length', error: 'The file must be between 10 seconds and 10 minutes.' });
+  if (Number(req.headers['content-length']) > DUB_MAX_BYTES) {
+    res.setHeader('Connection', 'close');
+    return sendJson(res, 413, { code: 'dub_big', error: 'This file is too big.' });
+  }
+  let me;
+  try { me = await rpc(who.token, 'credits_left'); } catch (e) { console.error(e.message); return sendJson(res, 502, { error: 'Could not check your minutes. Please try again.' }); }
+  if (me.plan === 'free') return sendJson(res, 402, { code: 'dub_paid', error: 'Dubbing is for paid plans.' });
+  try {
+    const mine = ((await admin('dub_list', { p_user: who.user.id })) || []).filter((j) => j.status === 'processing' || j.status === 'finalizing').length;
+    if (mine >= DUB_USER_ACTIVE) return sendJson(res, 429, { code: 'dub_user_busy', error: 'You already have dubs in progress. Wait for one to finish.' });
+    if ((await admin('dub_active')) >= DUB_CONCURRENCY) return sendJson(res, 503, { code: 'dub_busy', error: 'Dubbing is busy right now. Please try again in a few minutes.' });
+  } catch (e) { console.error(e.message); return sendJson(res, 502, { error: 'Dubbing is not available right now.' }); }
+  let body;
+  try { body = await readRaw(req, DUB_MAX_BYTES); } catch (e) { return sendJson(res, 413, { code: 'dub_big', error: 'This file is too big.' }); }
+  if (!body.length) return sendJson(res, 400, { code: 'dub_bad', error: 'We could not read this file.' });
+  const real = await probeSeconds(body);       // trust the file, not the browser
+  const seconds = Math.round(real || declared);
+  if (seconds < DUB_MIN_SECONDS || seconds > DUB_MAX_SECONDS) return sendJson(res, 400, { code: 'dub_length', error: 'The file must be between 10 seconds and 10 minutes.' });
+  const cost = dubCost(seconds, kind);
+  try {
+    const left = await rpc(who.token, 'credits_use_big', { n: cost });
+    if (left < 0) return sendJson(res, 402, { code: 'credits_over', error: 'You do not have enough minutes for this dub.' });
+  } catch (e) {
+    console.error(e.message);
+    return sendJson(res, 502, { error: 'Could not check your minutes. Please try again.' });
+  }
+  const refund = async () => { try { await admin('credits_refund', { p_user: who.user.id, n: cost }); } catch (e) { console.error('refund failed:', e.message); } };
+  try {
+    const type = String(req.headers['content-type'] || 'application/octet-stream').split(';')[0];
+    const form = new FormData();
+    form.append('model_id', DUB_RATES[kind].model);
+    form.append('target_language', target);
+    form.append('file', new Blob([body], { type }), 'media');
+    const r = await fetch(`${BASE}/v1/dubbing/project`, { method: 'POST', headers: { 'xi-api-key': API_KEY }, body: form });
+    if (!r.ok) {
+      console.error('ElevenLabs dub error', r.status, (await r.text().catch(() => '')).slice(0, 300));
+      await refund();
+      if (r.status === 400 || r.status === 422) return sendJson(res, 400, { code: 'dub_bad', error: 'This file or language is not supported.' });
+      if (r.status === 401) return sendJson(res, 502, { error: 'Server API key was rejected by ElevenLabs.' });
+      if (r.status === 402 || r.status === 403) return sendJson(res, 502, { error: 'The ElevenLabs plan does not allow this request (check plan or credits).' });
+      if (r.status === 429) return sendJson(res, 503, { code: 'dub_busy', error: 'Dubbing is busy right now. Please try again in a few minutes.' });
+      return sendJson(res, 502, { error: 'Dubbing failed. Please try again.' });
+    }
+    const j = await r.json();
+    const pid = String(j.project_id || '');
+    if (!/^[A-Za-z0-9_-]{6,80}$/.test(pid)) { await refund(); return sendJson(res, 502, { error: 'Dubbing failed. Please try again.' }); }
+    try {
+      const id = await admin('dub_add', { p_user: who.user.id, p_project: pid, p_target: target, p_model: DUB_RATES[kind].model, p_seconds: seconds, p_cost: cost });
+      sendJson(res, 200, { id, cost, seconds });
+    } catch (e) {
+      console.error('dub_add failed:', e.message);
+      await refund();
+      fetch(`${BASE}/v1/dubbing/project/${encodeURIComponent(pid)}`, { method: 'DELETE', headers: { 'xi-api-key': API_KEY } }).catch(() => {});
+      sendJson(res, 502, { error: 'Dubbing failed. Please try again.' });
+    }
+  } catch (e) {
+    console.error(e.message);
+    await refund();
+    sendJson(res, 502, { error: 'Dubbing failed. Please try again.' });
+  }
+}
+
 const server = http.createServer(async (req, res) => {
   try {
     const p = new URL(req.url, 'http://localhost').pathname;
@@ -1084,6 +1287,7 @@ const server = http.createServer(async (req, res) => {
         payOn: PAY_ON,
         historyOn: HISTORY_ON,
         designOn: DESIGN_ON,
+        dubOn: DUB_ON,
       });
     }
     if (req.method === 'GET' && p === '/api/voices') return await handleVoices(req, res);
@@ -1093,6 +1297,8 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'POST' && p === '/api/voice-design') return await handleVoiceDesign(req, res);
     if (req.method === 'POST' && p === '/api/voice-save') return await handleVoiceSave(req, res);
     if (req.method === 'POST' && p === '/api/voice-clone') return await handleVoiceClone(req, res);
+    if (req.method === 'GET' && p === '/api/dub') return await handleDubList(req, res);
+    if (req.method === 'POST' && p === '/api/dub-start') return await handleDubStart(req, res);
     if (p === '/api/history') {
       if (req.method === 'GET') return await handleHistoryList(req, res);
       if (req.method === 'DELETE') return await handleHistoryDelete(req, res, new URL(req.url, 'http://localhost'));
