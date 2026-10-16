@@ -19,8 +19,8 @@ const TOOLS = [
   { id: 'story', color: 'teal', href: '/dialogue', ex: 'hub.ex.story' },
   { id: 'sound', color: 'amber', href: '/dialogue', ex: 'hub.ex.sound' },
   { id: 'stt', color: 'rose', href: '/transcribe' },
-  { id: 'history', color: 'gray', href: '/history', needsHistory: true },
   { id: 'translate', soon: true }, { id: 'design', soon: true }, { id: 'clone', soon: true }, { id: 'dub', soon: true },
+  { id: 'history', color: 'gray', href: '/history', needsHistory: true },
 ];
 let historyOn = true;
 
