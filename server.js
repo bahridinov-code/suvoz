@@ -47,7 +47,7 @@ const TYPES = {
   '.png': 'image/png', '.jpg': 'image/jpeg', '.ico': 'image/x-icon',
   '.mp3': 'audio/mpeg', '.woff2': 'font/woff2', '.txt': 'text/plain; charset=utf-8',
 };
-const PAGES = { '/': 'index.html', '/app': 'app.html', '/login': 'login.html', '/terms': 'terms.html', '/privacy': 'privacy.html', '/refunds': 'refunds.html', '/history': 'history.html' };
+const PAGES = { '/': 'index.html', '/app': 'hub.html', '/dialogue': 'app.html', '/login': 'login.html', '/terms': 'terms.html', '/privacy': 'privacy.html', '/refunds': 'refunds.html', '/history': 'history.html', '/transcribe': 'transcribe.html' };
 
 // Serves files from /public only. Blocks anything outside that folder.
 function serveStatic(req, res, pathname) {
@@ -737,6 +737,117 @@ async function handleStripeWebhook(req, res) {
   }
 }
 
+
+// ---- Speech to text ----
+const STT_MODEL = process.env.ELEVEN_STT_MODEL || 'scribe_v2';
+const STT_MAX_BYTES = 60 * 1024 * 1024;     // biggest upload
+const STT_MAX_SECONDS = 30 * 60;            // longest recording
+const STT_CHARS_PER_SECOND = 3.75;          // 1/4 of a minute per minute of audio (900 chars = 1 minute)
+async function handleTranscribe(req, res) {
+  const who = await gate(req, res);
+  if (!who) return;
+  if (!API_KEY) return sendJson(res, 500, { error: 'Server is missing ELEVENLABS_API_KEY.' });
+  const seconds = Number(req.headers['x-duration']);
+  if (!(seconds > 0) || !isFinite(seconds)) return sendJson(res, 400, { code: 'stt_bad', error: 'We could not read this file.' });
+  if (seconds > STT_MAX_SECONDS + 5) return sendJson(res, 400, { code: 'stt_long', error: 'This file is longer than 30 minutes.' });
+  if (Number(req.headers['content-length']) > STT_MAX_BYTES) {
+    res.setHeader('Connection', 'close');
+    return sendJson(res, 413, { code: 'stt_big', error: 'This file is bigger than 60 MB.' });
+  }
+  let body;
+  try { body = await readRaw(req, STT_MAX_BYTES); }
+  catch (e) { return sendJson(res, 413, { code: 'stt_big', error: 'This file is bigger than 60 MB.' }); }
+  if (!body.length) return sendJson(res, 400, { code: 'stt_bad', error: 'We could not read this file.' });
+
+  const cost = Math.max(1, Math.ceil(seconds * STT_CHARS_PER_SECOND));
+  let charged = false;
+  const refund = async (n) => {
+    if (!charged) return;
+    charged = false;
+    try { if (SUPABASE_SECRET && who.user && who.user.id) await admin('credits_refund', { p_user: who.user.id, n: n || cost }); }
+    catch (e) { console.error('refund failed:', e.message); }
+  };
+  if (AUTH_ON) {
+    try {
+      const left = await rpc(who.token, 'credits_use', { n: cost });
+      if (left < 0) {
+        const me = await rpc(who.token, 'credits_left');
+        if (me && me.plan !== 'free') return sendJson(res, 402, { code: 'credits_over', error: 'You have used all your minutes.' });
+        return sendJson(res, 402, { code: 'trial_over', error: 'Your free trial is used up.' });
+      }
+      charged = true;
+    } catch (e) {
+      console.error(e.message);
+      return sendJson(res, 502, { error: 'Could not check your minutes. Please try again.' });
+    }
+  }
+
+  try {
+    const type = String(req.headers['content-type'] || 'application/octet-stream').split(';')[0];
+    const send = (model) => {
+      const form = new FormData();
+      form.append('model_id', model);
+      form.append('diarize', 'true');
+      form.append('tag_audio_events', 'false');
+      form.append('file', new Blob([body], { type }), 'audio');
+      return fetch(`${BASE}/v1/speech-to-text`, { method: 'POST', headers: { 'xi-api-key': API_KEY }, body: form });
+    };
+    let r = await send(STT_MODEL);
+    if (!r.ok && (r.status === 400 || r.status === 422) && STT_MODEL !== 'scribe_v1') {
+      const t1 = await r.text().catch(() => '');
+      console.error('ElevenLabs STT rejected', STT_MODEL, r.status, t1.slice(0, 300));
+      if (/model/i.test(t1)) r = await send('scribe_v1');
+      else r = { ok: false, status: r.status, text: async () => t1 };
+    }
+    if (!r.ok) {
+      const errBody = await r.text().catch(() => '');
+      console.error('ElevenLabs STT error', r.status, errBody.slice(0, 300));
+      await refund();
+      if (r.status === 400 || r.status === 422) return sendJson(res, 400, { code: 'stt_bad', error: 'We could not read this file.' });
+      const msg = r.status === 401 ? 'Server API key was rejected by ElevenLabs.'
+        : r.status === 402 || r.status === 403 ? 'The ElevenLabs plan does not allow this request (check plan or credits).'
+        : r.status === 429 ? 'ElevenLabs is busy. Please try again in a moment.'
+        : 'Transcription failed. Please try again.';
+      return sendJson(res, 502, { error: msg });
+    }
+    const j = await r.json();
+    const words = Array.isArray(j.words) ? j.words : [];
+    const segments = [];
+    const ids = new Map();
+    let actual = 0;
+    for (const w of words) {
+      if (!w || typeof w.text !== 'string' || w.type === 'audio_event') continue;
+      if (w.type === 'spacing' || !w.text.trim()) {   // spaces belong to whoever is talking
+        if (segments.length) segments[segments.length - 1].text += w.text;
+        continue;
+      }
+      if (typeof w.end === 'number') actual = Math.max(actual, w.end);
+      const key = w.speaker_id == null ? 'speaker_0' : String(w.speaker_id);
+      if (!ids.has(key)) ids.set(key, ids.size + 1);
+      const sp = ids.get(key);
+      const last = segments[segments.length - 1];
+      if (last && last.speaker === sp) last.text += w.text;
+      else segments.push({ speaker: sp, text: w.text });
+    }
+    for (const sg of segments) sg.text = sg.text.replace(/\s+/g, ' ').trim();
+    const clean = segments.filter((sg) => sg.text);
+    if (!clean.length) {
+      await refund();
+      return sendJson(res, 422, { code: 'stt_empty', error: 'No speech was found in this file.' });
+    }
+    // If the browser said the file was shorter than it really is, charge the difference.
+    if (AUTH_ON && charged && actual > seconds * 1.05 + 2) {
+      const extra = Math.min(10000, Math.ceil(actual * STT_CHARS_PER_SECOND) - cost);
+      if (extra > 0) { try { await rpc(who.token, 'credits_use', { n: extra }); } catch (e) { console.error(e.message); } }
+    }
+    sendJson(res, 200, { segments: clean, speakers: ids.size, language: j.language_code || '', seconds: Math.round(Math.max(actual, 0)) });
+  } catch (e) {
+    console.error(e.message);
+    await refund();
+    sendJson(res, 502, { error: 'Transcription failed. Please try again.' });
+  }
+}
+
 const server = http.createServer(async (req, res) => {
   try {
     const p = new URL(req.url, 'http://localhost').pathname;
@@ -767,6 +878,7 @@ const server = http.createServer(async (req, res) => {
     }
     if (req.method === 'GET' && p === '/api/voices') return await handleVoices(req, res);
     if (req.method === 'POST' && p === '/api/generate') return await handleGenerate(req, res);
+    if (req.method === 'POST' && p === '/api/transcribe') return await handleTranscribe(req, res);
     if (p === '/api/history') {
       if (req.method === 'GET') return await handleHistoryList(req, res);
       if (req.method === 'DELETE') return await handleHistoryDelete(req, res, new URL(req.url, 'http://localhost'));
