@@ -283,3 +283,7 @@ a.tile:hover { border-color: var(--indigo); transform: translateY(-2px); box-sha
 .mitem .mt { min-width: 0; }
 .mitem .mt strong { display: block; }
 .mitem .mt span { color: var(--muted); font-size: 13px; }
+
+.consent { display: flex; gap: 10px; align-items: flex-start; margin-top: 14px; font-size: 14px; line-height: 1.5; cursor: pointer; }
+.consent input { margin-top: 4px; flex: none; }
+#vname { margin-top: 14px; }

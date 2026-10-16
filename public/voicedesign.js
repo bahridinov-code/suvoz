@@ -65,7 +65,7 @@ function renderMine() {
     const row = document.createElement('div'); row.className = 'mitem';
     const mt = document.createElement('div'); mt.className = 'mt';
     const n = document.createElement('strong'); n.textContent = v.name; n.dir = 'auto';
-    const d = document.createElement('span'); d.textContent = v.description.length > 90 ? v.description.slice(0, 90) + '…' : v.description; d.dir = 'auto';
+    const d = document.createElement('span'); d.textContent = v.kind === 'clone' ? t('vc.tag') : (v.description.length > 90 ? v.description.slice(0, 90) + '…' : v.description); d.dir = 'auto';
     mt.append(n, d);
     const b = document.createElement('button'); b.type = 'button'; b.className = 'pbtn'; b.textContent = t('hist.delete');
     b.onclick = async () => {
