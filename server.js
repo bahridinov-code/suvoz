@@ -47,7 +47,7 @@ const TYPES = {
   '.png': 'image/png', '.jpg': 'image/jpeg', '.ico': 'image/x-icon',
   '.mp3': 'audio/mpeg', '.woff2': 'font/woff2', '.txt': 'text/plain; charset=utf-8',
 };
-const PAGES = { '/': 'index.html', '/app': 'hub.html', '/dialogue': 'app.html', '/login': 'login.html', '/terms': 'terms.html', '/privacy': 'privacy.html', '/refunds': 'refunds.html', '/history': 'history.html', '/transcribe': 'transcribe.html' };
+const PAGES = { '/': 'index.html', '/app': 'hub.html', '/dialogue': 'app.html', '/login': 'login.html', '/terms': 'terms.html', '/privacy': 'privacy.html', '/refunds': 'refunds.html', '/history': 'history.html', '/transcribe': 'transcribe.html', '/voice-design': 'voicedesign.html' };
 
 // Serves files from /public only. Blocks anything outside that folder.
 function serveStatic(req, res, pathname) {
@@ -258,7 +258,8 @@ function parseScript(text) {
 let voiceCache = { at: 0, data: null };
 
 async function handleVoices(req, res) {
-  if (!(await gate(req, res))) return;
+  const who = await gate(req, res);
+  if (!who) return;
   if (!API_KEY) return sendJson(res, 500, { error: 'Server is missing ELEVENLABS_API_KEY.' });
   try {
     if (!voiceCache.data || Date.now() - voiceCache.at > 10 * 60 * 1000) {
@@ -276,7 +277,15 @@ async function handleVoices(req, res) {
         })),
       };
     }
-    sendJson(res, 200, { voices: voiceCache.data });
+    let list = voiceCache.data;
+    if (DESIGN_ON && who.user && who.user.id) {
+      try {   // voices users designed are private: hide them here, add back the caller's own
+        const hide = new Set(((await admin('voices_all_ids')) || []).map((x) => x.voice_id));
+        const mine = ((await admin('voices_list', { p_user: who.user.id })) || []).map((x) => ({ id: x.voice_id, name: x.name, category: 'mine', mine: true, preview: '', labels: {} }));
+        list = list.filter((v) => !hide.has(v.id)).concat(mine);
+      } catch (e) { console.error('voices filter failed:', e.message); }
+    }
+    sendJson(res, 200, { voices: list });
   } catch (e) {
     console.error(e.message);
     sendJson(res, 502, { error: 'Could not load voices.' });
@@ -360,6 +369,12 @@ async function handleGenerate(req, res) {
     if (typeof v !== 'string' || !/^[A-Za-z0-9]{10,40}$/.test(v)) {
       return sendJson(res, 400, { error: `Pick a voice for "${s}".` });
     }
+  }
+  if (DESIGN_ON && who.user && who.user.id) {   // nobody may use another person's designed voice
+    try {
+      const foreign = (await admin('voices_foreign', { p_user: who.user.id, p_ids: [...new Set(speakers.map((x) => voiceMap[x]))] })) || [];
+      if (foreign.length) return sendJson(res, 400, { error: 'Please pick a different voice.' });
+    } catch (e) { console.error('voice check failed:', e.message); }
   }
   if (budgetUsed() + chars > DAILY_CHAR_LIMIT) {
     return sendJson(res, 429, { code: 'daily_limit', error: 'Daily limit reached. Please try again tomorrow.' });
@@ -848,6 +863,146 @@ async function handleTranscribe(req, res) {
   }
 }
 
+
+// ---- Voice design ----
+const DESIGN_ON = !!API_KEY && AUTH_ON && !!SUPABASE_SECRET;
+const DESIGN_MODEL = process.env.ELEVEN_DESIGN_MODEL || 'eleven_multilingual_ttv_v2';
+const DESIGN_COST_CHARS = 450;                               // half a minute per attempt
+const VOICE_LIMITS = { starter: 2, creator: 5, pro: 10, business: 20 };
+const VOICE_SLOTS_MAX = Number(process.env.VOICE_SLOTS_MAX || 25);   // our ElevenLabs plan has 30; keep a few free
+const VOICE_ID_RE = /^[A-Za-z0-9_-]{8,64}$/;
+function cleanText(v, min, max) {
+  const x = String(v == null ? '' : v).replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim();
+  return x.length >= min && x.length <= max ? x : null;
+}
+async function voiceAccount(req, res) {
+  if (!DESIGN_ON) { sendJson(res, 503, { code: 'design_off', error: 'Voice design is not available right now.' }); return null; }
+  const who = await gate(req, res);
+  if (!who || !who.user) return null;
+  try {
+    const me = await rpc(who.token, 'credits_left');
+    return { who, plan: me.plan, max: VOICE_LIMITS[me.plan] || 0, left: me.left };
+  } catch (e) {
+    console.error(e.message);
+    sendJson(res, 502, { error: 'Could not load your account.' });
+    return null;
+  }
+}
+async function handleMyVoices(req, res, url) {
+  const a = await voiceAccount(req, res);
+  if (!a) return;
+  try {
+    if (req.method === 'DELETE') {
+      const id = url.searchParams.get('id') || '';
+      if (!VOICE_ID_RE.test(id)) return sendJson(res, 400, { error: 'Bad request.' });
+      const removed = await admin('voices_remove', { p_user: a.who.user.id, p_voice: id });
+      if (removed) {
+        fetch(`${BASE}/v1/voices/${encodeURIComponent(id)}`, { method: 'DELETE', headers: { 'xi-api-key': API_KEY } })
+          .then(async (r) => { if (!r.ok) console.error('ElevenLabs voice delete', r.status, (await r.text().catch(() => '')).slice(0, 200)); })
+          .catch((e) => console.error(e.message));
+      }
+      return sendJson(res, 200, { ok: true });
+    }
+    const rows = (await admin('voices_list', { p_user: a.who.user.id })) || [];
+    sendJson(res, 200, {
+      plan: a.plan, canDesign: a.max > 0, max: a.max, cost: DESIGN_COST_CHARS / 900,
+      voices: rows.map((x) => ({ id: x.voice_id, name: x.name, description: x.description })),
+    });
+  } catch (e) {
+    console.error(e.message);
+    sendJson(res, 502, { error: 'Could not load your voices.' });
+  }
+}
+async function handleVoiceDesign(req, res) {
+  const a = await voiceAccount(req, res);
+  if (!a) return;
+  if (!a.max) return sendJson(res, 402, { code: 'design_paid', error: 'Voice design is for paid plans.' });
+  if (rateLimited(clientIp(req))) return sendJson(res, 429, { error: 'Too many requests. Please try again in a few minutes.' });
+  let body;
+  try { body = await readJson(req); } catch (e) { return sendJson(res, 400, { error: 'Bad request.' }); }
+  const description = cleanText(body && body.description, 20, 500);
+  if (!description) return sendJson(res, 400, { code: 'design_short', error: 'Describe the voice in 20 to 500 characters.' });
+  let charged = false;
+  try {
+    const left = await rpc(a.who.token, 'credits_use', { n: DESIGN_COST_CHARS });
+    if (left < 0) return sendJson(res, 402, { code: 'credits_over', error: 'You have used all your minutes.' });
+    charged = true;
+  } catch (e) {
+    console.error(e.message);
+    return sendJson(res, 502, { error: 'Could not check your minutes. Please try again.' });
+  }
+  const refund = async () => {
+    if (!charged) return;
+    charged = false;
+    try { await admin('credits_refund', { p_user: a.who.user.id, n: DESIGN_COST_CHARS }); } catch (e) { console.error('refund failed:', e.message); }
+  };
+  try {
+    const r = await fetch(`${BASE}/v1/text-to-voice/design?output_format=mp3_44100_128`, {
+      method: 'POST',
+      headers: { 'xi-api-key': API_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ voice_description: description, auto_generate_text: true, model_id: DESIGN_MODEL }),
+    });
+    if (!r.ok) {
+      console.error('ElevenLabs design error', r.status, (await r.text().catch(() => '')).slice(0, 300));
+      await refund();
+      if (r.status === 409) return sendJson(res, 409, { error: 'Still working on it. Please try again in a moment.' });
+      if (r.status === 400 || r.status === 422) return sendJson(res, 400, { code: 'design_bad', error: 'That voice could not be created. Try describing it differently.' });
+      if (r.status === 401) return sendJson(res, 502, { error: 'Server API key was rejected by ElevenLabs.' });
+      if (r.status === 429) return sendJson(res, 502, { error: 'ElevenLabs is busy. Please try again in a moment.' });
+      return sendJson(res, 502, { error: 'Voice creation failed. Please try again.' });
+    }
+    const j = await r.json();
+    const previews = (j.previews || []).filter((p) => p && VOICE_ID_RE.test(String(p.generated_voice_id)) && p.audio_base_64)
+      .slice(0, 3).map((p) => ({ id: p.generated_voice_id, audio: p.audio_base_64, type: p.media_type || 'audio/mpeg' }));
+    if (!previews.length) { await refund(); return sendJson(res, 502, { error: 'Voice creation failed. Please try again.' }); }
+    sendJson(res, 200, { previews, description });
+  } catch (e) {
+    console.error(e.message);
+    await refund();
+    sendJson(res, 502, { error: 'Voice creation failed. Please try again.' });
+  }
+}
+async function handleVoiceSave(req, res) {
+  const a = await voiceAccount(req, res);
+  if (!a) return;
+  if (!a.max) return sendJson(res, 402, { code: 'design_paid', error: 'Voice design is for paid plans.' });
+  let body;
+  try { body = await readJson(req); } catch (e) { return sendJson(res, 400, { error: 'Bad request.' }); }
+  const id = String((body && body.id) || '');
+  const name = cleanText(body && body.name, 1, 40);
+  const description = cleanText(body && body.description, 20, 500);
+  if (!VOICE_ID_RE.test(id) || !name || !description) return sendJson(res, 400, { error: 'Bad request.' });
+  try {
+    const can = await admin('voices_can_add', { p_user: a.who.user.id, p_max: a.max, p_global_max: VOICE_SLOTS_MAX });
+    if (can === 'limit') return sendJson(res, 400, { code: 'voice_limit', error: 'You have reached your voice limit. Delete one to save a new one.' });
+    if (can === 'full') return sendJson(res, 503, { code: 'voice_full', error: 'Voice saving is full right now. Please try again later.' });
+    const r = await fetch(`${BASE}/v1/text-to-voice`, {
+      method: 'POST',
+      headers: { 'xi-api-key': API_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ voice_name: 'Suvoz ' + name + ' ' + crypto.randomBytes(3).toString('hex'), voice_description: description, generated_voice_id: id }),
+    });
+    if (!r.ok) {
+      console.error('ElevenLabs save voice error', r.status, (await r.text().catch(() => '')).slice(0, 300));
+      if (r.status === 400 || r.status === 422) return sendJson(res, 400, { code: 'voice_gone', error: 'This sample expired. Please create the voices again.' });
+      return sendJson(res, 502, { error: 'Could not save the voice. Please try again.' });
+    }
+    const j = await r.json();
+    const voiceId = String(j.voice_id || '');
+    if (!VOICE_ID_RE.test(voiceId)) return sendJson(res, 502, { error: 'Could not save the voice. Please try again.' });
+    try {
+      await admin('voices_add', { p_user: a.who.user.id, p_voice: voiceId, p_name: name, p_desc: description });
+    } catch (e) {
+      console.error('voices_add failed:', e.message);
+      fetch(`${BASE}/v1/voices/${encodeURIComponent(voiceId)}`, { method: 'DELETE', headers: { 'xi-api-key': API_KEY } }).catch(() => {});
+      return sendJson(res, 502, { error: 'Could not save the voice. Please try again.' });
+    }
+    sendJson(res, 200, { voice: { id: voiceId, name, description } });
+  } catch (e) {
+    console.error(e.message);
+    sendJson(res, 502, { error: 'Could not save the voice. Please try again.' });
+  }
+}
+
 const server = http.createServer(async (req, res) => {
   try {
     const p = new URL(req.url, 'http://localhost').pathname;
@@ -874,11 +1029,15 @@ const server = http.createServer(async (req, res) => {
         configured: !!API_KEY,
         payOn: PAY_ON,
         historyOn: HISTORY_ON,
+        designOn: DESIGN_ON,
       });
     }
     if (req.method === 'GET' && p === '/api/voices') return await handleVoices(req, res);
     if (req.method === 'POST' && p === '/api/generate') return await handleGenerate(req, res);
     if (req.method === 'POST' && p === '/api/transcribe') return await handleTranscribe(req, res);
+    if (p === '/api/my-voices' && (req.method === 'GET' || req.method === 'DELETE')) return await handleMyVoices(req, res, new URL(req.url, 'http://localhost'));
+    if (req.method === 'POST' && p === '/api/voice-design') return await handleVoiceDesign(req, res);
+    if (req.method === 'POST' && p === '/api/voice-save') return await handleVoiceSave(req, res);
     if (p === '/api/history') {
       if (req.method === 'GET') return await handleHistoryList(req, res);
       if (req.method === 'DELETE') return await handleHistoryDelete(req, res, new URL(req.url, 'http://localhost'));
