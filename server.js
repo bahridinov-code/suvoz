@@ -47,7 +47,7 @@ const TYPES = {
   '.png': 'image/png', '.jpg': 'image/jpeg', '.ico': 'image/x-icon',
   '.mp3': 'audio/mpeg', '.woff2': 'font/woff2', '.txt': 'text/plain; charset=utf-8',
 };
-const PAGES = { '/': 'index.html', '/app': 'hub.html', '/dialogue': 'app.html', '/login': 'login.html', '/terms': 'terms.html', '/privacy': 'privacy.html', '/refunds': 'refunds.html', '/history': 'history.html', '/transcribe': 'transcribe.html', '/voice-design': 'voicedesign.html', '/voice-clone': 'voiceclone.html', '/dubbing': 'dubbing.html', '/translate': 'translate.html' };
+const PAGES = { '/': 'index.html', '/app': 'hub.html', '/dialogue': 'app.html', '/login': 'login.html', '/terms': 'terms.html', '/privacy': 'privacy.html', '/refunds': 'refunds.html', '/history': 'history.html', '/transcribe': 'transcribe.html', '/voice-design': 'voicedesign.html', '/voice-clone': 'voiceclone.html', '/dubbing': 'dubbing.html', '/translate': 'translate.html', '/account': 'account.html' };
 
 // Serves files from /public only. Blocks anything outside that folder.
 function serveStatic(req, res, pathname) {
@@ -1018,6 +1018,48 @@ async function handleTranslate(req, res) {
   }
 }
 
+// ---- Account deletion ----
+async function handleAccountDelete(req, res) {
+  const who = await gate(req, res);
+  if (!who || !who.user) return;
+  if (!AUTH_ON || !SUPABASE_SECRET) return sendJson(res, 503, { error: 'Account deletion is not available right now.' });
+  let b = {};
+  try { b = await readJson(req, 2048); } catch (e) {}
+  if (b.confirm !== 'DELETE') return sendJson(res, 400, { code: 'del_confirm', error: 'Please type DELETE to confirm.' });
+  const id = who.user.id, email = who.user.email || '';
+  try {
+    const d = (await admin('account_data', { p_user: id })) || {};
+    // 1. Stop billing first. If this fails we stop here, so nobody keeps paying for a deleted account.
+    if (PAY_ON && d.subscription) {
+      try { await stripe('DELETE', '/v1/subscriptions/' + encodeURIComponent(d.subscription), {}); }
+      catch (e) {
+        const gone = e.stripe && (e.stripe.code === 'resource_missing' || /already been canceled|No such subscription/i.test(e.stripe.message || ''));
+        if (!gone) throw e;
+      }
+    }
+    // 2. Voices and unfinished dubbing projects at the voice provider (best effort: they may already be gone).
+    if (API_KEY) {
+      await Promise.allSettled([
+        ...(d.voices || []).map((v) => fetch(`${BASE}/v1/voices/${encodeURIComponent(v)}`, { method: 'DELETE', headers: { 'xi-api-key': API_KEY } })),
+        ...(d.projects || []).map((p) => fetch(`${BASE}/v1/dubbing/project/${encodeURIComponent(p)}`, { method: 'DELETE', headers: { 'xi-api-key': API_KEY } })),
+      ]);
+    }
+    // 3. Saved audio files. If this fails we stop, so no files are left behind without an owner.
+    const files = (d.files || []).filter((f) => typeof f === 'string' && f.startsWith(id + '/'));
+    for (let i = 0; i < files.length; i += 100) await storageDelete(files.slice(i, i + 100));
+    // 4. The account itself. The database rows (history, voices, plan, jobs) go with it.
+    const r = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${encodeURIComponent(id)}`, { method: 'DELETE', headers: sbAdminHeaders() });
+    if (!r.ok && r.status !== 404) throw new Error('delete user ' + r.status + ' ' + (await r.text().catch(() => '')).slice(0, 200));
+    tokenCache.clear();
+    sendMail({ to: email, subject: 'Your Suvoz account was deleted', text: 'Your Suvoz account and the data stored in it have been deleted. Payment records that we must keep by law are kept. If you did not ask for this, write to support@suvoz.io.', html: '<p>Your Suvoz account and the data stored in it have been deleted. Payment records that we must keep by law are kept.</p><p>If you did not ask for this, write to <a href="mailto:support@suvoz.io">support@suvoz.io</a>.</p>' });
+    sendJson(res, 200, { ok: true });
+  } catch (e) {
+    console.error('account delete failed:', e.message);
+    sendJson(res, 502, { code: 'del_failed', error: 'We could not delete your account. Nothing was lost; please try again or write to support@suvoz.io.' });
+  }
+}
+
+
 // ---- Voice design ----
 const DESIGN_ON = !!API_KEY && AUTH_ON && !!SUPABASE_SECRET;
 const DESIGN_MODEL = process.env.ELEVEN_DESIGN_MODEL || 'eleven_multilingual_ttv_v2';
@@ -1416,6 +1458,7 @@ const server = http.createServer(async (req, res) => {
     }
     if (req.method === 'GET' && p === '/api/voices') return await handleVoices(req, res);
     if (req.method === 'POST' && p === '/api/generate') return await handleGenerate(req, res);
+    if (req.method === 'POST' && p === '/api/account-delete') return await handleAccountDelete(req, res);
     if (req.method === 'POST' && p === '/api/translate') return await handleTranslate(req, res);
     if (req.method === 'POST' && p === '/api/transcribe') return await handleTranscribe(req, res);
     if (p === '/api/my-voices' && (req.method === 'GET' || req.method === 'DELETE')) return await handleMyVoices(req, res, new URL(req.url, 'http://localhost'));
