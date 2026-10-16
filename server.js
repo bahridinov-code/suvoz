@@ -47,7 +47,7 @@ const TYPES = {
   '.png': 'image/png', '.jpg': 'image/jpeg', '.ico': 'image/x-icon',
   '.mp3': 'audio/mpeg', '.woff2': 'font/woff2', '.txt': 'text/plain; charset=utf-8',
 };
-const PAGES = { '/': 'index.html', '/app': 'hub.html', '/dialogue': 'app.html', '/login': 'login.html', '/terms': 'terms.html', '/privacy': 'privacy.html', '/refunds': 'refunds.html', '/history': 'history.html', '/transcribe': 'transcribe.html', '/voice-design': 'voicedesign.html' };
+const PAGES = { '/': 'index.html', '/app': 'hub.html', '/dialogue': 'app.html', '/login': 'login.html', '/terms': 'terms.html', '/privacy': 'privacy.html', '/refunds': 'refunds.html', '/history': 'history.html', '/transcribe': 'transcribe.html', '/voice-design': 'voicedesign.html', '/voice-clone': 'voiceclone.html' };
 
 // Serves files from /public only. Blocks anything outside that folder.
 function serveStatic(req, res, pathname) {
@@ -906,7 +906,7 @@ async function handleMyVoices(req, res, url) {
     const rows = (await admin('voices_list', { p_user: a.who.user.id })) || [];
     sendJson(res, 200, {
       plan: a.plan, canDesign: a.max > 0, max: a.max, cost: DESIGN_COST_CHARS / 900,
-      voices: rows.map((x) => ({ id: x.voice_id, name: x.name, description: x.description })),
+      voices: rows.map((x) => ({ id: x.voice_id, name: x.name, description: x.description, kind: x.kind || 'design' })),
     });
   } catch (e) {
     console.error(e.message);
@@ -1003,6 +1003,60 @@ async function handleVoiceSave(req, res) {
   }
 }
 
+
+const CLONE_MAX_BYTES = 15 * 1024 * 1024, CLONE_MIN_SECONDS = 20, CLONE_MAX_SECONDS = 300;
+async function handleVoiceClone(req, res) {
+  const a = await voiceAccount(req, res);
+  if (!a) return;
+  if (!a.max) return sendJson(res, 402, { code: 'design_paid', error: 'Voice cloning is for paid plans.' });
+  if (rateLimited(clientIp(req))) return sendJson(res, 429, { error: 'Too many requests. Please try again in a few minutes.' });
+  if (String(req.headers['x-consent'] || '') !== 'yes') return sendJson(res, 400, { code: 'clone_consent', error: 'Please confirm you have the right to use this voice.' });
+  let name = null;
+  try { name = cleanText(decodeURIComponent(String(req.headers['x-voice-name'] || '')), 1, 40); } catch (e) {}
+  if (!name) return sendJson(res, 400, { error: 'Bad request.' });
+  const seconds = Number(req.headers['x-duration']);
+  if (!isFinite(seconds) || seconds < CLONE_MIN_SECONDS || seconds > CLONE_MAX_SECONDS) return sendJson(res, 400, { code: 'clone_short', error: 'The recording must be between 20 seconds and 5 minutes.' });
+  if (Number(req.headers['content-length']) > CLONE_MAX_BYTES) {
+    res.setHeader('Connection', 'close');
+    return sendJson(res, 413, { code: 'clone_big', error: 'This file is bigger than 15 MB.' });
+  }
+  let body;
+  try { body = await readRaw(req, CLONE_MAX_BYTES); } catch (e) { return sendJson(res, 413, { code: 'clone_big', error: 'This file is bigger than 15 MB.' }); }
+  if (!body.length) return sendJson(res, 400, { code: 'clone_bad', error: 'We could not use this recording.' });
+  try {
+    const can = await admin('voices_can_add', { p_user: a.who.user.id, p_max: a.max, p_global_max: VOICE_SLOTS_MAX });
+    if (can === 'limit') return sendJson(res, 400, { code: 'voice_limit', error: 'You have reached your voice limit. Delete one to save a new one.' });
+    if (can === 'full') return sendJson(res, 503, { code: 'voice_full', error: 'Voice saving is full right now. Please try again later.' });
+    const type = String(req.headers['content-type'] || 'application/octet-stream').split(';')[0];
+    const form = new FormData();
+    form.append('name', 'Suvoz ' + name + ' ' + crypto.randomBytes(3).toString('hex'));
+    form.append('description', 'Cloned voice (owner confirmed the right to use it)');
+    form.append('files', new Blob([body], { type }), 'sample');
+    const r = await fetch(`${BASE}/v1/voices/add`, { method: 'POST', headers: { 'xi-api-key': API_KEY }, body: form });
+    if (!r.ok) {
+      console.error('ElevenLabs clone error', r.status, (await r.text().catch(() => '')).slice(0, 300));
+      if (r.status === 400 || r.status === 422) return sendJson(res, 400, { code: 'clone_bad', error: 'We could not use this recording.' });
+      if (r.status === 401) return sendJson(res, 502, { error: 'Server API key was rejected by ElevenLabs.' });
+      if (r.status === 402 || r.status === 403) return sendJson(res, 502, { error: 'The ElevenLabs plan does not allow this request (check plan or credits).' });
+      return sendJson(res, 502, { error: 'Cloning failed. Please try again.' });
+    }
+    const j = await r.json();
+    const voiceId = String(j.voice_id || '');
+    if (!VOICE_ID_RE.test(voiceId)) return sendJson(res, 502, { error: 'Cloning failed. Please try again.' });
+    try {
+      await admin('voices_add_clone', { p_user: a.who.user.id, p_voice: voiceId, p_name: name, p_ip: clientIp(req) });
+    } catch (e) {
+      console.error('voices_add_clone failed:', e.message);
+      fetch(`${BASE}/v1/voices/${encodeURIComponent(voiceId)}`, { method: 'DELETE', headers: { 'xi-api-key': API_KEY } }).catch(() => {});
+      return sendJson(res, 502, { error: 'Cloning failed. Please try again.' });
+    }
+    sendJson(res, 200, { voice: { id: voiceId, name, description: '', kind: 'clone' } });
+  } catch (e) {
+    console.error(e.message);
+    sendJson(res, 502, { error: 'Cloning failed. Please try again.' });
+  }
+}
+
 const server = http.createServer(async (req, res) => {
   try {
     const p = new URL(req.url, 'http://localhost').pathname;
@@ -1038,6 +1092,7 @@ const server = http.createServer(async (req, res) => {
     if (p === '/api/my-voices' && (req.method === 'GET' || req.method === 'DELETE')) return await handleMyVoices(req, res, new URL(req.url, 'http://localhost'));
     if (req.method === 'POST' && p === '/api/voice-design') return await handleVoiceDesign(req, res);
     if (req.method === 'POST' && p === '/api/voice-save') return await handleVoiceSave(req, res);
+    if (req.method === 'POST' && p === '/api/voice-clone') return await handleVoiceClone(req, res);
     if (p === '/api/history') {
       if (req.method === 'GET') return await handleHistoryList(req, res);
       if (req.method === 'DELETE') return await handleHistoryDelete(req, res, new URL(req.url, 'http://localhost'));
