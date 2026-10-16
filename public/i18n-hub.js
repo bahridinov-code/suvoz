@@ -1,6 +1,7 @@
 // Text for the start page. Loaded after i18n.js.
 // Tajik (tg) and Uzbek (uz) texts should be checked by a native speaker before launch.
 Object.assign(T.en, {
+  'voice.female': 'Female', 'voice.male': 'Male',
   'hub.title': 'What would you like to create?',
   'hub.note': 'More tools are on the way.',
   'hub.soon': 'Soon', 'nav.tools': 'All tools',
@@ -18,6 +19,7 @@ Object.assign(T.en, {
   'hub.ex.sound': 'Anna: [whispers] Who is there? (door creaks, 2s)\nBen: [laughs] Only me!',
 });
 Object.assign(T.ar, {
+  'voice.female': 'أنثى', 'voice.male': 'ذكر',
   'hub.title': 'ماذا تريد أن تنشئ؟',
   'hub.note': 'المزيد من الأدوات قادم.',
   'hub.soon': 'قريبًا', 'nav.tools': 'كل الأدوات',
@@ -35,6 +37,7 @@ Object.assign(T.ar, {
   'hub.ex.sound': 'Anna: [whispers] مَن هناك؟ (صرير الباب، 2s)\nBen: [laughs] أنا فقط!',
 });
 Object.assign(T.ru, {
+  'voice.female': 'женский', 'voice.male': 'мужской',
   'hub.title': 'Что вы хотите создать?',
   'hub.note': 'Скоро появятся новые инструменты.',
   'hub.soon': 'Скоро', 'nav.tools': 'Все инструменты',
@@ -52,6 +55,7 @@ Object.assign(T.ru, {
   'hub.ex.sound': 'Анна: [whispers] Кто там? (скрип двери, 2с)\nБорис: [laughs] Это только я!',
 });
 Object.assign(T.tg, {
+  'voice.female': 'занона', 'voice.male': 'мардона',
   'hub.title': 'Чӣ сохтан мехоҳед?',
   'hub.note': 'Абзорҳои нав ба зудӣ меоянд.',
   'hub.soon': 'Ба зудӣ', 'nav.tools': 'Ҳамаи абзорҳо',
@@ -69,6 +73,7 @@ Object.assign(T.tg, {
   'hub.ex.sound': 'Анна: [whispers] Он ҷо кист? (ғиҷиррос задани дар, 2с)\nБорис: [laughs] Танҳо ман!',
 });
 Object.assign(T.uz, {
+  'voice.female': 'ayol', 'voice.male': 'erkak',
   'hub.title': 'Nima yaratmoqchisiz?',
   'hub.note': 'Yangi vositalar tez orada qoʻshiladi.',
   'hub.soon': 'Tez orada', 'nav.tools': 'Barcha vositalar',

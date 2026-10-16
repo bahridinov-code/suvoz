@@ -180,7 +180,8 @@ function renderSpeakers(names) {
     voices.forEach((v) => {
       const o = document.createElement('option');
       o.value = v.id;
-      o.textContent = v.name + (v.labels && v.labels.accent ? ' · ' + v.labels.accent : '');
+      const g = v.labels && v.labels.gender ? String(v.labels.gender).toLowerCase() : '';
+      o.textContent = v.name + (g ? ' · ' + (T.en['voice.' + g] ? t('voice.' + g) : g) : '') + (v.labels && v.labels.accent ? ' · ' + v.labels.accent : '');
       sel.appendChild(o);
     });
     sel.value = choice[name] || '';
