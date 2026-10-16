@@ -303,3 +303,4 @@ a.tile:hover { border-color: var(--indigo); transform: translateY(-2px); box-sha
 .job .jtext { white-space: pre-wrap; background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin-top: 10px; font-size: 14px; max-height: 220px; overflow: auto; }
 .job audio { width: 100%; margin-top: 10px; }
 .job .hact { margin-top: 10px; }
+#count.err { color: var(--err); }
