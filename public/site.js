@@ -61,6 +61,35 @@ window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(buil
       b.onclick = async () => { await Auth.signOut(); location.reload(); };
       right.appendChild(b);
     }
+    // Show which plan the visitor has now.
+    try {
+      const me = await (await fetch('/api/me', { headers: { Authorization: 'Bearer ' + s.access_token } })).json();
+      const keys = ['free', 'starter', 'creator', 'pro', 'business'];
+      const idx = keys.indexOf(me.plan || 'free');
+      const cards = document.querySelectorAll('#pricing .plan');
+      if (idx >= 0 && cards[idx]) {
+        const paid = idx > 0;
+        cards.forEach((card, i) => {
+          const a = card.querySelector('a.btn');
+          if (!a || i > 4) return;
+          if (i === idx) {
+            card.classList.add('current');
+            const span = document.createElement('span');
+            span.className = 'btn small ghost cur'; span.dataset.i18n = 'price.current';
+            a.replaceWith(span);
+          } else if (paid && i > 0) {
+            a.dataset.i18n = 'price.change'; a.href = '#';
+            a.onclick = async (ev) => {
+              ev.preventDefault();
+              try {
+                const r = await fetch('/api/portal', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + s.access_token }, body: JSON.stringify({ lang: currentLang }) });
+                const j = await r.json(); if (j.url) location.href = j.url;
+              } catch (e) {}
+            };
+          }
+        });
+      }
+    } catch (e) {}
     applyLang(currentLang);
   } catch (e) {}
 })();
