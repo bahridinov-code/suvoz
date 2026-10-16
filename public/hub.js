@@ -93,6 +93,7 @@ document.addEventListener('langchange', render);
   try { config = await (await fetch('/api/config')).json(); } catch (e) {}
   if (!config.authOn) return location.replace('/dialogue');
   historyOn = !!config.historyOn;
+  if (config.designOn) { const d = TOOLS.find((x) => x.id === 'design'); d.soon = false; d.href = '/voice-design'; d.color = 'indigo'; }
   $('historyLink').hidden = !historyOn;
   if (!(await Auth.session())) return location.replace('/login');
   $('logout').hidden = false;

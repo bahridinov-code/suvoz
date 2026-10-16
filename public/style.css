@@ -268,3 +268,18 @@ a.tile:hover { border-color: var(--indigo); transform: translateY(-2px); box-sha
 .ticon { flex: none; }
 @media (max-width: 520px) { .top .who-mail { display: none; } .top-right { gap: 6px; } .top-right .pbtn { padding: 8px 12px; white-space: nowrap; } .top-right .lang { max-width: 92px; } }
 @media (max-width: 440px) { .top .logo [data-brand] { display: none; } }
+
+/* Voice design */
+.vd-desc { min-height: 110px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.chip { border: 1px solid var(--line); background: var(--paper); border-radius: 999px; padding: 6px 12px; font: inherit; font-size: 13px; color: var(--muted); cursor: pointer; }
+.chip:hover { border-color: var(--indigo); color: var(--indigo); }
+.vcard { border: 1px solid var(--line); border-radius: 16px; padding: 14px; margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+.vcard audio { width: 100%; }
+.vcard .vrow2 { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.vcard input { flex: 1 1 160px; min-width: 0; }
+.mitem { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
+.mitem:first-child { border-top: 0; }
+.mitem .mt { min-width: 0; }
+.mitem .mt strong { display: block; }
+.mitem .mt span { color: var(--muted); font-size: 13px; }

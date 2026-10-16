@@ -165,7 +165,8 @@ function renderSpeakers(names) {
     return;
   }
   names.forEach((name, i) => {
-    if (!choice[name] && voices.length) choice[name] = voices[i % voices.length].id;
+    const shared = voices.filter((v) => !v.mine);
+    if (!choice[name] && shared.length) choice[name] = shared[i % shared.length].id;
     const row = document.createElement('div');
     row.className = 'vrow';
     const who = document.createElement('span');
@@ -177,13 +178,21 @@ function renderSpeakers(names) {
     who.append(dot, nm);
     const sel = document.createElement('select');
     sel.className = 'field';
-    voices.forEach((v) => {
+    const addOpt = (parent, v) => {
       const o = document.createElement('option');
       o.value = v.id;
       const g = v.labels && v.labels.gender ? String(v.labels.gender).toLowerCase() : '';
       o.textContent = v.name + (g ? ' · ' + (T.en['voice.' + g] ? t('voice.' + g) : g) : '') + (v.labels && v.labels.accent ? ' · ' + v.labels.accent : '');
-      sel.appendChild(o);
-    });
+      parent.appendChild(o);
+    };
+    voices.filter((v) => !v.mine).forEach((v) => addOpt(sel, v));
+    const mineList = voices.filter((v) => v.mine);
+    if (mineList.length) {
+      const og = document.createElement('optgroup');
+      og.label = t('voice.mine');
+      mineList.forEach((v) => addOpt(og, v));
+      sel.appendChild(og);
+    }
     sel.value = choice[name] || '';
     sel.onchange = () => { choice[name] = sel.value; };
     const btn = document.createElement('button');
