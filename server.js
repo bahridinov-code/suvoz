@@ -40,6 +40,14 @@ const PLANS = {
   business: { name: 'Suvoz Business', minutes: 3000, cents: 49900, firstOff: 0 },
 };
 
+// Browser safety headers on every answer: no framing by other sites, no content-type guessing, less referrer leakage.
+const SEC_HEADERS = {
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Permissions-Policy': 'camera=(), geolocation=()',
+  'Strict-Transport-Security': 'max-age=31536000',
+};
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const TYPES = {
   '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8',
@@ -57,7 +65,7 @@ function serveStatic(req, res, pathname) {
   if (!file.startsWith(PUBLIC_DIR + path.sep) || !type) return false;
   let data;
   try { data = fs.readFileSync(file); } catch (e) { return false; }
-  res.writeHead(200, { 'Content-Type': type, 'Cache-Control': 'no-cache' });
+  res.writeHead(200, { 'Content-Type': type, 'Cache-Control': 'no-cache', ...SEC_HEADERS });
   res.end(data);
   return true;
 }
@@ -69,6 +77,7 @@ function sendJson(res, status, obj) {
     'Content-Type': 'application/json; charset=utf-8',
     'Content-Length': body.length,
     'Cache-Control': 'no-store',
+    ...SEC_HEADERS,
   });
   res.end(body);
 }
@@ -1476,7 +1485,7 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'POST' && p === '/api/checkout') return await handleCheckout(req, res);
     if (req.method === 'POST' && p === '/api/portal') return await handlePortal(req, res);
     if (req.method === 'POST' && p === '/api/stripe-webhook') return await handleStripeWebhook(req, res);
-    if (req.method === 'GET' && !p.startsWith('/api/') && serveStatic(req, res, p)) return;
+    if ((req.method === 'GET' || req.method === 'HEAD') && !p.startsWith('/api/') && serveStatic(req, res, p)) return;
     sendJson(res, 404, { error: 'Not found.' });
   } catch (e) {
     console.error(e.message);
