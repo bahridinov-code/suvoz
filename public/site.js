@@ -53,7 +53,7 @@ window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(buil
     if (!s) return;
     const login = document.querySelector('.top-right a.login');
     if (login) login.hidden = true;
-    document.querySelectorAll('a[data-i18n="nav.try"], a[data-i18n="hero.cta1"]').forEach((a) => { a.href = '/app'; });
+    document.querySelectorAll('a[data-i18n="nav.try"], a[data-i18n="hero.cta1"]').forEach((a) => { a.href = '/app'; if (a.dataset.i18n === 'nav.try') a.dataset.i18n = 'nav.tools'; });
     const right = document.querySelector('.top-right');
     if (right && !document.getElementById('logout')) {
       const b = document.createElement('button');
