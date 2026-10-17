@@ -4,27 +4,27 @@
   Object.assign(T.en, {
     'prof.community': 'Join our community', 'prof.instagram': 'Instagram', 'prof.tiktok': 'TikTok', 'prof.affiliate': 'Affiliate program',
     'prof.menu': 'Account menu', 'prof.plan': 'Plan', 'prof.total': 'In your plan', 'prof.left': 'Minutes left', 'prof.min': 'min',
-    'prof.account': 'Account', 'prof.plans': 'Plans', 'prof.history': 'My history', 'prof.feedback': 'Send feedback', 'prof.manage': 'Manage plan', 'prof.logout': 'Log out', 'prof.trial': 'Free trial',
+    'prof.account': 'Account', 'prof.plans': 'Plans', 'prof.history': 'My history', 'prof.feedback': 'Send feedback', 'prof.fbshort': 'Feedback', 'prof.manage': 'Manage plan', 'prof.logout': 'Log out', 'prof.trial': 'Free trial',
   });
   Object.assign(T.ar, {
     'prof.community': 'انضم إلى مجتمعنا', 'prof.instagram': 'إنستغرام', 'prof.tiktok': 'تيك توك', 'prof.affiliate': 'برنامج الشركاء',
     'prof.menu': 'قائمة الحساب', 'prof.plan': 'الخطة', 'prof.total': 'في خطتك', 'prof.left': 'الدقائق المتبقية', 'prof.min': 'د',
-    'prof.account': 'الحساب', 'prof.plans': 'الخطط', 'prof.history': 'سجلّي', 'prof.feedback': 'أرسل ملاحظاتك', 'prof.manage': 'إدارة الخطة', 'prof.logout': 'تسجيل الخروج', 'prof.trial': 'تجربة مجانية',
+    'prof.account': 'الحساب', 'prof.plans': 'الخطط', 'prof.history': 'سجلّي', 'prof.feedback': 'أرسل ملاحظاتك', 'prof.fbshort': 'ملاحظات', 'prof.manage': 'إدارة الخطة', 'prof.logout': 'تسجيل الخروج', 'prof.trial': 'تجربة مجانية',
   });
   Object.assign(T.ru, {
     'prof.community': 'Вступить в сообщество', 'prof.instagram': 'Instagram', 'prof.tiktok': 'TikTok', 'prof.affiliate': 'Партнёрская программа',
     'prof.menu': 'Меню аккаунта', 'prof.plan': 'Тариф', 'prof.total': 'В вашем тарифе', 'prof.left': 'Осталось минут', 'prof.min': 'мин',
-    'prof.account': 'Аккаунт', 'prof.plans': 'Тарифы', 'prof.history': 'Моя история', 'prof.feedback': 'Отправить отзыв', 'prof.manage': 'Управление тарифом', 'prof.logout': 'Выйти', 'prof.trial': 'Бесплатный пробный период',
+    'prof.account': 'Аккаунт', 'prof.plans': 'Тарифы', 'prof.history': 'Моя история', 'prof.feedback': 'Отправить отзыв', 'prof.fbshort': 'Отзыв', 'prof.manage': 'Управление тарифом', 'prof.logout': 'Выйти', 'prof.trial': 'Бесплатный пробный период',
   });
   Object.assign(T.tg, {
     'prof.community': 'Ба ҷомеаи мо ҳамроҳ шавед', 'prof.instagram': 'Instagram', 'prof.tiktok': 'TikTok', 'prof.affiliate': 'Барномаи шарикӣ',
     'prof.menu': 'Менюи ҳисоб', 'prof.plan': 'Нақша', 'prof.total': 'Дар нақшаи шумо', 'prof.left': 'Дақиқаҳои боқимонда', 'prof.min': 'дақ',
-    'prof.account': 'Ҳисоб', 'prof.plans': 'Нақшаҳо', 'prof.history': 'Таърихи ман', 'prof.feedback': 'Фикру мулоҳиза', 'prof.manage': 'Идораи нақша', 'prof.logout': 'Баромадан', 'prof.trial': 'Санҷиши ройгон',
+    'prof.account': 'Ҳисоб', 'prof.plans': 'Нақшаҳо', 'prof.history': 'Таърихи ман', 'prof.feedback': 'Фикру мулоҳиза', 'prof.fbshort': 'Фикр', 'prof.manage': 'Идораи нақша', 'prof.logout': 'Баромадан', 'prof.trial': 'Санҷиши ройгон',
   });
   Object.assign(T.uz, {
     'prof.community': 'Hamjamiyatimizga qoʻshiling', 'prof.instagram': 'Instagram', 'prof.tiktok': 'TikTok', 'prof.affiliate': 'Hamkorlik dasturi',
     'prof.menu': 'Hisob menyusi', 'prof.plan': 'Tarif', 'prof.total': 'Tarifingizda', 'prof.left': 'Qolgan daqiqalar', 'prof.min': 'daq',
-    'prof.account': 'Hisob', 'prof.plans': 'Tariflar', 'prof.history': 'Mening tarixim', 'prof.feedback': 'Fikr-mulohaza', 'prof.manage': 'Tarifni boshqarish', 'prof.logout': 'Chiqish', 'prof.trial': 'Bepul sinov',
+    'prof.account': 'Hisob', 'prof.plans': 'Tariflar', 'prof.history': 'Mening tarixim', 'prof.feedback': 'Fikr-mulohaza', 'prof.fbshort': 'Fikr', 'prof.manage': 'Tarifni boshqarish', 'prof.logout': 'Chiqish', 'prof.trial': 'Bepul sinov',
   });
 
   const TOTAL = { free: 1800, starter: 27000, creator: 108000, pro: 360000, business: 2700000 };   // characters; 900 = 1 minute
@@ -45,7 +45,7 @@
   const svg = (k) => '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICON[k] + '</svg>';
 
   let cfg = {}, token = '', me = { email: '', plan: 'free', left: null };
-  let btn, panel, built = false;
+  let btn, panel, fbBtn, built = false;
 
   const planName = (p) => { const k = PLAN_KEY[p]; const v = k ? t(k) : ''; return v && v !== k ? v : (p ? p[0].toUpperCase() + p.slice(1) : ''); };
   const mins = (chars) => { const m = Math.max(0, chars) / 900; return String(Math.round(m * 10) / 10); };
@@ -62,6 +62,7 @@
   }
 
   function render() {
+    if (fbBtn) { fbBtn.querySelector('span').textContent = t('prof.fbshort'); fbBtn.setAttribute('aria-label', t('prof.feedback')); }
     if (!built) return;
     const initial = (me.email || '?')[0].toUpperCase();
     const col = colorFor(me.email || '');
@@ -102,7 +103,6 @@
     list.append(item('account', t('prof.account'), '/account'));
     list.append(item('plans', t('prof.plans'), '/plans'));
     if (cfg.historyOn) list.append(item('history', t('prof.history'), '/history'));
-    list.append(item('feedback', t('prof.feedback'), '/feedback?from=' + encodeURIComponent(location.pathname)));
     const L = cfg.links || {};
     const more = [['affiliate', 'prof.affiliate', L.affiliate], ['community', 'prof.community', L.discord], ['instagram', 'prof.instagram', L.instagram], ['tiktok', 'prof.tiktok', L.tiktok]].filter((x) => x[2]);
     if (more.length) {
@@ -139,6 +139,12 @@
     btn = document.createElement('button'); btn.type = 'button'; btn.className = 'prof-btn'; btn.setAttribute('aria-haspopup', 'true'); btn.setAttribute('aria-expanded', 'false');
     panel = document.createElement('div'); panel.className = 'prof-panel'; panel.hidden = true;
     wrap.append(btn, panel);
+    if (location.pathname !== '/feedback') {
+      fbBtn = document.createElement('a'); fbBtn.className = 'fb-top';
+      fbBtn.innerHTML = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9.5L5 20v-4H4z"/><path d="M8 9.5h8M8 12.5h5"/></svg><span></span>';
+      fbBtn.href = '/feedback?from=' + encodeURIComponent(location.pathname);
+      right.appendChild(fbBtn);
+    }
     right.appendChild(wrap);
     built = true;
     document.body.classList.add('has-profile');
