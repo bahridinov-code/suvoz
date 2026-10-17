@@ -101,13 +101,23 @@ function renderInfo() {
 $('pick').onclick = () => $('file').click();
 $('file').onchange = async () => {
   const f = $('file').files[0];
-  file = null; seconds = 0; renderInfo(); updateGo(); setStatus(null);
+  file = null; seconds = 0; renderInfo(); updateGo(); setStatus(null); Recorder.clear();
   if (!f) return;
   if (f.size > MAX_BYTES) { setStatus('err.clone_big', true); return; }
   try { seconds = await readDuration(f); } catch (e) { setStatus('err.clone_bad', true); return; }
   if (seconds < MIN_SECONDS || seconds > MAX_SECONDS) { seconds = 0; setStatus('err.clone_short', true); return; }
   file = f; renderInfo(); updateGo();
 };
+Recorder.init({
+  pickBtn: $('pick'), maxSeconds: MAX_SECONDS,
+  onStart() { file = null; seconds = 0; $('file').value = ''; renderInfo(); updateGo(); setStatus(null); },
+  onDone(f, secs) {
+    if (f.size > MAX_BYTES) { setStatus('err.clone_big', true); return; }
+    if (secs < MIN_SECONDS) { setStatus('err.clone_short', true); return; }
+    file = f; seconds = secs; renderInfo(); updateGo();
+  },
+  onError(key) { setStatus(key, true); },
+});
 $('consent').onchange = updateGo;
 $('vname').oninput = updateGo;
 $('go').onclick = async () => {
@@ -124,7 +134,7 @@ $('go').onclick = async () => {
     if (r.status === 401) { await Auth.signOut(); return location.replace('/login'); }
     if (!r.ok) throw new Error(errText(j, t('err.clone_failed')));
     setStatus('vc.done');
-    file = null; seconds = 0; $('file').value = ''; $('vname').value = ''; $('consent').checked = false; renderInfo();
+    file = null; seconds = 0; $('file').value = ''; Recorder.clear(); $('vname').value = ''; $('consent').checked = false; renderInfo();
     await loadVoices();
   } catch (e) { if (e.message !== 'login') setStatus(null, true, e.message === 'Failed to fetch' ? t('err.clone_failed') : e.message); }
   finally { busy = false; updateGo(); }

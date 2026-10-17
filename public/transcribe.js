@@ -78,7 +78,7 @@ $('pick').onclick = () => $('file').click();
 $('file').onchange = async () => {
   const f = $('file').files[0];
   file = null; seconds = 0; $('go').disabled = true; $('result').hidden = true; lastSegments = null;
-  setStatus(null); renderInfo();
+  setStatus(null); renderInfo(); Recorder.clear();
   if (!f) return;
   if (f.size > MAX_BYTES) { setStatus('err.stt_big', true); return; }
   try { seconds = await readDuration(f); } catch (e) { setStatus('err.stt_bad', true); return; }
@@ -87,6 +87,15 @@ $('file').onchange = async () => {
   renderInfo();
   $('go').disabled = false;
 };
+Recorder.init({
+  pickBtn: $('pick'), maxSeconds: MAX_SECONDS,
+  onStart() { file = null; seconds = 0; $('file').value = ''; $('go').disabled = true; $('result').hidden = true; lastSegments = null; setStatus(null); renderInfo(); },
+  onDone(f, secs) {
+    if (f.size > MAX_BYTES) { setStatus('err.stt_big', true); return; }
+    file = f; seconds = secs; renderInfo(); $('go').disabled = false;
+  },
+  onError(key) { setStatus(key, true); },
+});
 
 $('go').onclick = async () => {
   if (!file || busy) return;

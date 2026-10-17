@@ -461,3 +461,13 @@ mark.kw { background: linear-gradient(transparent 58%, rgba(59, 63, 224, .22) 58
 .plan .btn.cur { cursor: default; color: var(--teal); border: 1px solid var(--teal); pointer-events: none; padding-inline: 14px; }
 .dbtns { display: flex; justify-content: center; gap: 10px; margin-top: 22px; }
 @media (max-width: 640px) { .cur-card { grid-template-columns: 1fr; padding: 20px; } }
+
+/* ---- Microphone recording ---- */
+.rec-btn { margin-inline-start: 10px; }
+.rec-bar { display: inline-flex; align-items: center; gap: 10px; margin-inline-start: 10px; padding: 6px 8px 6px 14px; border: 1px solid var(--err); border-radius: 999px; font-size: 14px; }
+.rec-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--err); animation: recpulse 1s ease-in-out infinite; }
+.rec-time { font-variant-numeric: tabular-nums; font-weight: 600; min-width: 34px; }
+.rec-bar[hidden], .rec-prev[hidden], .rec-btn[hidden] { display: none; }
+.rec-prev { display: block; width: 100%; max-width: 420px; margin-top: 12px; }
+@keyframes recpulse { 50% { opacity: .25; transform: scale(.8); } }
+@media (prefers-reduced-motion: reduce) { .rec-dot { animation: none; } }
