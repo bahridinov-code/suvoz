@@ -48,7 +48,7 @@ const SEC_HEADERS = {
   'X-Content-Type-Options': 'nosniff',
   'X-Frame-Options': 'DENY',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
-  'Permissions-Policy': 'camera=(), geolocation=()',
+  'Permissions-Policy': 'camera=(), geolocation=(), microphone=(self)',
   'Strict-Transport-Security': 'max-age=31536000',
 };
 const PUBLIC_DIR = path.join(__dirname, 'public');
