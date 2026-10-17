@@ -260,19 +260,3 @@ function initLang() {
   // Visitors who are not logged in have nothing more to wait for: show the top bar now.
   if (document.documentElement.classList.contains('out')) document.documentElement.classList.remove('pre');
 }
-
-// Warm up the next page the moment a finger touches (or the mouse hovers) a link, so opening it feels instant.
-(function () {
-  const seen = new Set();
-  const warm = (e) => {
-    const a = e.target && e.target.closest && e.target.closest('a[href]');
-    if (!a || a.target === '_blank' || a.hasAttribute('download')) return;
-    let u; try { u = new URL(a.href, location.href); } catch (x) { return; }
-    if (u.origin !== location.origin || u.pathname === location.pathname || /^\/api\//.test(u.pathname) || seen.has(u.pathname + u.search)) return;
-    seen.add(u.pathname + u.search);
-    const l = document.createElement('link'); l.rel = 'prefetch'; l.as = 'document'; l.href = u.pathname + u.search;
-    document.head.appendChild(l);
-  };
-  document.addEventListener('touchstart', warm, { passive: true });
-  document.addEventListener('mouseover', warm, { passive: true });
-})();

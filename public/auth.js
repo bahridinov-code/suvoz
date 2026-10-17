@@ -124,10 +124,20 @@ const Auth = (() => {
       if (!s) throw new Error('no session');
       await call('/auth/v1/user', { password }, s.access_token, 'PUT');
     },
+    // Logs out on this device at once. Telling the login server happens in the background, so the page never waits for it.
     async signOut() {
       const s = load();
       clear();
-      if (s) { try { await call('/auth/v1/logout', {}, s.access_token); } catch (e) {} }
+      try { localStorage.removeItem('suvoz_me'); } catch (e) {}
+      if (s) {
+        try {
+          getConfig().then((c) => fetch(c.supabaseUrl + '/auth/v1/logout', {
+            method: 'POST', keepalive: true,
+            headers: { apikey: c.supabaseKey, 'Content-Type': 'application/json', Authorization: 'Bearer ' + s.access_token },
+            body: '{}',
+          })).catch(() => {});
+        } catch (e) {}
+      }
     },
     // Turns a Supabase error into one of our translated messages.
     errKey(e) {
