@@ -99,6 +99,7 @@ function serveStatic(req, res, pathname, query) {
   let body = asset.raw, hash = asset.hash, store = asset.enc;
   let cache = 'no-cache';
   if (ext === '.html') {
+    cache = 'private, max-age=60';   // moving between pages needs no network for a minute; the scripts and styles inside are fingerprinted, so a new version still arrives
     const out = withVersions(asset.raw.toString('utf8'));
     const h = crypto.createHash('md5').update(out).digest('hex');
     if (!asset.html || asset.html.hash !== h) asset.html = { hash: h, body: Buffer.from(out), enc: {} };
@@ -1678,6 +1679,7 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'POST' && p === '/api/plan-cancel') return await setCancel(req, res, true);
     if (req.method === 'POST' && p === '/api/plan-resume') return await setCancel(req, res, false);
     if (req.method === 'POST' && p === '/api/stripe-webhook') return await handleStripeWebhook(req, res);
+    if ((req.method === 'GET' || req.method === 'HEAD') && p === '/healthz') return sendJson(res, 200, { ok: true });
     if ((req.method === 'GET' || req.method === 'HEAD') && !p.startsWith('/api/') && serveStatic(req, res, p, req.url.split('?')[1] || '')) return;
     sendJson(res, 404, { error: 'Not found.' });
   } catch (e) {
