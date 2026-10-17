@@ -62,15 +62,72 @@ const TYPES = {
 const PAGES = { '/': 'index.html', '/app': 'hub.html', '/dialogue': 'app.html', '/login': 'login.html', '/terms': 'terms.html', '/privacy': 'privacy.html', '/refunds': 'refunds.html', '/history': 'history.html', '/transcribe': 'transcribe.html', '/voice-design': 'voicedesign.html', '/voice-clone': 'voiceclone.html', '/dubbing': 'dubbing.html', '/translate': 'translate.html', '/account': 'account.html', '/plans': 'plans.html', '/feedback': 'feedback.html' };
 
 // Serves files from /public only. Blocks anything outside that folder.
-function serveStatic(req, res, pathname) {
+// Speed: text files are compressed once (brotli or gzip) and kept in memory; every file has an ETag so a repeat visit
+// gets a tiny "not modified" answer; the script/style/image links inside the HTML pages get ?v=<fingerprint> so the browser
+// can keep them for a year and still pick up a new version the moment a file changes.
+const zlib = require('zlib');
+const assetCache = new Map();
+function loadAsset(file) {
+  let st; try { st = fs.statSync(file); } catch (e) { return null; }
+  const c = assetCache.get(file);
+  if (c && c.mtimeMs === st.mtimeMs && c.size === st.size) return c;
+  let raw; try { raw = fs.readFileSync(file); } catch (e) { return null; }
+  const hash = crypto.createHash('md5').update(raw).digest('hex');
+  const a = { mtimeMs: st.mtimeMs, size: st.size, raw, hash, ver: hash.slice(0, 8), enc: {} };
+  assetCache.set(file, a);
+  return a;
+}
+const COMPRESSIBLE = new Set(['.html', '.css', '.js', '.svg', '.txt', '.json', '.xml']);
+const VERSIONED_LINK = /\b(src|href)="(\/[^"?#]+\.(?:js|css|svg|png))"/g;
+function withVersions(html) {
+  return html.replace(VERSIONED_LINK, (m, attr, url) => {
+    if (url.startsWith('/fonts/')) return m;
+    const f = path.normalize(path.join(PUBLIC_DIR, decodeURIComponent(url)));
+    if (!f.startsWith(PUBLIC_DIR + path.sep)) return m;
+    const a = loadAsset(f);
+    return a ? `${attr}="${url}?v=${a.ver}"` : m;
+  });
+}
+function serveStatic(req, res, pathname, query) {
   const rel = PAGES[pathname] || decodeURIComponent(pathname).replace(/^\/+/, '');
   const file = path.normalize(path.join(PUBLIC_DIR, rel));
-  const type = TYPES[path.extname(file).toLowerCase()];
+  const ext = path.extname(file).toLowerCase();
+  const type = TYPES[ext];
   if (!file.startsWith(PUBLIC_DIR + path.sep) || !type) return false;
-  let data;
-  try { data = fs.readFileSync(file); } catch (e) { return false; }
-  res.writeHead(200, { 'Content-Type': type, 'Cache-Control': 'no-cache', ...SEC_HEADERS });
-  res.end(data);
+  const asset = loadAsset(file);
+  if (!asset) return false;
+  let body = asset.raw, hash = asset.hash, store = asset.enc;
+  let cache = 'no-cache';
+  if (ext === '.html') {
+    const out = withVersions(asset.raw.toString('utf8'));
+    const h = crypto.createHash('md5').update(out).digest('hex');
+    if (!asset.html || asset.html.hash !== h) asset.html = { hash: h, body: Buffer.from(out), enc: {} };
+    body = asset.html.body; hash = h; store = asset.html.enc;
+  } else if (pathname.startsWith('/fonts/')) {
+    cache = 'public, max-age=31536000, immutable';
+  } else if (query && /(^|&)v=/.test(query) && (ext === '.js' || ext === '.css')) {
+    cache = 'public, max-age=31536000, immutable';
+  } else if (ext !== '.js' && ext !== '.css') {
+    cache = 'public, max-age=86400';
+  }
+  let enc = '';
+  if (COMPRESSIBLE.has(ext) && body.length > 300) {
+    const ae = String(req.headers['accept-encoding'] || '');
+    enc = /\bbr\b/.test(ae) ? 'br' : /\bgzip\b/.test(ae) ? 'gzip' : '';
+    if (enc && !store[enc]) {
+      store[enc] = enc === 'br'
+        ? zlib.brotliCompressSync(body, { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 9, [zlib.constants.BROTLI_PARAM_SIZE_HINT]: body.length } })
+        : zlib.gzipSync(body, { level: 9 });
+    }
+    if (enc) body = store[enc];
+  }
+  const etag = '"' + hash.slice(0, 20) + (enc ? '-' + enc : '') + '"';
+  const head = { 'Content-Type': type, 'Cache-Control': cache, ETag: etag, Vary: 'Accept-Encoding', ...SEC_HEADERS };
+  if (req.headers['if-none-match'] === etag) { res.writeHead(304, head); res.end(); return true; }
+  if (enc) head['Content-Encoding'] = enc;
+  head['Content-Length'] = body.length;
+  res.writeHead(200, head);
+  res.end(req.method === 'HEAD' ? undefined : body);
   return true;
 }
 
@@ -1621,7 +1678,7 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'POST' && p === '/api/plan-cancel') return await setCancel(req, res, true);
     if (req.method === 'POST' && p === '/api/plan-resume') return await setCancel(req, res, false);
     if (req.method === 'POST' && p === '/api/stripe-webhook') return await handleStripeWebhook(req, res);
-    if ((req.method === 'GET' || req.method === 'HEAD') && !p.startsWith('/api/') && serveStatic(req, res, p)) return;
+    if ((req.method === 'GET' || req.method === 'HEAD') && !p.startsWith('/api/') && serveStatic(req, res, p, req.url.split('?')[1] || '')) return;
     sendJson(res, 404, { error: 'Not found.' });
   } catch (e) {
     console.error(e.message);
