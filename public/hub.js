@@ -91,7 +91,7 @@ document.addEventListener('langchange', render);
   // Old links like /app?paid=1 or /app?plan=pro belong to the creation page.
   if (/[?&](plan|paid)=/.test(location.search)) return location.replace('/dialogue' + location.search + location.hash);
   let config = {};
-  try { config = await (await fetch('/api/config')).json(); } catch (e) {}
+  try { config = await getConfig(); } catch (e) {}
   if (!config.authOn) return location.replace('/dialogue');
   historyOn = !!config.historyOn;
   if (config.translateOn) { const u = TOOLS.find((x) => x.id === 'translate'); u.soon = false; u.href = '/translate'; u.color = 'teal'; }

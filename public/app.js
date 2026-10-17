@@ -341,7 +341,7 @@ async function ensureProfile() {
 (async function init() {
   initLang();
   rememberPlan();
-  try { config = await (await fetch('/api/config')).json(); } catch (e) {}
+  try { config = await getConfig(); } catch (e) {}
   $('max').textContent = config.maxChars;
   $('historyLink').hidden = !config.historyOn;
   try {   // "Use this text again" from the History page

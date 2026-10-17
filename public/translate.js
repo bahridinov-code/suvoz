@@ -104,7 +104,7 @@ document.addEventListener('langchange', () => {
 (async function init() {
   initLang();
   let config = {};
-  try { config = await (await fetch('/api/config')).json(); } catch (e) {}
+  try { config = await getConfig(); } catch (e) {}
   if (!config.authOn) return location.replace('/dialogue');
   if (!config.translateOn) return location.replace('/app');
   if (config.translateRatio) ratio = config.translateRatio;

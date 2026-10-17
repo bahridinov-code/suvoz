@@ -151,7 +151,7 @@ document.addEventListener('langchange', () => {
 (async function init() {
   initLang();
   let config = {};
-  try { config = await (await fetch('/api/config')).json(); } catch (e) {}
+  try { config = await getConfig(); } catch (e) {}
   if (!config.authOn) return location.replace('/dialogue');
   if (!(await Auth.session())) return location.replace('/login');
   $('tr').hidden = !config.translateOn;

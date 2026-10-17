@@ -4,7 +4,7 @@ const Auth = (() => {
   let cfg = null;
 
   async function config() {
-    if (!cfg) cfg = await (await fetch('/api/config')).json();
+    if (!cfg) cfg = await getConfig();
     return cfg;
   }
   const save = (s) => { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {} };
@@ -77,7 +77,7 @@ const Auth = (() => {
   }
 
   return {
-    config, session, takeHash, emailFrom,
+    config, session, takeHash, emailFrom, peek: load,
     async signUp(email, password) {
       const j = await call('/auth/v1/signup?redirect_to=' + encodeURIComponent(location.origin + '/app'), { email, password });
       if (j.access_token) { store(j); return { loggedIn: true }; }

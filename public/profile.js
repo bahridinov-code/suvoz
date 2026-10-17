@@ -124,6 +124,7 @@
       if (!r.ok) return;
       const j = await r.json();
       me = { email: j.email || me.email, plan: j.plan || 'free', left: typeof j.trialChars === 'number' ? j.trialChars : me.left };
+      try { localStorage.setItem('suvoz_me', JSON.stringify(me)); } catch (e) {}
       render();
     } catch (e) {}
   }
@@ -155,19 +156,35 @@
     render();
   }
 
+  const root = document.documentElement;
+  const unhide = () => root.classList.remove('pre');
+  const setState = (loggedIn) => { root.classList.remove('in', 'out'); root.classList.add(loggedIn ? 'in' : 'out'); unhide(); };
   async function init() {
     const right = document.querySelector('.top-right');
-    if (!right) return;
-    try { cfg = await (await fetch('/api/config')).json(); } catch (e) { return; }
-    if (!cfg.authOn) return;
-    let s = null;
-    for (let i = 0; i < 6 && !s; i++) {      // right after Google sign-in the page may still be saving the login
-      s = await Auth.session();
-      if (!s) await new Promise((r) => setTimeout(r, 500));
+    if (!right) return unhide();
+    // Already logged in on this browser: draw the round profile button at once from what we saved, then update it quietly.
+    const cached = Auth.peek && Auth.peek();
+    if (cached && cached.access_token) {
+      token = cached.access_token;
+      try {
+        const m = JSON.parse(localStorage.getItem('suvoz_me') || 'null');
+        me = m && m.email === cached.email ? m : Object.assign(me, { email: cached.email || '' });
+      } catch (e) { me.email = cached.email || ''; }
+      build(right);
+      unhide();
     }
-    if (!s) return;
+    try { cfg = await getConfig(); } catch (e) { return unhide(); }
+    if (!cfg.authOn) { if (built) { right.querySelectorAll('.prof, .fb-top').forEach((x) => x.remove()); built = false; } return setState(false); }
+    let s = null;
+    for (let i = 0; i < (built ? 1 : 6) && !s; i++) {      // right after Google sign-in the page may still be saving the login
+      s = await Auth.session();
+      if (!s && !built) await new Promise((r) => setTimeout(r, 500));
+    }
+    if (!s) { if (built) { right.querySelectorAll('.prof, .fb-top').forEach((x) => x.remove()); built = false; } return setState(false); }
     token = s.access_token;
-    build(right);
+    if (!built) build(right);
+    setState(true);
+    render();
     refresh();
   }
   if (document.readyState !== 'loading') init(); else document.addEventListener('DOMContentLoaded', init);

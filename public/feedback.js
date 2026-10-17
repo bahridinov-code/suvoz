@@ -34,7 +34,7 @@ document.addEventListener('langchange', texts);
 (async function init() {
   initLang();
   let cfg = {};
-  try { cfg = await (await fetch('/api/config')).json(); } catch (x) {}
+  try { cfg = await getConfig(); } catch (x) {}
   if (!cfg.authOn) return location.replace('/');
   Auth.takeHash();
   const s = await Auth.session();

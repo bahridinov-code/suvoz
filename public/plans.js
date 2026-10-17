@@ -197,7 +197,7 @@ document.addEventListener('langchange', render);
 (async function init() {
   initLang();
   let cfg = {};
-  try { cfg = await (await fetch('/api/config')).json(); } catch (e) {}
+  try { cfg = await getConfig(); } catch (e) {}
   if (!cfg.authOn) return location.replace('/');
   Auth.takeHash();
   if (!(await Auth.session())) return location.replace('/login');

@@ -233,6 +233,20 @@ function applyLang(code) {
   try { localStorage.setItem('lang', currentLang); } catch (e) {}
   document.dispatchEvent(new CustomEvent('langchange', { detail: currentLang }));
 }
+// One shared copy of /api/config per page (and per tab for a few minutes), so pages do not each wait for it.
+let __cfgP = null;
+function getConfig() {
+  if (__cfgP) return __cfgP;
+  try {
+    const c = JSON.parse(sessionStorage.getItem('suvoz_cfg') || 'null');
+    if (c && c.v && Date.now() - c.t < 600000) { __cfgP = Promise.resolve(c.v); return __cfgP; }
+  } catch (e) {}
+  __cfgP = fetch('/api/config').then((r) => r.json()).then((v) => {
+    try { sessionStorage.setItem('suvoz_cfg', JSON.stringify({ t: Date.now(), v })); } catch (e) {}
+    return v;
+  }).catch((e) => { __cfgP = null; throw e; });
+  return __cfgP;
+}
 function initLang() {
   const sel = document.getElementById('langSel');
   if (sel) {
@@ -243,4 +257,22 @@ function initLang() {
     sel.addEventListener('change', () => applyLang(sel.value));
   }
   applyLang(detectLang());
+  // Visitors who are not logged in have nothing more to wait for: show the top bar now.
+  if (document.documentElement.classList.contains('out')) document.documentElement.classList.remove('pre');
 }
+
+// Warm up the next page the moment a finger touches (or the mouse hovers) a link, so opening it feels instant.
+(function () {
+  const seen = new Set();
+  const warm = (e) => {
+    const a = e.target && e.target.closest && e.target.closest('a[href]');
+    if (!a || a.target === '_blank' || a.hasAttribute('download')) return;
+    let u; try { u = new URL(a.href, location.href); } catch (x) { return; }
+    if (u.origin !== location.origin || u.pathname === location.pathname || /^\/api\//.test(u.pathname) || seen.has(u.pathname + u.search)) return;
+    seen.add(u.pathname + u.search);
+    const l = document.createElement('link'); l.rel = 'prefetch'; l.as = 'document'; l.href = u.pathname + u.search;
+    document.head.appendChild(l);
+  };
+  document.addEventListener('touchstart', warm, { passive: true });
+  document.addEventListener('mouseover', warm, { passive: true });
+})();

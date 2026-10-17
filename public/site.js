@@ -46,14 +46,27 @@ window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(buil
 
 // If the visitor is already logged in, do not show "Log in" again: show the way back to the tools and a log-out button.
 (async function () {
-  try {
-    const c = await (await fetch('/api/config')).json();
-    if (!c.authOn) return;
-    const s = await Auth.session();
-    if (!s) return;
+  const root = document.documentElement;
+  const nav = (inn) => {
     const login = document.querySelector('.top-right a.login');
-    if (login) login.hidden = true;
-    document.querySelectorAll('a[data-i18n="nav.signup"], a[data-i18n="hero.cta1"]').forEach((a) => { a.href = '/app'; if (a.dataset.i18n === 'nav.signup') a.dataset.i18n = 'nav.tools'; });
+    if (login) login.hidden = inn;
+    document.querySelectorAll('a[data-i18n="nav.signup"], a[data-i18n="nav.tools"], a[data-i18n="hero.cta1"]').forEach((a) => {
+      if (!a.dataset.h0) a.dataset.h0 = a.getAttribute('href') || '';
+      a.href = inn ? '/app' : a.dataset.h0;
+      if (a.dataset.i18n === 'nav.signup' || a.dataset.i18n === 'nav.tools') a.dataset.i18n = inn ? 'nav.tools' : 'nav.signup';
+    });
+    applyLang(currentLang);
+  };
+  // Logged in on this browser: switch the top buttons right away (no waiting for the network), then check quietly.
+  const cached = Auth.peek && Auth.peek();
+  if (cached && cached.access_token) { nav(true); root.classList.remove('pre'); }
+  try {
+    const c = await getConfig();
+    if (!c.authOn) { if (cached) nav(false); root.classList.remove('in', 'pre'); root.classList.add('out'); return; }
+    const s = await Auth.session();
+    if (!s) { if (cached) nav(false); root.classList.remove('in', 'pre'); root.classList.add('out'); return; }
+    if (!cached) nav(true);
+    root.classList.remove('pre');
     // Show which plan the visitor has now.
     try {
       const me = await (await fetch('/api/me', { headers: { Authorization: 'Bearer ' + s.access_token } })).json();
