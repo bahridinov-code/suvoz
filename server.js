@@ -33,6 +33,7 @@ const RESEND_KEY = process.env.RESEND_API_KEY || '';          // lets the server
 const MAIL_FROM = process.env.MAIL_FROM || 'Suvoz <support@suvoz.io>';
 const RESEND_BASE = (process.env.RESEND_BASE || 'https://api.resend.com').replace(/\/$/, '');
 const SALES_TO = process.env.SALES_TO || 'sales@suvoz.io';
+const FEEDBACK_TO = process.env.FEEDBACK_TO || process.env.SALES_TO || 'support@suvoz.io';
 const PAY_ON = !!(STRIPE_KEY && STRIPE_WEBHOOK_SECRET && SUPABASE_SECRET && SUPABASE_URL);
 const HISTORY_ON = !!(AUTH_ON && SUPABASE_SECRET);   // saves each user's audios (needs supabase-history.sql)
 // Prices in US cents. firstOff = amount taken off the first month only (new customers).
@@ -58,7 +59,7 @@ const TYPES = {
   '.png': 'image/png', '.jpg': 'image/jpeg', '.ico': 'image/x-icon',
   '.mp3': 'audio/mpeg', '.woff2': 'font/woff2', '.txt': 'text/plain; charset=utf-8',
 };
-const PAGES = { '/': 'index.html', '/app': 'hub.html', '/dialogue': 'app.html', '/login': 'login.html', '/terms': 'terms.html', '/privacy': 'privacy.html', '/refunds': 'refunds.html', '/history': 'history.html', '/transcribe': 'transcribe.html', '/voice-design': 'voicedesign.html', '/voice-clone': 'voiceclone.html', '/dubbing': 'dubbing.html', '/translate': 'translate.html', '/account': 'account.html', '/plans': 'plans.html' };
+const PAGES = { '/': 'index.html', '/app': 'hub.html', '/dialogue': 'app.html', '/login': 'login.html', '/terms': 'terms.html', '/privacy': 'privacy.html', '/refunds': 'refunds.html', '/history': 'history.html', '/transcribe': 'transcribe.html', '/voice-design': 'voicedesign.html', '/voice-clone': 'voiceclone.html', '/dubbing': 'dubbing.html', '/translate': 'translate.html', '/account': 'account.html', '/plans': 'plans.html', '/feedback': 'feedback.html' };
 
 // Serves files from /public only. Blocks anything outside that folder.
 function serveStatic(req, res, pathname) {
@@ -669,6 +670,44 @@ async function handleSales(req, res) {
     to: SALES_TO, replyTo: email, subject: 'Suvoz sales: ' + name,
     html: '<p><b>Name:</b> ' + escHtml(name) + '<br><b>Email:</b> ' + escHtml(email) + '</p><p style="white-space:pre-wrap">' + escHtml(message) + '</p>',
     text: 'Name: ' + name + '\nEmail: ' + email + '\n\n' + message,
+  });
+  if (!saved && !mailed) return sendJson(res, 500, { error: 'failed' });
+  sendJson(res, 200, { ok: true });
+}
+
+// ---- Feedback from logged-in users: saved in Supabase and emailed to FEEDBACK_TO (reply goes to the user) ----
+const fbHits = new Map();
+function fbLimited(id) {
+  if (fbHits.size > 2000) fbHits.clear();
+  const now = Date.now();
+  const arr = (fbHits.get(id) || []).filter((t) => now - t < 60 * 60 * 1000);
+  if (arr.length >= 8) { fbHits.set(id, arr); return true; }
+  arr.push(now); fbHits.set(id, arr); return false;
+}
+async function handleFeedback(req, res) {
+  const who = await getUser(req);
+  if (!who) return sendJson(res, 401, { code: 'auth_required', error: 'Please log in.' });
+  let b;
+  try { b = JSON.parse((await readRaw(req, 20 * 1024)).toString('utf8')); } catch (e) { return sendJson(res, 400, { error: 'bad_request' }); }
+  const kind = ['bug', 'idea', 'question', 'other'].includes(b.kind) ? b.kind : 'other';
+  const message = String(b.message || '').trim().slice(0, 3000);
+  if (message.length < 5) return sendJson(res, 400, { code: 'short', error: 'Message too short.' });
+  if (fbLimited(who.user.id)) return sendJson(res, 429, { code: 'slow_down', error: 'Too many messages.' });
+  const page = String(b.page || '').slice(0, 120).replace(/[^\w\-\/.?=&]/g, '');
+  const lang = ['en', 'ar', 'ru', 'tg', 'uz'].includes(b.lang) ? b.lang : '';
+  const agent = String(req.headers['user-agent'] || '').slice(0, 250);
+  let plan = '';
+  try { const me = await rpc(who.token, 'credits_left'); plan = (me && me.plan) || ''; } catch (e) {}
+  const email = who.user.email || '';
+  let saved = false, mailed = false;
+  if (SUPABASE_SECRET && SUPABASE_URL) {
+    try { await admin('add_feedback', { p_user: who.user.id, p_email: email, p_kind: kind, p_message: message, p_page: page, p_lang: lang, p_plan: plan, p_agent: agent }); saved = true; } catch (e) { console.error('feedback save:', e.message); }
+  }
+  const head = message.replace(/\s+/g, ' ').slice(0, 60);
+  mailed = await sendMail({
+    to: FEEDBACK_TO, replyTo: email || undefined, subject: '[Suvoz ' + kind + '] ' + head,
+    html: '<p><b>Type:</b> ' + kind + '<br><b>From:</b> ' + escHtml(email) + '<br><b>Plan:</b> ' + escHtml(plan || '-') + ' &middot; <b>Language:</b> ' + (lang || '-') + ' &middot; <b>Page:</b> ' + escHtml(page || '-') + '</p><p style="white-space:pre-wrap">' + escHtml(message) + '</p><p style="color:#888;font-size:12px">' + escHtml(agent) + '</p>',
+    text: 'Type: ' + kind + '\nFrom: ' + email + '\nPlan: ' + (plan || '-') + ' | Language: ' + (lang || '-') + ' | Page: ' + (page || '-') + '\n\n' + message + '\n\n' + agent,
   });
   if (!saved && !mailed) return sendJson(res, 500, { error: 'failed' });
   sendJson(res, 200, { ok: true });
@@ -1574,6 +1613,7 @@ const server = http.createServer(async (req, res) => {
     }
     if (req.method === 'GET' && p === '/api/history/audio') return await handleHistoryAudio(req, res, new URL(req.url, 'http://localhost'));
     if (req.method === 'POST' && p === '/api/sales') return await handleSales(req, res);
+    if (req.method === 'POST' && p === '/api/feedback') return await handleFeedback(req, res);
     if (req.method === 'POST' && p === '/api/checkout') return await handleCheckout(req, res);
     if (req.method === 'POST' && p === '/api/portal') return await handlePortal(req, res);
     if (req.method === 'GET' && p === '/api/plan') return await handlePlanInfo(req, res);
