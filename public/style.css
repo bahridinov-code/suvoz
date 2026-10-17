@@ -501,3 +501,20 @@ mark.kw { background: linear-gradient(transparent 58%, rgba(59, 63, 224, .22) 58
 @keyframes busysweep { to { transform: translateX(100%); } }
 @keyframes busyglow { 0%, 100% { box-shadow: 0 0 0 0 rgba(59,63,224,.35); } 50% { box-shadow: 0 0 22px 4px rgba(59,63,224,.35); } }
 @media (prefers-reduced-motion: reduce) { .btn.busy, .btn.busy::after, .eq b { animation: none; } .eq b { transform: scaleY(.7); } }
+
+/* ---- Feedback page ---- */
+.fb-page { max-width: 760px; }
+.fb-form { margin-top: 28px; }
+.fb-kinds { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+.fb-kind input { position: absolute; opacity: 0; pointer-events: none; }
+.fb-kind span { display: inline-block; padding: 10px 18px; border: 1.5px solid var(--line); border-radius: 999px; font-size: 15px; font-weight: 500; cursor: pointer; background: var(--white); transition: border-color .15s, background .15s, color .15s; }
+.fb-kind span:hover { border-color: var(--indigo); }
+.fb-kind input:checked + span { border-color: var(--indigo); background: #eceeff; color: var(--indigo); font-weight: 600; }
+.fb-kind input:focus-visible + span { outline: 2px solid var(--indigo); outline-offset: 2px; }
+.fb-label { display: block; font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+.fb-form textarea { min-height: 170px; resize: vertical; }
+.fb-form .btn { margin-top: 6px; }
+.fb-thanks { margin-top: 28px; text-align: center; padding: 44px 24px; }
+.fb-thanks h2 { font-size: 28px; max-width: none; letter-spacing: -.02em; }
+.fb-thanks p { color: var(--muted); margin: 10px auto 22px; max-width: 460px; }
+.fb-check { width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 18px; display: grid; place-items: center; background: #e5f7f5; color: var(--teal); }

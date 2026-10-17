@@ -9,6 +9,7 @@ const BUSY_TEXTS = {
     clone: ['Listening to your voice…', 'Learning how you sound…', 'Almost there…'],
     design: ['Designing voices…', 'Shaping the sound…', 'Almost there…'],
     dub: ['Sending your video…', 'Getting the dubbing ready…', 'Almost there…'],
+    send: ['Sending…', 'Almost there…'],
   },
   ar: {
     gen: ['جارٍ الإنشاء…', 'نمنح أصواتًا لكلماتك…', 'اقتربنا…'],
@@ -17,6 +18,7 @@ const BUSY_TEXTS = {
     clone: ['نستمع إلى صوتك…', 'نتعلّم كيف يبدو صوتك…', 'اقتربنا…'],
     design: ['نصمّم الأصوات…', 'نصوغ الصوت…', 'اقتربنا…'],
     dub: ['نرسل الفيديو…', 'نجهّز الدبلجة…', 'اقتربنا…'],
+    send: ['جارٍ الإرسال…', 'اقتربنا…'],
   },
   ru: {
     gen: ['Создаём…', 'Даём голоса вашим словам…', 'Почти готово…'],
@@ -25,6 +27,7 @@ const BUSY_TEXTS = {
     clone: ['Слушаем ваш голос…', 'Изучаем, как вы звучите…', 'Почти готово…'],
     design: ['Придумываем голоса…', 'Формируем звучание…', 'Почти готово…'],
     dub: ['Отправляем видео…', 'Готовим дубляж…', 'Почти готово…'],
+    send: ['Отправляем…', 'Почти готово…'],
   },
   tg: {
     gen: ['Сохта истодаем…', 'Ба суханони шумо овоз медиҳем…', 'Қариб омода…'],
@@ -33,6 +36,7 @@ const BUSY_TEXTS = {
     clone: ['Овози шуморо гӯш мекунем…', 'Тарзи садои шуморо меомӯзем…', 'Қариб омода…'],
     design: ['Овозҳоро тарроҳӣ мекунем…', 'Садоро ташаккул медиҳем…', 'Қариб омода…'],
     dub: ['Видеоро мефиристем…', 'Дубляжро омода мекунем…', 'Қариб омода…'],
+    send: ['Фиристода истодаем…', 'Қариб омода…'],
   },
   uz: {
     gen: ['Yaratilmoqda…', 'Soʻzlaringizga ovoz berilmoqda…', 'Deyarli tayyor…'],
@@ -41,5 +45,6 @@ const BUSY_TEXTS = {
     clone: ['Ovozingiz tinglanmoqda…', 'Ovozingiz oʻrganilmoqda…', 'Deyarli tayyor…'],
     design: ['Ovozlar yaratilmoqda…', 'Tovush shakllantirilmoqda…', 'Deyarli tayyor…'],
     dub: ['Video yuborilmoqda…', 'Dublyaj tayyorlanmoqda…', 'Deyarli tayyor…'],
+    send: ['Yuborilmoqda…', 'Deyarli tayyor…'],
   },
 };

@@ -4,27 +4,27 @@
   Object.assign(T.en, {
     'prof.community': 'Join our community', 'prof.instagram': 'Instagram', 'prof.tiktok': 'TikTok', 'prof.affiliate': 'Affiliate program',
     'prof.menu': 'Account menu', 'prof.plan': 'Plan', 'prof.total': 'In your plan', 'prof.left': 'Minutes left', 'prof.min': 'min',
-    'prof.account': 'Account', 'prof.plans': 'Plans', 'prof.history': 'My history', 'prof.manage': 'Manage plan', 'prof.logout': 'Log out', 'prof.trial': 'Free trial',
+    'prof.account': 'Account', 'prof.plans': 'Plans', 'prof.history': 'My history', 'prof.feedback': 'Send feedback', 'prof.manage': 'Manage plan', 'prof.logout': 'Log out', 'prof.trial': 'Free trial',
   });
   Object.assign(T.ar, {
     'prof.community': 'انضم إلى مجتمعنا', 'prof.instagram': 'إنستغرام', 'prof.tiktok': 'تيك توك', 'prof.affiliate': 'برنامج الشركاء',
     'prof.menu': 'قائمة الحساب', 'prof.plan': 'الخطة', 'prof.total': 'في خطتك', 'prof.left': 'الدقائق المتبقية', 'prof.min': 'د',
-    'prof.account': 'الحساب', 'prof.plans': 'الخطط', 'prof.history': 'سجلّي', 'prof.manage': 'إدارة الخطة', 'prof.logout': 'تسجيل الخروج', 'prof.trial': 'تجربة مجانية',
+    'prof.account': 'الحساب', 'prof.plans': 'الخطط', 'prof.history': 'سجلّي', 'prof.feedback': 'أرسل ملاحظاتك', 'prof.manage': 'إدارة الخطة', 'prof.logout': 'تسجيل الخروج', 'prof.trial': 'تجربة مجانية',
   });
   Object.assign(T.ru, {
     'prof.community': 'Вступить в сообщество', 'prof.instagram': 'Instagram', 'prof.tiktok': 'TikTok', 'prof.affiliate': 'Партнёрская программа',
     'prof.menu': 'Меню аккаунта', 'prof.plan': 'Тариф', 'prof.total': 'В вашем тарифе', 'prof.left': 'Осталось минут', 'prof.min': 'мин',
-    'prof.account': 'Аккаунт', 'prof.plans': 'Тарифы', 'prof.history': 'Моя история', 'prof.manage': 'Управление тарифом', 'prof.logout': 'Выйти', 'prof.trial': 'Бесплатный пробный период',
+    'prof.account': 'Аккаунт', 'prof.plans': 'Тарифы', 'prof.history': 'Моя история', 'prof.feedback': 'Отправить отзыв', 'prof.manage': 'Управление тарифом', 'prof.logout': 'Выйти', 'prof.trial': 'Бесплатный пробный период',
   });
   Object.assign(T.tg, {
     'prof.community': 'Ба ҷомеаи мо ҳамроҳ шавед', 'prof.instagram': 'Instagram', 'prof.tiktok': 'TikTok', 'prof.affiliate': 'Барномаи шарикӣ',
     'prof.menu': 'Менюи ҳисоб', 'prof.plan': 'Нақша', 'prof.total': 'Дар нақшаи шумо', 'prof.left': 'Дақиқаҳои боқимонда', 'prof.min': 'дақ',
-    'prof.account': 'Ҳисоб', 'prof.plans': 'Нақшаҳо', 'prof.history': 'Таърихи ман', 'prof.manage': 'Идораи нақша', 'prof.logout': 'Баромадан', 'prof.trial': 'Санҷиши ройгон',
+    'prof.account': 'Ҳисоб', 'prof.plans': 'Нақшаҳо', 'prof.history': 'Таърихи ман', 'prof.feedback': 'Фикру мулоҳиза', 'prof.manage': 'Идораи нақша', 'prof.logout': 'Баромадан', 'prof.trial': 'Санҷиши ройгон',
   });
   Object.assign(T.uz, {
     'prof.community': 'Hamjamiyatimizga qoʻshiling', 'prof.instagram': 'Instagram', 'prof.tiktok': 'TikTok', 'prof.affiliate': 'Hamkorlik dasturi',
     'prof.menu': 'Hisob menyusi', 'prof.plan': 'Tarif', 'prof.total': 'Tarifingizda', 'prof.left': 'Qolgan daqiqalar', 'prof.min': 'daq',
-    'prof.account': 'Hisob', 'prof.plans': 'Tariflar', 'prof.history': 'Mening tarixim', 'prof.manage': 'Tarifni boshqarish', 'prof.logout': 'Chiqish', 'prof.trial': 'Bepul sinov',
+    'prof.account': 'Hisob', 'prof.plans': 'Tariflar', 'prof.history': 'Mening tarixim', 'prof.feedback': 'Fikr-mulohaza', 'prof.manage': 'Tarifni boshqarish', 'prof.logout': 'Chiqish', 'prof.trial': 'Bepul sinov',
   });
 
   const TOTAL = { free: 1800, starter: 27000, creator: 108000, pro: 360000, business: 2700000 };   // characters; 900 = 1 minute
@@ -35,6 +35,7 @@
     plans: '<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 10h18"/><path d="M7 15h4"/>',
     history: '<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 8v4l3 2"/>',
     manage: '<circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3.9a7 7 0 0 0-2-1.2L14.2 3h-4l-.4 2.6a7 7 0 0 0-2 1.2l-2.3-.9-2 3.4 2 1.5A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.5 2 3.4 2.3-.9a7 7 0 0 0 2 1.2l.4 2.6h4l.4-2.6a7 7 0 0 0 2-1.2l2.3.9 2-3.4-2-1.5c.1-.4.1-.8.1-1.2z"/>',
+    feedback: '<path d="M4 5h16v11H9.5L5 20v-4H4z"/><path d="M8 9.5h8M8 12.5h5"/>',
     community: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.4 2.8-5.5 6.5-5.5s6.5 2.1 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8"/><path d="M18 14.8c2 .7 3.5 2.3 3.5 5.2"/>',
     instagram: '<rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1" fill="currentColor"/>',
     tiktok: '<path d="M14 3v11.5a3.5 3.5 0 1 1-3.5-3.5"/><path d="M14 3c.4 2.6 2 4.4 5 4.7"/>',
@@ -101,6 +102,7 @@
     list.append(item('account', t('prof.account'), '/account'));
     list.append(item('plans', t('prof.plans'), '/plans'));
     if (cfg.historyOn) list.append(item('history', t('prof.history'), '/history'));
+    list.append(item('feedback', t('prof.feedback'), '/feedback?from=' + encodeURIComponent(location.pathname)));
     const L = cfg.links || {};
     const more = [['affiliate', 'prof.affiliate', L.affiliate], ['community', 'prof.community', L.discord], ['instagram', 'prof.instagram', L.instagram], ['tiktok', 'prof.tiktok', L.tiktok]].filter((x) => x[2]);
     if (more.length) {
