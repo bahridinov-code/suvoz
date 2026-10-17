@@ -56,7 +56,7 @@ $('src').oninput = () => { setStatus(null); renderCount(); };
 
 $('go').onclick = async () => {
   if (busy) return;
-  busy = true; renderCount(); $('result').hidden = true;
+  busy = true; renderCount(); $('result').hidden = true; Busy.start($('go'), 'tr');
   setStatus('tr.working');
   try {
     const h = await headers();
@@ -72,7 +72,7 @@ $('go').onclick = async () => {
   } catch (e) {
     if (e.message !== 'login') setStatus(null, true, e.message === 'Failed to fetch' ? t('err.tr_failed') : e.message);
   } finally {
-    busy = false; renderCount();
+    busy = false; Busy.stop($('go')); renderCount();
   }
 };
 

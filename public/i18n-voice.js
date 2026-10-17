@@ -127,10 +127,11 @@ Object.assign(T.uz, {
 });
 Object.assign(T.en, {
   'vc.title': 'Voice cloning',
-  'vc.sub': 'Upload a *clean recording of one voice* and get a copy you can use in your audios.',
+  'vc.sub': 'Clone *your own voice*. Upload or record a clean sample of yourself and get a copy to use in your audios.',
   'vc.pick': 'Choose a recording',
-  'vc.tips': 'Best: *1 to 2 minutes* of one person speaking clearly, with no music or background noise. Between 20 seconds and 5 minutes, up to 15 MB.',
-  'vc.consent': 'I own this voice or have the permission of the person it belongs to, and I may use it for this purpose.',
+  'vc.tips': 'Best: *1 to 2 minutes* of you speaking clearly, with no music or background noise. Between 20 seconds and 5 minutes, up to 15 MB.',
+  'vc.consent': 'This is my own voice, or the person it belongs to has given me permission. I will not clone anyone else\'s voice.',
+  'vc.own': 'Clone only your own voice. Cloning someone else\'s voice without their permission is not allowed here.',
   'vc.go': 'Clone this voice',
   'vc.working': 'Cloning the voice… this takes a few seconds.',
   'vc.done': 'Done! Your cloned voice is in "My voices" and in the voice list on the creation page.',
@@ -144,10 +145,11 @@ Object.assign(T.en, {
 });
 Object.assign(T.ar, {
   'vc.title': 'استنساخ الصوت',
-  'vc.sub': 'ارفع *تسجيلًا نظيفًا لصوت واحد* واحصل على نسخة منه تستخدمها في ملفاتك الصوتية.',
+  'vc.sub': 'استنسخ *صوتك أنت*. ارفع أو سجّل عينة نظيفة منك واحصل على نسخة تستخدمها في ملفاتك الصوتية.',
   'vc.pick': 'اختر تسجيلًا',
-  'vc.tips': 'الأفضل: *دقيقة إلى دقيقتان* لشخص واحد يتكلم بوضوح دون موسيقى أو ضجيج. من 20 ثانية إلى 5 دقائق وحتى 15 ميغابايت.',
-  'vc.consent': 'هذا الصوت لي أو لدي إذن من صاحبه، ويحق لي استخدامه لهذا الغرض.',
+  'vc.tips': 'الأفضل: *دقيقة إلى دقيقتان* تتكلم فيها بوضوح دون موسيقى أو ضجيج. من 20 ثانية إلى 5 دقائق وحتى 15 ميغابايت.',
+  'vc.consent': 'هذا صوتي أنا، أو أعطاني صاحبه الإذن. لن أستنسخ صوت أي شخص آخر.',
+  'vc.own': 'استنسخ صوتك أنت فقط. استنساخ صوت شخص آخر دون إذنه غير مسموح هنا.',
   'vc.go': 'استنسخ هذا الصوت',
   'vc.working': 'جارٍ استنساخ الصوت… يستغرق ثوانيَ قليلة.',
   'vc.done': 'تم! صوتك المستنسخ في «أصواتي» وفي قائمة الأصوات بصفحة الإنشاء.',
@@ -161,10 +163,11 @@ Object.assign(T.ar, {
 });
 Object.assign(T.ru, {
   'vc.title': 'Клонирование голоса',
-  'vc.sub': 'Загрузите *чистую запись одного голоса* и получите его копию для своих аудио.',
+  'vc.sub': 'Клонируйте *свой собственный голос*. Загрузите или запишите чистый образец своей речи и получите копию для своих аудио.',
   'vc.pick': 'Выберите запись',
-  'vc.tips': 'Лучше всего: *1–2 минуты*, говорит один человек, чётко, без музыки и шума. От 20 секунд до 5 минут, до 15 МБ.',
-  'vc.consent': 'Это мой голос, или у меня есть разрешение владельца голоса, и я вправе использовать его для этой цели.',
+  'vc.tips': 'Лучше всего: *1–2 минуты* вашей чёткой речи, без музыки и шума. От 20 секунд до 5 минут, до 15 МБ.',
+  'vc.consent': 'Это мой собственный голос, или его владелец дал мне разрешение. Я не буду клонировать чужой голос.',
+  'vc.own': 'Клонируйте только свой голос. Клонировать чужой голос без разрешения здесь запрещено.',
   'vc.go': 'Клонировать голос',
   'vc.working': 'Клонируем голос… это займёт несколько секунд.',
   'vc.done': 'Готово! Ваш клонированный голос в «Мои голоса» и в списке голосов на странице создания.',
@@ -178,10 +181,11 @@ Object.assign(T.ru, {
 });
 Object.assign(T.tg, {
   'vc.title': 'Нусхабардории овоз',
-  'vc.sub': '*Сабти тозаи як овозро* бор кунед ва нусхаи онро барои аудиоҳоятон гиред.',
+  'vc.sub': 'Танҳо *овози худатонро* нусха кунед. Намунаи тозаи овози худро бор кунед ё сабт намоед ва нусхаро барои аудиоҳои худ гиред.',
   'vc.pick': 'Сабтро интихоб кунед',
-  'vc.tips': 'Беҳтарин: *1–2 дақиқа*, як нафар возеҳ сухан мегӯяд, бе мусиқӣ ва садо. Аз 20 сония то 5 дақиқа, то 15 МБ.',
-  'vc.consent': 'Ин овози худи ман аст ё иҷозати соҳибаш дорам ва ҳақ дорам онро барои ин мақсад истифода барам.',
+  'vc.tips': 'Беҳтарин: *1–2 дақиқа* сухани возеҳи шумо, бе мусиқӣ ва садо. Аз 20 сония то 5 дақиқа, то 15 МБ.',
+  'vc.consent': 'Ин овози худи ман аст ё соҳибаш ба ман иҷозат додааст. Овози каси дигарро нусха намекунам.',
+  'vc.own': 'Танҳо овози худатонро нусха кунед. Нусхабардории овози каси дигар бе иҷозати ӯ дар ин ҷо манъ аст.',
   'vc.go': 'Ин овозро нусха кунед',
   'vc.working': 'Овоз нусха шуда истодааст… чанд сония мегирад.',
   'vc.done': 'Тайёр! Овози нусхашуда дар «Овозҳои ман» ва дар рӯйхати овозҳои саҳифаи сохтан аст.',
@@ -195,10 +199,11 @@ Object.assign(T.tg, {
 });
 Object.assign(T.uz, {
   'vc.title': 'Ovozni klonlash',
-  'vc.sub': 'Bitta ovozning *toza yozuvini* yuklang va audiolaringizda ishlatish uchun nusxasini oling.',
+  'vc.sub': '*Oʻz ovozingizni* klonlang. Oʻzingizning toza namunangizni yuklang yoki yozing va audiolaringizda ishlatish uchun nusxa oling.',
   'vc.pick': 'Yozuvni tanlang',
-  'vc.tips': 'Eng yaxshisi: *1–2 daqiqa*, bitta odam aniq gapiradi, musiqa va shovqinsiz. 20 soniyadan 5 daqiqagacha, 15 MB gacha.',
-  'vc.consent': 'Bu ovoz meniki yoki egasining ruxsati bor va uni shu maqsadda ishlatishga haqqim bor.',
+  'vc.tips': 'Eng yaxshisi: musiqa va shovqinsiz, aniq gapirgan *1–2 daqiqa*lik yozuv. 20 soniyadan 5 daqiqagacha, 15 MB gacha.',
+  'vc.consent': 'Bu mening oʻz ovozim yoki uning egasi menga ruxsat bergan. Boshqa birovning ovozini klonlamayman.',
+  'vc.own': 'Faqat oʻz ovozingizni klonlang. Boshqa kishining ovozini ruxsatisiz klonlash bu yerda taqiqlanadi.',
   'vc.go': 'Ovozni klonlash',
   'vc.working': 'Ovoz klonlanmoqda… bir necha soniya ketadi.',
   'vc.done': 'Tayyor! Klonlangan ovozingiz «Ovozlarim»da va yaratish sahifasidagi ovozlar roʻyxatida.',

@@ -119,7 +119,7 @@ EXAMPLES.forEach((x) => {
 });
 $('go').onclick = async () => {
   if (busy) return;
-  busy = true; updateGo(); $('previews').hidden = true; setStatus('vd.working');
+  busy = true; updateGo(); Busy.start($('go'), 'design'); $('previews').hidden = true; setStatus('vd.working');
   try {
     const j = await call('/api/voice-design', 'POST', { description: $('desc').value });
     lastDesc = j.description || $('desc').value.trim();
@@ -129,7 +129,7 @@ $('go').onclick = async () => {
     setStatus(null);
     loadMe();
   } catch (e) { if (e.message !== 'login') setStatus(null, true, e.message === 'Failed to fetch' ? t('err.design_failed') : e.message); }
-  finally { busy = false; updateGo(); }
+  finally { busy = false; Busy.stop($('go')); updateGo(); }
 };
 
 document.addEventListener('langchange', () => {

@@ -122,7 +122,7 @@ $('consent').onchange = updateGo;
 $('vname').oninput = updateGo;
 $('go').onclick = async () => {
   if (busy || !file) return;
-  busy = true; updateGo(); setStatus('vc.working');
+  busy = true; updateGo(); Busy.start($('go'), 'clone'); setStatus('vc.working');
   try {
     const h = await headers();
     h['Content-Type'] = file.type || 'application/octet-stream';
@@ -137,7 +137,7 @@ $('go').onclick = async () => {
     file = null; seconds = 0; $('file').value = ''; Recorder.clear(); $('vname').value = ''; $('consent').checked = false; renderInfo();
     await loadVoices();
   } catch (e) { if (e.message !== 'login') setStatus(null, true, e.message === 'Failed to fetch' ? t('err.clone_failed') : e.message); }
-  finally { busy = false; updateGo(); }
+  finally { busy = false; Busy.stop($('go')); updateGo(); }
 };
 
 document.addEventListener('langchange', () => {

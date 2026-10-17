@@ -462,12 +462,44 @@ mark.kw { background: linear-gradient(transparent 58%, rgba(59, 63, 224, .22) 58
 .dbtns { display: flex; justify-content: center; gap: 10px; margin-top: 22px; }
 @media (max-width: 640px) { .cur-card { grid-template-columns: 1fr; padding: 20px; } }
 
-/* ---- Microphone recording ---- */
-.rec-btn { margin-inline-start: 10px; }
-.rec-bar { display: inline-flex; align-items: center; gap: 10px; margin-inline-start: 10px; padding: 6px 8px 6px 14px; border: 1px solid var(--err); border-radius: 999px; font-size: 14px; }
-.rec-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--err); animation: recpulse 1s ease-in-out infinite; }
-.rec-time { font-variant-numeric: tabular-nums; font-weight: 600; min-width: 34px; }
-.rec-bar[hidden], .rec-prev[hidden], .rec-btn[hidden] { display: none; }
-.rec-prev { display: block; width: 100%; max-width: 420px; margin-top: 12px; }
-@keyframes recpulse { 50% { opacity: .25; transform: scale(.8); } }
-@media (prefers-reduced-motion: reduce) { .rec-dot { animation: none; } }
+/* ---- Upload and record boxes ---- */
+.src { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; transition: background .2s; border-radius: 20px; }
+.src:has(> :only-child) { grid-template-columns: 1fr; }
+.src.drag .srcbtn { border-color: var(--indigo); background: #e9ebff; }
+.srcbtn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; min-height: 112px; padding: 20px 16px; border: 1.5px dashed #c9ccf5; border-radius: 18px; background: linear-gradient(180deg, #f8f8ff, #f1f2ff); color: var(--ink); font: inherit; font-size: 15px; font-weight: 600; text-align: center; line-height: 1.3; cursor: pointer; transition: transform .15s, border-color .15s, background .15s, box-shadow .15s; }
+.srcbtn svg { color: var(--indigo); flex: none; transition: transform .2s; }
+.srcbtn:hover { border-style: solid; border-color: var(--indigo); background: #eceeff; transform: translateY(-2px); box-shadow: 0 14px 26px -18px rgba(59, 63, 224, .6); }
+.srcbtn:hover svg { transform: scale(1.12); }
+.srcbtn.rec-btn { border-color: #f6cbd3; background: linear-gradient(180deg, #fffafb, #fff1f4); }
+.srcbtn.rec-btn svg { color: var(--err); }
+.srcbtn.rec-btn:hover { border-color: var(--err); background: #ffecef; box-shadow: 0 14px 26px -18px rgba(214, 48, 80, .6); }
+.srcbtn[hidden] { display: none; }
+.rec-bar { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; padding: 14px 16px 14px 20px; border: 1.5px solid var(--err); border-radius: 18px; background: #fff5f7; font-size: 15px; font-weight: 500; }
+.rec-bar[hidden], .rec-prev[hidden] { display: none; }
+.rec-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--err); box-shadow: 0 0 0 0 rgba(214, 48, 80, .5); animation: recpulse 1.2s ease-out infinite; flex: none; }
+.rec-time { font-variant-numeric: tabular-nums; font-weight: 700; margin-inline-start: auto; }
+.rec-stop { border-color: var(--err); color: var(--err); font-weight: 600; }
+.rec-stop:hover { background: var(--err); color: #fff; border-color: var(--err); }
+.rec-prev { display: block; width: 100%; margin-top: 14px; }
+.own { margin: 26px 0 0; padding: 14px 16px 14px 48px; border-radius: 14px; background: #fff8e6; border: 1px solid #f3dd9c; color: #6b4e00; font-size: 15px; font-weight: 500; line-height: 1.45; position: relative; }
+.own::before { content: "!"; position: absolute; inset-inline-start: 16px; top: 13px; width: 22px; height: 22px; border-radius: 50%; background: #e8a900; color: #fff; font-weight: 700; font-size: 14px; display: grid; place-items: center; }
+@keyframes recpulse { 0% { box-shadow: 0 0 0 0 rgba(214, 48, 80, .5); } 80%, 100% { box-shadow: 0 0 0 10px rgba(214, 48, 80, 0); } }
+@media (max-width: 520px) {
+  .src { grid-template-columns: 1fr; gap: 10px; }
+  .srcbtn { flex-direction: row; justify-content: flex-start; min-height: 0; padding: 16px 18px; gap: 14px; text-align: start; }
+}
+@media (prefers-reduced-motion: reduce) { .rec-dot { animation: none; } .srcbtn, .srcbtn svg { transition: none; } }
+
+/* ---- Working state of the main button ---- */
+.btn.busy, .btn.busy:disabled { opacity: 1; cursor: progress; position: relative; overflow: hidden; gap: 12px; background: linear-gradient(110deg, var(--indigo), #6a4cf0, var(--teal), #6a4cf0, var(--indigo)); background-size: 300% 100%; animation: busyflow 3.2s linear infinite, busyglow 1.8s ease-in-out infinite; }
+.btn.busy::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,.38) 50%, transparent 70%); transform: translateX(-100%); animation: busysweep 1.6s ease-in-out infinite; pointer-events: none; }
+.btn.busy .bl { position: relative; z-index: 1; transition: opacity .18s, transform .18s; }
+.btn.busy .bl.out { opacity: 0; transform: translateY(5px); }
+.eq { display: inline-flex; align-items: center; gap: 3px; height: 18px; position: relative; z-index: 1; }
+.eq b { width: 3px; height: 100%; border-radius: 2px; background: #fff; transform-origin: center; animation: eqbar .9s ease-in-out infinite; }
+.eq b:nth-child(2) { animation-delay: .15s; } .eq b:nth-child(3) { animation-delay: .3s; } .eq b:nth-child(4) { animation-delay: .45s; }
+@keyframes eqbar { 0%, 100% { transform: scaleY(.25); } 50% { transform: scaleY(1); } }
+@keyframes busyflow { to { background-position: -300% 0; } }
+@keyframes busysweep { to { transform: translateX(100%); } }
+@keyframes busyglow { 0%, 100% { box-shadow: 0 0 0 0 rgba(59,63,224,.35); } 50% { box-shadow: 0 0 22px 4px rgba(59,63,224,.35); } }
+@media (prefers-reduced-motion: reduce) { .btn.busy, .btn.busy::after, .eq b { animation: none; } .eq b { transform: scaleY(.7); } }

@@ -99,7 +99,7 @@ Recorder.init({
 
 $('go').onclick = async () => {
   if (!file || busy) return;
-  busy = true; $('go').disabled = true; $('result').hidden = true;
+  busy = true; $('go').disabled = true; $('result').hidden = true; Busy.start($('go'), 'stt');
   setStatus('stt.working');
   try {
     const h = await headers();
@@ -117,7 +117,7 @@ $('go').onclick = async () => {
   } catch (e) {
     if (e.message !== 'login') setStatus(null, true, e.message === 'Failed to fetch' ? t('err.stt_failed') : e.message);
   } finally {
-    busy = false; $('go').disabled = !file;
+    busy = false; Busy.stop($('go')); $('go').disabled = !file;
   }
 };
 

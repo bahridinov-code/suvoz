@@ -144,7 +144,7 @@ try { $('lang').value = ({ en: 'es', ru: 'en', ar: 'en', tg: 'ru', uz: 'ru' })[c
 
 $('go').onclick = async () => {
   if (busy || !file) return;
-  busy = true; renderForm(); setStatus('dub.working');
+  busy = true; renderForm(); Busy.start($('go'), 'dub'); setStatus('dub.working');
   try {
     const kind = document.querySelector('input[name=q]:checked').value;
     await api('/api/dub-start', 'POST', file, {
@@ -155,7 +155,7 @@ $('go').onclick = async () => {
     file = null; seconds = 0; $('file').value = '';
     await refresh();
   } catch (e) { if (e.message !== 'login') setStatus(null, true, e.message === 'Failed to fetch' ? t('err.dub_failed') : e.message); }
-  finally { busy = false; renderForm(); }
+  finally { busy = false; Busy.stop($('go')); renderForm(); }
 };
 
 document.addEventListener('langchange', () => {

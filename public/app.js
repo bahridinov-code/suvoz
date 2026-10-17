@@ -229,6 +229,7 @@ async function generate() {
   const map = {};
   names.forEach((n) => (map[n] = choice[n]));
   $('go').disabled = true;
+  Busy.start($('go'), 'gen');
   $('result').hidden = true;
   setStatus('app.generating');
   try {
@@ -252,6 +253,7 @@ async function generate() {
     if (e.message !== 'login') setStatus(null, true, e.message);
     if (config.authOn) loadMe();
   } finally {
+    Busy.stop($('go'));
     refresh();
   }
 }
