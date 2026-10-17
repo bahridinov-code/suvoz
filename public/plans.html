@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Suvoz – Plans</title>
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="/" aria-label="Suvoz">
+      <svg width="28" height="28" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#3b3fe0"/><g stroke-linecap="round" stroke-width="3.2"><path d="M9 13v6" stroke="#fff"/><path d="M14.5 8v16" stroke="#fff"/><path d="M20 11v10" stroke="#7fe3dd"/><path d="M25 14.5v3" stroke="#7fe3dd"/></g></svg>
+      <span data-brand>Suvoz</span>
+    </a>
+    <div class="top-right">
+      <span id="who" class="who-mail" dir="ltr" hidden></span>
+      <a class="pbtn" href="/app" data-i18n="nav.tools"></a>
+      <button id="logout" class="pbtn" type="button" hidden data-i18n="app.logout"></button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap plans-page">
+  <h1 data-i18n="pl.title"></h1>
+  <p class="lead" data-i18n="pl.sub"></p>
+  <div id="curCard" class="cur-card" hidden></div>
+  <p id="msg" class="amsg" role="status"></p>
+  <div id="grid" class="plans"></div>
+  <p class="pnote" id="note" hidden data-i18n="pl.note"></p>
+  <p class="pnote" data-i18n="price.note"></p>
+</main>
+
+<dialog id="dlg" class="sdlg"><h3 id="dT"></h3><p id="dD"></p>
+<div class="dbtns"><button type="button" class="btn ghost" id="dNo" data-i18n="pl.c.no"></button><button type="button" class="btn" id="dYes" data-i18n="pl.c.yes"></button></div></dialog>
+
+<script src="/i18n.js"></script>
+<script src="/i18n-auth.js"></script>
+<script src="/i18n-pricing.js"></script>
+<script src="/i18n-plans.js"></script>
+<script src="/i18n-hub.js"></script>
+<script src="/auth.js"></script>
+<script src="/profile.js"></script>
+<script src="/plans.js"></script>
+</body>
+</html>

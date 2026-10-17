@@ -439,3 +439,25 @@ mark.kw { background: linear-gradient(transparent 58%, rgba(59, 63, 224, .22) 58
 .tile mark.kw, .lead mark.kw { color: inherit; }
 .tile:not(.soon) mark.kw { color: var(--ink); }
 @media (prefers-reduced-motion: reduce) { mark.kw { animation: none; background-size: 100% 100%; } }
+.prof-panel { max-height: calc(100vh - 90px); overflow-y: auto; }
+
+/* ---- Plans page ---- */
+.plans-page { padding: 56px 0 90px; }
+.plans-page h1 { font-size: clamp(32px, 5vw, 46px); letter-spacing: -0.03em; line-height: 1.1; font-weight: 700; }
+.plans-page .lead { color: var(--muted); margin-top: 12px; font-size: 18px; }
+.plans-page .plans { margin-top: 28px; }
+.plans-page .pnote { margin-top: 14px; }
+.cur-card { margin-top: 28px; display: grid; grid-template-columns: 1fr minmax(220px, 320px); gap: 18px 32px; align-items: center; background: var(--white); border: 1px solid var(--line); border-radius: 22px; padding: 24px 26px; box-shadow: 0 20px 40px -26px rgba(40, 44, 120, .3); }
+.cur-card[hidden] { display: none; }
+.cur-info small { color: var(--muted); font-size: 13px; font-weight: 500; }
+.cur-info h2 { font-size: 28px; letter-spacing: -0.02em; margin-top: 2px; max-width: none; }
+.cur-info p { color: var(--muted); margin-top: 6px; font-size: 15px; }
+.cur-info p.cur-warn { color: var(--err); font-weight: 500; }
+.cur-use { display: grid; gap: 8px; font-size: 15px; }
+.cur-use b { font-weight: 600; }
+.cur-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 10px; padding-top: 6px; border-top: 1px solid var(--line); margin-top: 4px; padding-top: 16px; }
+.btn.small.outline { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+.btn.small.outline:hover { border-color: var(--indigo); color: var(--indigo); background: transparent; }
+.plan .btn.cur { cursor: default; color: var(--teal); border: 1px solid var(--teal); pointer-events: none; padding-inline: 14px; }
+.dbtns { display: flex; justify-content: center; gap: 10px; margin-top: 22px; }
+@media (max-width: 640px) { .cur-card { grid-template-columns: 1fr; padding: 20px; } }

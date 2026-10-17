@@ -2,22 +2,27 @@
 (function () {
   if (typeof T === 'undefined' || typeof Auth === 'undefined') return;
   Object.assign(T.en, {
+    'prof.community': 'Join our community', 'prof.instagram': 'Instagram', 'prof.tiktok': 'TikTok', 'prof.affiliate': 'Affiliate program',
     'prof.menu': 'Account menu', 'prof.plan': 'Plan', 'prof.total': 'In your plan', 'prof.left': 'Minutes left', 'prof.min': 'min',
     'prof.account': 'Account', 'prof.plans': 'Plans', 'prof.history': 'My history', 'prof.manage': 'Manage plan', 'prof.logout': 'Log out', 'prof.trial': 'Free trial',
   });
   Object.assign(T.ar, {
+    'prof.community': 'انضم إلى مجتمعنا', 'prof.instagram': 'إنستغرام', 'prof.tiktok': 'تيك توك', 'prof.affiliate': 'برنامج الشركاء',
     'prof.menu': 'قائمة الحساب', 'prof.plan': 'الخطة', 'prof.total': 'في خطتك', 'prof.left': 'الدقائق المتبقية', 'prof.min': 'د',
     'prof.account': 'الحساب', 'prof.plans': 'الخطط', 'prof.history': 'سجلّي', 'prof.manage': 'إدارة الخطة', 'prof.logout': 'تسجيل الخروج', 'prof.trial': 'تجربة مجانية',
   });
   Object.assign(T.ru, {
+    'prof.community': 'Вступить в сообщество', 'prof.instagram': 'Instagram', 'prof.tiktok': 'TikTok', 'prof.affiliate': 'Партнёрская программа',
     'prof.menu': 'Меню аккаунта', 'prof.plan': 'Тариф', 'prof.total': 'В вашем тарифе', 'prof.left': 'Осталось минут', 'prof.min': 'мин',
     'prof.account': 'Аккаунт', 'prof.plans': 'Тарифы', 'prof.history': 'Моя история', 'prof.manage': 'Управление тарифом', 'prof.logout': 'Выйти', 'prof.trial': 'Бесплатный пробный период',
   });
   Object.assign(T.tg, {
+    'prof.community': 'Ба ҷомеаи мо ҳамроҳ шавед', 'prof.instagram': 'Instagram', 'prof.tiktok': 'TikTok', 'prof.affiliate': 'Барномаи шарикӣ',
     'prof.menu': 'Менюи ҳисоб', 'prof.plan': 'Нақша', 'prof.total': 'Дар нақшаи шумо', 'prof.left': 'Дақиқаҳои боқимонда', 'prof.min': 'дақ',
     'prof.account': 'Ҳисоб', 'prof.plans': 'Нақшаҳо', 'prof.history': 'Таърихи ман', 'prof.manage': 'Идораи нақша', 'prof.logout': 'Баромадан', 'prof.trial': 'Санҷиши ройгон',
   });
   Object.assign(T.uz, {
+    'prof.community': 'Hamjamiyatimizga qoʻshiling', 'prof.instagram': 'Instagram', 'prof.tiktok': 'TikTok', 'prof.affiliate': 'Hamkorlik dasturi',
     'prof.menu': 'Hisob menyusi', 'prof.plan': 'Tarif', 'prof.total': 'Tarifingizda', 'prof.left': 'Qolgan daqiqalar', 'prof.min': 'daq',
     'prof.account': 'Hisob', 'prof.plans': 'Tariflar', 'prof.history': 'Mening tarixim', 'prof.manage': 'Tarifni boshqarish', 'prof.logout': 'Chiqish', 'prof.trial': 'Bepul sinov',
   });
@@ -30,6 +35,10 @@
     plans: '<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 10h18"/><path d="M7 15h4"/>',
     history: '<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 8v4l3 2"/>',
     manage: '<circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3.9a7 7 0 0 0-2-1.2L14.2 3h-4l-.4 2.6a7 7 0 0 0-2 1.2l-2.3-.9-2 3.4 2 1.5A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.5 2 3.4 2.3-.9a7 7 0 0 0 2 1.2l.4 2.6h4l.4-2.6a7 7 0 0 0 2-1.2l2.3.9 2-3.4-2-1.5c.1-.4.1-.8.1-1.2z"/>',
+    community: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.4 2.8-5.5 6.5-5.5s6.5 2.1 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8"/><path d="M18 14.8c2 .7 3.5 2.3 3.5 5.2"/>',
+    instagram: '<rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1" fill="currentColor"/>',
+    tiktok: '<path d="M14 3v11.5a3.5 3.5 0 1 1-3.5-3.5"/><path d="M14 3c.4 2.6 2 4.4 5 4.7"/>',
+    affiliate: '<path d="M12 20.5s-7.5-4.4-7.5-10A4.2 4.2 0 0 1 12 7.8a4.2 4.2 0 0 1 7.5 2.7c0 5.6-7.5 10-7.5 10z"/>',
     logout: '<path d="M9 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h4"/><path d="M16 8l4 4-4 4"/><path d="M20 12H9"/>',
   };
   const svg = (k) => '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICON[k] + '</svg>';
@@ -90,21 +99,18 @@
 
     const list = document.createElement('div'); list.className = 'prof-list';
     list.append(item('account', t('prof.account'), '/account'));
-    list.append(item('plans', t('prof.plans'), '/#pricing'));
+    list.append(item('plans', t('prof.plans'), '/plans'));
     if (cfg.historyOn) list.append(item('history', t('prof.history'), '/history'));
-    if (me.plan !== 'free' && cfg.payOn) list.append(item('manage', t('prof.manage'), null, openPortal));
+    const L = cfg.links || {};
+    const more = [['affiliate', 'prof.affiliate', L.affiliate], ['community', 'prof.community', L.discord], ['instagram', 'prof.instagram', L.instagram], ['tiktok', 'prof.tiktok', L.tiktok]].filter((x) => x[2]);
+    if (more.length) {
+      list.append(document.createElement('hr'));
+      more.forEach(([k, key, href]) => { const a = item(k, t(key), href); if (!/^mailto:/.test(href)) { a.target = '_blank'; a.rel = 'noopener'; } list.append(a); });
+    }
     const hr = document.createElement('hr');
     list.append(hr, item('logout', t('prof.logout'), null, async () => { try { await Auth.signOut(); } catch (e) {} location.replace('/'); }));
 
     panel.append(head, box, list);
-  }
-
-  async function openPortal() {
-    try {
-      const r = await fetch('/api/portal', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token }, body: JSON.stringify({ lang: currentLang }) });
-      const j = await r.json().catch(() => ({}));
-      if (j.url) location.href = j.url;
-    } catch (e) {}
   }
 
   async function refresh() {
