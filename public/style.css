@@ -396,3 +396,46 @@ a.tile:hover .ticon { transform: scale(1.08) rotate(-4deg); }
 @keyframes pricepop { 0%, 8% { transform: scale(1); } 14% { transform: scale(1.06); } 22%, 100% { transform: scale(1); } }
 @media (prefers-reduced-motion: reduce) { .langs .lg, .plan .disc, .plan .disc::after, .plan .amt, .plan .amt s::after { animation: none !important; } .plan .amt s::after { transform: none; } }
 .plan .disc { margin-top: 6px; }
+
+/* ---- Profile button and menu ---- */
+body.has-profile #who, body.has-profile #historyLink, body.has-profile #plansLink, body.has-profile #manage, body.has-profile #logout { display: none !important; }
+.prof { position: relative; margin-inline-start: 4px; }
+.prof-btn { width: 38px; height: 38px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px var(--line), 0 3px 10px -2px rgba(40, 44, 120, .3); background: var(--av, var(--indigo)); color: #fff; font: 600 15px/1 var(--font); cursor: pointer; display: grid; place-items: center; transition: transform .15s, box-shadow .15s; padding: 0; }
+.prof-btn:hover { transform: scale(1.06); }
+.prof-btn[aria-expanded="true"] { box-shadow: 0 0 0 2px var(--indigo), 0 3px 10px -2px rgba(40, 44, 120, .3); }
+.prof-panel { position: absolute; inset-inline-end: 0; top: calc(100% + 12px); width: 310px; max-width: calc(100vw - 24px); background: var(--white); border: 1px solid var(--line); border-radius: 20px; box-shadow: 0 28px 64px -22px rgba(30, 34, 100, .4); padding: 16px; z-index: 60; transform-origin: top right; animation: profpop .16s ease-out; text-align: start; }
+[dir="rtl"] .prof-panel { transform-origin: top left; }
+.prof-panel[hidden] { display: none; }
+@keyframes profpop { from { opacity: 0; transform: translateY(-6px) scale(.97); } to { opacity: 1; transform: none; } }
+.prof-head { display: flex; align-items: center; gap: 12px; padding-bottom: 14px; }
+.prof-av { flex: none; width: 44px; height: 44px; border-radius: 50%; background: var(--av, var(--indigo)); color: #fff; display: grid; place-items: center; font-weight: 600; font-size: 18px; }
+.prof-mail { min-width: 0; font-size: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.prof-use { background: #f6f6fb; border-radius: 14px; padding: 12px 14px 14px; display: grid; gap: 8px; }
+.prof-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 14px; color: var(--muted); }
+.prof-row b { color: var(--ink); font-weight: 600; }
+.prof-row.big { font-size: 15px; margin-top: 4px; }
+.prof-row.big b { font-size: 20px; letter-spacing: -.01em; }
+.prof-row.small { font-size: 13px; }
+.prof-chip { background: var(--indigo-soft); color: var(--indigo) !important; padding: 2px 11px; border-radius: 999px; font-size: 13px; }
+.prof-chip.free { background: #ececf1; color: var(--muted) !important; }
+.prof-bar { height: 8px; border-radius: 999px; background: #e3e3ec; overflow: hidden; }
+.prof-bar i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--indigo), var(--teal)); transition: width .5s cubic-bezier(.2, .7, .2, 1); }
+.prof-bar.mid i { background: var(--amber); }
+.prof-bar.low i { background: var(--err); }
+.prof-list { margin-top: 10px; display: grid; gap: 2px; }
+.prof-list hr { border: 0; border-top: 1px solid var(--line); margin: 6px 4px; width: calc(100% - 8px); }
+.prof-item { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px; border: 0; border-radius: 12px; background: none; color: var(--ink); font: inherit; font-size: 15px; font-weight: 500; text-decoration: none; cursor: pointer; text-align: start; }
+.prof-item:hover { background: #f1f1f7; }
+.prof-item svg { color: var(--muted); flex: none; }
+.prof-item.out { color: var(--err); }
+.prof-item.out svg { color: var(--err); }
+@media (max-width: 520px) { .prof-panel { position: fixed; inset-inline: 12px; top: 66px; width: auto; max-width: none; } }
+@media (prefers-reduced-motion: reduce) { .prof-panel { animation: none; } .prof-bar i { transition: none; } }
+
+/* ---- Key words in tool descriptions ---- */
+mark.kw { background: linear-gradient(transparent 58%, rgba(59, 63, 224, .22) 58%) no-repeat left / 0% 100%; color: var(--ink); font-weight: 600; padding: 0 .08em; border-radius: 3px; animation: kwdraw .9s cubic-bezier(.2, .7, .2, 1) .35s forwards; }
+@keyframes kwdraw { to { background-size: 100% 100%; } }
+[dir="rtl"] mark.kw { background-position: right; }
+.tile mark.kw, .lead mark.kw { color: inherit; }
+.tile:not(.soon) mark.kw { color: var(--ink); }
+@media (prefers-reduced-motion: reduce) { mark.kw { animation: none; background-size: 100% 100%; } }

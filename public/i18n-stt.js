@@ -3,7 +3,7 @@
 Object.assign(T.en, {
   'stt.nav': 'Speech to text',
   'stt.title': 'Speech to text',
-  'stt.sub': 'Upload a recording and get the text back. Different speakers are told apart. Up to 30 minutes and 60 MB per file. It uses 1/4 of a minute for each minute of audio.',
+  'stt.sub': 'Upload a recording and *get the text back*. *Different speakers are told apart*. Up to 30 minutes and 60 MB per file. It uses *1/4 of a minute* for each minute of audio.',
   'stt.pick': 'Choose an audio or video file',
   'stt.go': 'Turn into text',
   'stt.cost': '{a} min of audio, uses {c} min of your minutes.',
@@ -20,7 +20,7 @@ Object.assign(T.en, {
 Object.assign(T.ar, {
   'stt.nav': 'تحويل الكلام إلى نص',
   'stt.title': 'تحويل الكلام إلى نص',
-  'stt.sub': 'ارفع تسجيلًا واحصل على النص. يتم التمييز بين المتحدثين. حتى 30 دقيقة و60 ميغابايت للملف. يستهلك ربع دقيقة لكل دقيقة صوت.',
+  'stt.sub': 'ارفع تسجيلًا *واحصل على النص*. *يتم التمييز بين المتحدثين*. حتى 30 دقيقة و60 ميغابايت للملف. يستهلك *ربع دقيقة* لكل دقيقة صوت.',
   'stt.pick': 'اختر ملفًا صوتيًا أو مرئيًا',
   'stt.go': 'حوّل إلى نص',
   'stt.cost': '{a} دقيقة من الصوت، تستهلك {c} دقيقة من رصيدك.',
@@ -37,7 +37,7 @@ Object.assign(T.ar, {
 Object.assign(T.ru, {
   'stt.nav': 'Речь в текст',
   'stt.title': 'Речь в текст',
-  'stt.sub': 'Загрузите запись и получите текст. Разные говорящие разделяются. До 30 минут и 60 МБ на файл. Расходует 1/4 минуты за каждую минуту аудио.',
+  'stt.sub': 'Загрузите запись и *получите текст*. *Разные говорящие разделяются*. До 30 минут и 60 МБ на файл. Расходует *1/4 минуты* за каждую минуту аудио.',
   'stt.pick': 'Выберите аудио- или видеофайл',
   'stt.go': 'Превратить в текст',
   'stt.cost': '{a} мин аудио, расходует {c} мин вашего баланса.',
@@ -54,7 +54,7 @@ Object.assign(T.ru, {
 Object.assign(T.tg, {
   'stt.nav': 'Нутқ ба матн',
   'stt.title': 'Нутқ ба матн',
-  'stt.sub': 'Сабтро бор кунед ва матнро гиред. Гӯяндагони гуногун ҷудо карда мешаванд. То 30 дақиқа ва 60 МБ барои як файл. Барои ҳар дақиқаи аудио 1/4 дақиқа сарф мешавад.',
+  'stt.sub': 'Сабтро бор кунед ва *матнро гиред*. *Гӯяндагони гуногун ҷудо карда мешаванд*. То 30 дақиқа ва 60 МБ барои як файл. Барои ҳар дақиқаи аудио *1/4 дақиқа* сарф мешавад.',
   'stt.pick': 'Файли аудио ё видеоро интихоб кунед',
   'stt.go': 'Ба матн табдил диҳед',
   'stt.cost': '{a} дақ аудио, {c} дақ аз дақиқаҳои шумо сарф мешавад.',
@@ -71,7 +71,7 @@ Object.assign(T.tg, {
 Object.assign(T.uz, {
   'stt.nav': 'Nutqdan matnga',
   'stt.title': 'Nutqdan matnga',
-  'stt.sub': 'Yozuvni yuklang va matnni oling. Turli so\u02bbzlovchilar ajratiladi. Har bir fayl uchun 30 daqiqagacha va 60 MB. Har bir audio daqiqa uchun 1/4 daqiqa sarflanadi.',
+  'stt.sub': 'Yozuvni yuklang va *matnni oling*. *Turli so\u02bbzlovchilar ajratiladi*. Har bir fayl uchun 30 daqiqagacha va 60 MB. Har bir audio daqiqa uchun *1/4 daqiqa* sarflanadi.',
   'stt.pick': 'Audio yoki video faylni tanlang',
   'stt.go': 'Matnga aylantirish',
   'stt.cost': '{a} daq audio, daqiqalaringizdan {c} daq sarflanadi.',

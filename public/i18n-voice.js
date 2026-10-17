@@ -2,7 +2,7 @@
 // Tajik (tg) and Uzbek (uz) texts should be checked by a native speaker before launch.
 Object.assign(T.en, {
   'vd.title': 'Voice design',
-  'vd.sub': 'Describe the voice you want. We create a few samples. Save your favorite and use it in your audios. Descriptions in English work best.',
+  'vd.sub': '*Describe the voice you want*. We create a few samples. *Save your favorite* and use it in your audios. Descriptions in English work best.',
   'vd.ph': 'Example: a calm old man with a deep voice and a British accent, speaking slowly.',
   'vd.go': 'Create voices',
   'vd.cost': 'Each try uses {c} min of your minutes.',
@@ -27,7 +27,7 @@ Object.assign(T.en, {
 });
 Object.assign(T.ar, {
   'vd.title': 'تصميم الصوت',
-  'vd.sub': 'صِف الصوت الذي تريده. سننشئ عدة عيّنات. احفظ المفضّلة لديك واستخدمها في ملفاتك الصوتية. الوصف بالإنجليزية يعطي أفضل نتيجة.',
+  'vd.sub': '*صِف الصوت الذي تريده*. سننشئ عدة عيّنات. *احفظ المفضّلة لديك* واستخدمها في ملفاتك الصوتية. الوصف بالإنجليزية يعطي أفضل نتيجة.',
   'vd.ph': 'مثال: a calm old man with a deep voice and a British accent, speaking slowly.',
   'vd.go': 'أنشئ الأصوات',
   'vd.cost': 'كل محاولة تستهلك {c} دقيقة من رصيدك.',
@@ -52,7 +52,7 @@ Object.assign(T.ar, {
 });
 Object.assign(T.ru, {
   'vd.title': 'Создание голоса',
-  'vd.sub': 'Опишите нужный голос. Мы создадим несколько образцов. Сохраните понравившийся и используйте в своих аудио. Описание на английском работает лучше всего.',
+  'vd.sub': '*Опишите нужный голос*. Мы создадим несколько образцов. *Сохраните понравившийся* и используйте в своих аудио. Описание на английском работает лучше всего.',
   'vd.ph': 'Пример: a calm old man with a deep voice and a British accent, speaking slowly.',
   'vd.go': 'Создать голоса',
   'vd.cost': 'Каждая попытка расходует {c} мин вашего баланса.',
@@ -77,7 +77,7 @@ Object.assign(T.ru, {
 });
 Object.assign(T.tg, {
   'vd.title': 'Тарҳрезии овоз',
-  'vd.sub': 'Овози дилхоҳро тасвир кунед. Мо якчанд намуна месозем. Дӯстдоштаатонро захира кунед ва дар аудиоҳоятон истифода баред. Тавсиф ба забони англисӣ беҳтарин кор мекунад.',
+  'vd.sub': '*Овози дилхоҳро тасвир кунед*. Мо якчанд намуна месозем. *Дӯстдоштаатонро захира кунед* ва дар аудиоҳоятон истифода баред. Тавсиф ба забони англисӣ беҳтарин кор мекунад.',
   'vd.ph': 'Мисол: a calm old man with a deep voice and a British accent, speaking slowly.',
   'vd.go': 'Овозҳоро созед',
   'vd.cost': 'Ҳар кӯшиш {c} дақ аз дақиқаҳои шуморо сарф мекунад.',
@@ -102,7 +102,7 @@ Object.assign(T.tg, {
 });
 Object.assign(T.uz, {
   'vd.title': 'Ovoz yaratish',
-  'vd.sub': 'Kerakli ovozni tasvirlang. Biz bir nechta namuna yaratamiz. Yoqqanini saqlang va audiolaringizda ishlating. Inglizcha tavsif eng yaxshi ishlaydi.',
+  'vd.sub': '*Kerakli ovozni tasvirlang*. Biz bir nechta namuna yaratamiz. *Yoqqanini saqlang* va audiolaringizda ishlating. Inglizcha tavsif eng yaxshi ishlaydi.',
   'vd.ph': 'Masalan: a calm old man with a deep voice and a British accent, speaking slowly.',
   'vd.go': 'Ovozlarni yaratish',
   'vd.cost': 'Har bir urinish daqiqalaringizdan {c} daq sarflaydi.',
@@ -127,9 +127,9 @@ Object.assign(T.uz, {
 });
 Object.assign(T.en, {
   'vc.title': 'Voice cloning',
-  'vc.sub': 'Upload a clean recording of one voice and get a copy you can use in your audios.',
+  'vc.sub': 'Upload a *clean recording of one voice* and get a copy you can use in your audios.',
   'vc.pick': 'Choose a recording',
-  'vc.tips': 'Best: 1 to 2 minutes of one person speaking clearly, with no music or background noise. Between 20 seconds and 5 minutes, up to 15 MB.',
+  'vc.tips': 'Best: *1 to 2 minutes* of one person speaking clearly, with no music or background noise. Between 20 seconds and 5 minutes, up to 15 MB.',
   'vc.consent': 'I own this voice or have the permission of the person it belongs to, and I may use it for this purpose.',
   'vc.go': 'Clone this voice',
   'vc.working': 'Cloning the voice… this takes a few seconds.',
@@ -144,9 +144,9 @@ Object.assign(T.en, {
 });
 Object.assign(T.ar, {
   'vc.title': 'استنساخ الصوت',
-  'vc.sub': 'ارفع تسجيلًا نظيفًا لصوت واحد واحصل على نسخة منه تستخدمها في ملفاتك الصوتية.',
+  'vc.sub': 'ارفع *تسجيلًا نظيفًا لصوت واحد* واحصل على نسخة منه تستخدمها في ملفاتك الصوتية.',
   'vc.pick': 'اختر تسجيلًا',
-  'vc.tips': 'الأفضل: دقيقة إلى دقيقتان لشخص واحد يتكلم بوضوح دون موسيقى أو ضجيج. من 20 ثانية إلى 5 دقائق وحتى 15 ميغابايت.',
+  'vc.tips': 'الأفضل: *دقيقة إلى دقيقتان* لشخص واحد يتكلم بوضوح دون موسيقى أو ضجيج. من 20 ثانية إلى 5 دقائق وحتى 15 ميغابايت.',
   'vc.consent': 'هذا الصوت لي أو لدي إذن من صاحبه، ويحق لي استخدامه لهذا الغرض.',
   'vc.go': 'استنسخ هذا الصوت',
   'vc.working': 'جارٍ استنساخ الصوت… يستغرق ثوانيَ قليلة.',
@@ -161,9 +161,9 @@ Object.assign(T.ar, {
 });
 Object.assign(T.ru, {
   'vc.title': 'Клонирование голоса',
-  'vc.sub': 'Загрузите чистую запись одного голоса и получите его копию для своих аудио.',
+  'vc.sub': 'Загрузите *чистую запись одного голоса* и получите его копию для своих аудио.',
   'vc.pick': 'Выберите запись',
-  'vc.tips': 'Лучше всего: 1–2 минуты, говорит один человек, чётко, без музыки и шума. От 20 секунд до 5 минут, до 15 МБ.',
+  'vc.tips': 'Лучше всего: *1–2 минуты*, говорит один человек, чётко, без музыки и шума. От 20 секунд до 5 минут, до 15 МБ.',
   'vc.consent': 'Это мой голос, или у меня есть разрешение владельца голоса, и я вправе использовать его для этой цели.',
   'vc.go': 'Клонировать голос',
   'vc.working': 'Клонируем голос… это займёт несколько секунд.',
@@ -178,9 +178,9 @@ Object.assign(T.ru, {
 });
 Object.assign(T.tg, {
   'vc.title': 'Нусхабардории овоз',
-  'vc.sub': 'Сабти тозаи як овозро бор кунед ва нусхаи онро барои аудиоҳоятон гиред.',
+  'vc.sub': '*Сабти тозаи як овозро* бор кунед ва нусхаи онро барои аудиоҳоятон гиред.',
   'vc.pick': 'Сабтро интихоб кунед',
-  'vc.tips': 'Беҳтарин: 1–2 дақиқа, як нафар возеҳ сухан мегӯяд, бе мусиқӣ ва садо. Аз 20 сония то 5 дақиқа, то 15 МБ.',
+  'vc.tips': 'Беҳтарин: *1–2 дақиқа*, як нафар возеҳ сухан мегӯяд, бе мусиқӣ ва садо. Аз 20 сония то 5 дақиқа, то 15 МБ.',
   'vc.consent': 'Ин овози худи ман аст ё иҷозати соҳибаш дорам ва ҳақ дорам онро барои ин мақсад истифода барам.',
   'vc.go': 'Ин овозро нусха кунед',
   'vc.working': 'Овоз нусха шуда истодааст… чанд сония мегирад.',
@@ -195,9 +195,9 @@ Object.assign(T.tg, {
 });
 Object.assign(T.uz, {
   'vc.title': 'Ovozni klonlash',
-  'vc.sub': 'Bitta ovozning toza yozuvini yuklang va audiolaringizda ishlatish uchun nusxasini oling.',
+  'vc.sub': 'Bitta ovozning *toza yozuvini* yuklang va audiolaringizda ishlatish uchun nusxasini oling.',
   'vc.pick': 'Yozuvni tanlang',
-  'vc.tips': 'Eng yaxshisi: 1–2 daqiqa, bitta odam aniq gapiradi, musiqa va shovqinsiz. 20 soniyadan 5 daqiqagacha, 15 MB gacha.',
+  'vc.tips': 'Eng yaxshisi: *1–2 daqiqa*, bitta odam aniq gapiradi, musiqa va shovqinsiz. 20 soniyadan 5 daqiqagacha, 15 MB gacha.',
   'vc.consent': 'Bu ovoz meniki yoki egasining ruxsati bor va uni shu maqsadda ishlatishga haqqim bor.',
   'vc.go': 'Ovozni klonlash',
   'vc.working': 'Ovoz klonlanmoqda… bir necha soniya ketadi.',

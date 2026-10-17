@@ -1,8 +1,10 @@
 // Text for dubbing. Loaded after i18n.js.
 // Tajik (tg) and Uzbek (uz) texts should be checked by a native speaker before launch.
 Object.assign(T.en, {
+  'dub.note': 'Audio and text only. Video is not included.',
+  'dub.note2': 'Only need text? Use Speech to text.',
   'dub.title': 'Dubbing',
-  'dub.sub': 'Upload a recording or video and hear it in another language. You get the dubbed audio and the translated text. Files from 10 seconds to 10 minutes.',
+  'dub.sub': 'Upload a recording or video and hear it in *another language*. You get the *dubbed audio and the translated text*. Files from 10 seconds to 10 minutes.',
   'dub.pick': 'Choose an audio or video file',
   'dub.lang': 'Dub into',
   'dub.quality': 'Quality',
@@ -30,8 +32,10 @@ Object.assign(T.en, {
   'err.dub_failed': 'Something went wrong. Please try again.',
 });
 Object.assign(T.ar, {
+  'dub.note': 'صوت ونص فقط. الفيديو غير مشمول.',
+  'dub.note2': 'تحتاج النص فقط؟ استخدم تحويل الكلام إلى نص.',
   'dub.title': 'الدبلجة',
-  'dub.sub': 'ارفع تسجيلًا أو فيديو واستمع إليه بلغة أخرى. تحصل على الصوت المدبلج والنص المترجم. ملفات من 10 ثوانٍ إلى 10 دقائق.',
+  'dub.sub': 'ارفع تسجيلًا أو فيديو واستمع إليه *بلغة أخرى*. تحصل على *الصوت المدبلج والنص المترجم*. ملفات من 10 ثوانٍ إلى 10 دقائق.',
   'dub.pick': 'اختر ملفًا صوتيًا أو مرئيًا',
   'dub.lang': 'دبلجة إلى',
   'dub.quality': 'الجودة',
@@ -59,8 +63,10 @@ Object.assign(T.ar, {
   'err.dub_failed': 'حدث خطأ ما. حاول مرة أخرى.',
 });
 Object.assign(T.ru, {
+  'dub.note': 'Только аудио и текст. Видео не входит.',
+  'dub.note2': 'Нужен только текст? Используйте «Речь в текст».',
   'dub.title': 'Дубляж',
-  'dub.sub': 'Загрузите запись или видео и услышьте её на другом языке. Вы получите дублированное аудио и переведённый текст. Файлы от 10 секунд до 10 минут.',
+  'dub.sub': 'Загрузите запись или видео и услышьте её *на другом языке*. Вы получите *дублированное аудио и переведённый текст*. Файлы от 10 секунд до 10 минут.',
   'dub.pick': 'Выберите аудио- или видеофайл',
   'dub.lang': 'Дублировать на',
   'dub.quality': 'Качество',
@@ -88,8 +94,10 @@ Object.assign(T.ru, {
   'err.dub_failed': 'Что-то пошло не так. Попробуйте ещё раз.',
 });
 Object.assign(T.tg, {
+  'dub.note': 'Танҳо аудио ва матн. Видео дохил намешавад.',
+  'dub.note2': 'Танҳо матн лозим аст? «Гуфтор ба матн»-ро истифода баред.',
   'dub.title': 'Дубляж',
-  'dub.sub': 'Сабт ё видеоро бор кунед ва онро ба забони дигар шунавед. Шумо аудиои дубляжшуда ва матни тарҷумашударо мегиред. Файлҳо аз 10 сония то 10 дақиқа.',
+  'dub.sub': 'Сабт ё видеоро бор кунед ва онро *ба забони дигар* шунавед. Шумо *аудиои дубляжшуда ва матни тарҷумашударо* мегиред. Файлҳо аз 10 сония то 10 дақиқа.',
   'dub.pick': 'Файли аудио ё видеоро интихоб кунед',
   'dub.lang': 'Дубляж ба',
   'dub.quality': 'Сифат',
@@ -117,8 +125,10 @@ Object.assign(T.tg, {
   'err.dub_failed': 'Чизе хато шуд. Лутфан боз кӯшиш кунед.',
 });
 Object.assign(T.uz, {
+  'dub.note': 'Faqat audio va matn. Video kirmaydi.',
+  'dub.note2': 'Faqat matn kerakmi? «Nutqdan matnga» dan foydalaning.',
   'dub.title': 'Dublyaj',
-  'dub.sub': 'Yozuv yoki videoni yuklang va boshqa tilda eshiting. Dublyaj qilingan audio va tarjima qilingan matnni olasiz. Fayllar 10 soniyadan 10 daqiqagacha.',
+  'dub.sub': 'Yozuv yoki videoni yuklang va *boshqa tilda* eshiting. *Dublyaj qilingan audio va tarjima qilingan matn*ni olasiz. Fayllar 10 soniyadan 10 daqiqagacha.',
   'dub.pick': 'Audio yoki video faylni tanlang',
   'dub.lang': 'Dublyaj tili',
   'dub.quality': 'Sifat',

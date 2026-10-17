@@ -54,13 +54,6 @@ window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(buil
     const login = document.querySelector('.top-right a.login');
     if (login) login.hidden = true;
     document.querySelectorAll('a[data-i18n="nav.signup"], a[data-i18n="hero.cta1"]').forEach((a) => { a.href = '/app'; if (a.dataset.i18n === 'nav.signup') a.dataset.i18n = 'nav.tools'; });
-    const right = document.querySelector('.top-right');
-    if (right && !document.getElementById('logout')) {
-      const b = document.createElement('button');
-      b.id = 'logout'; b.type = 'button'; b.className = 'pbtn'; b.dataset.i18n = 'app.logout';
-      b.onclick = async () => { await Auth.signOut(); location.reload(); };
-      right.appendChild(b);
-    }
     // Show which plan the visitor has now.
     try {
       const me = await (await fetch('/api/me', { headers: { Authorization: 'Bearer ' + s.access_token } })).json();
@@ -123,7 +116,7 @@ function buildHomeTiles() {
     ic.innerHTML = '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + HOME_ICONS[x.id] + '</svg>';
     const b = document.createElement('span'); b.className = 'tbody';
     const h = document.createElement('strong'); h.textContent = t('hub.' + x.id);
-    const p = document.createElement('span'); p.textContent = t('hub.' + x.id + '.d'); if (x.hl) p.dataset.hl = '1';
+    const p = document.createElement('span'); p.textContent = t('hub.' + x.id + '.d'); p.dataset.hl = '1';
     b.append(h, p); el.append(ic, b);
     if (x.soon) { const s = document.createElement('em'); s.className = 'badge'; s.textContent = t('hub.soon'); el.append(s); }
     box.appendChild(el);

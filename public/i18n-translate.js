@@ -3,7 +3,7 @@
 Object.assign(T.en, {
   'stt.translate': 'Translate this',
   'tr.title': 'Translate text',
-  'tr.sub': 'Paste your text and get it in another language. Speaker names (like "Anna:") and sound or emotion tags stay as they are, so you can use the result in Dialogue.',
+  'tr.sub': 'Paste your text and get it in *another language*. Speaker names (like "Anna:") and *sound or emotion tags stay as they are*, so you can use the result in Dialogue.',
   'tr.ph': 'Paste or type your text here',
   'tr.to': 'Translate into',
   'tr.go': 'Translate',
@@ -18,7 +18,7 @@ Object.assign(T.en, {
 Object.assign(T.ar, {
   'stt.translate': 'ترجمة هذا النص',
   'tr.title': 'ترجمة النص',
-  'tr.sub': 'الصق نصك واحصل عليه بلغة أخرى. تبقى أسماء المتحدثين (مثل "Anna:") ووسوم الصوت أو العاطفة كما هي، فيمكنك استخدام النتيجة في الحوار.',
+  'tr.sub': 'الصق نصك واحصل عليه *بلغة أخرى*. تبقى أسماء المتحدثين (مثل "Anna:") و*وسوم الصوت أو العاطفة كما هي*، فيمكنك استخدام النتيجة في الحوار.',
   'tr.ph': 'الصق نصك هنا أو اكتبه',
   'tr.to': 'ترجمة إلى',
   'tr.go': 'ترجم',
@@ -33,7 +33,7 @@ Object.assign(T.ar, {
 Object.assign(T.ru, {
   'stt.translate': 'Перевести этот текст',
   'tr.title': 'Перевод текста',
-  'tr.sub': 'Вставьте текст и получите его на другом языке. Имена говорящих (например, «Anna:») и теги звуков или эмоций остаются как есть, так что результат можно использовать в диалоге.',
+  'tr.sub': 'Вставьте текст и получите его *на другом языке*. Имена говорящих (например, «Anna:») и *теги звуков или эмоций остаются как есть*, так что результат можно использовать в диалоге.',
   'tr.ph': 'Вставьте или введите текст',
   'tr.to': 'Перевести на',
   'tr.go': 'Перевести',
@@ -48,7 +48,7 @@ Object.assign(T.ru, {
 Object.assign(T.tg, {
   'stt.translate': 'Ин матнро тарҷума кунед',
   'tr.title': 'Тарҷумаи матн',
-  'tr.sub': 'Матнро гузоред ва онро ба забони дигар гиред. Номҳои гӯяндагон (масалан, «Anna:») ва тегҳои садо ё эҳсосот бетағйир мемонанд, бинобар ин натиҷаро дар Муколама истифода бурдан мумкин аст.',
+  'tr.sub': 'Матнро гузоред ва онро *ба забони дигар* гиред. Номҳои гӯяндагон (масалан, «Anna:») ва *тегҳои садо ё эҳсосот бетағйир мемонанд*, бинобар ин натиҷаро дар Муколама истифода бурдан мумкин аст.',
   'tr.ph': 'Матнро ин ҷо гузоред ё нависед',
   'tr.to': 'Тарҷума ба',
   'tr.go': 'Тарҷума кунед',
@@ -63,7 +63,7 @@ Object.assign(T.tg, {
 Object.assign(T.uz, {
   'stt.translate': 'Bu matnni tarjima qilish',
   'tr.title': 'Matn tarjimasi',
-  'tr.sub': 'Matnni qoʻying va uni boshqa tilda oling. Soʻzlovchi nomlari (masalan, «Anna:») va tovush yoki his-tuygʻu teglari oʻzgarmaydi, shuning uchun natijani Dialogda ishlatish mumkin.',
+  'tr.sub': 'Matnni qoʻying va uni *boshqa tilda* oling. Soʻzlovchi nomlari (masalan, «Anna:») va *tovush yoki his-tuygʻu teglari oʻzgarmaydi*, shuning uchun natijani Dialogda ishlatish mumkin.',
   'tr.ph': 'Matnni shu yerga qoʻying yoki yozing',
   'tr.to': 'Tarjima tili',
   'tr.go': 'Tarjima qilish',

@@ -30,7 +30,7 @@
 
 <main class="app">
   <h1 data-i18n="app.title"></h1>
-  <p class="lead" data-i18n="app.sub"></p>
+  <p class="lead" data-i18n="app.sub" data-hl></p>
   <div id="trial" class="pill" hidden></div>
 
   <div class="panel" id="codeBox" hidden>
@@ -39,10 +39,10 @@
   </div>
 
   <div class="panel">
-    <h3><span data-i18n="app.script"></span><small data-i18n="app.script.hint"></small></h3>
+    <h3><span data-i18n="app.script"></span><small data-i18n="app.script.hint" data-hl></small></h3>
     <textarea id="script" class="field" dir="auto" spellcheck="false"></textarea>
     <div class="meta" id="meta"><span id="count">0</span> / <span id="max">3000</span> <span data-i18n="app.chars"></span></div>
-    <div class="meta" data-i18n="app.sound.hint"></div>
+    <div class="meta" data-i18n="app.sound.hint" data-hl></div>
   </div>
 
   <div class="panel">
@@ -75,7 +75,9 @@
 <script src="/i18n-stt.js"></script>
 <script src="/i18n-voice.js"></script>
 <script src="/i18n-hub.js"></script>
+<script src="/hl.js"></script>
 <script src="/auth.js"></script>
+<script src="/profile.js"></script>
 <script src="/app.js"></script>
 </body>
 </html>

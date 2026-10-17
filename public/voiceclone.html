@@ -27,7 +27,7 @@
 
 <main class="app">
   <h1 data-i18n="vc.title"></h1>
-  <p class="lead" data-i18n="vc.sub"></p>
+  <p class="lead" data-i18n="vc.sub" data-hl></p>
   <div id="trial" class="pill" hidden></div>
 
   <div class="panel" id="paidBox" hidden>
@@ -40,7 +40,7 @@
       <input id="file" type="file" accept="audio/*,video/*" hidden>
       <button id="pick" class="pbtn" type="button" data-i18n="vc.pick"></button>
       <div class="meta" id="fileInfo" dir="auto"></div>
-      <p class="meta" data-i18n="vc.tips"></p>
+      <p class="meta" data-i18n="vc.tips" data-hl></p>
       <input id="vname" class="field" maxlength="40" dir="auto" data-i18n-ph="vd.name">
       <label class="consent"><input id="consent" type="checkbox"> <span data-i18n="vc.consent"></span></label>
     </div>
@@ -61,7 +61,9 @@
 <script src="/i18n-history.js"></script>
 <script src="/i18n-voice.js"></script>
 <script src="/i18n-hub.js"></script>
+<script src="/hl.js"></script>
 <script src="/auth.js"></script>
+<script src="/profile.js"></script>
 <script src="/voiceclone.js"></script>
 </body>
 </html>

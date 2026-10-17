@@ -39,7 +39,7 @@ function tile(x) {
   const h = document.createElement('strong');
   h.textContent = t('hub.' + x.id);
   const p = document.createElement('span');
-  p.textContent = t('hub.' + x.id + '.d');
+  p.textContent = t('hub.' + x.id + '.d'); p.dataset.hl = '1';
   b.append(h, p);
   el.append(ic, b);
   if (x.soon) {
@@ -54,6 +54,7 @@ function render() {
   const box = $('tiles');
   box.textContent = '';
   TOOLS.filter((x) => !x.needsHistory || historyOn).forEach((x) => box.appendChild(tile(x)));
+  if (window.hlRun) hlRun(box);
   renderTrial();
 }
 
