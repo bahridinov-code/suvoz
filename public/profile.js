@@ -139,7 +139,7 @@
     btn = document.createElement('button'); btn.type = 'button'; btn.className = 'prof-btn'; btn.setAttribute('aria-haspopup', 'true'); btn.setAttribute('aria-expanded', 'false');
     panel = document.createElement('div'); panel.className = 'prof-panel'; panel.hidden = true;
     wrap.append(btn, panel);
-    if (location.pathname !== '/feedback') {
+    if (location.pathname === '/app') {   // only on the /app page
       fbBtn = document.createElement('a'); fbBtn.className = 'fb-top';
       fbBtn.innerHTML = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9.5L5 20v-4H4z"/><path d="M8 9.5h8M8 12.5h5"/></svg><span></span>';
       fbBtn.href = '/feedback?from=' + encodeURIComponent(location.pathname);
