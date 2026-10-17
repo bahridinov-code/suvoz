@@ -481,8 +481,6 @@ mark.kw { background: linear-gradient(transparent 58%, rgba(59, 63, 224, .22) 58
 .rec-stop { border-color: var(--err); color: var(--err); font-weight: 600; }
 .rec-stop:hover { background: var(--err); color: #fff; border-color: var(--err); }
 .rec-prev { display: block; width: 100%; margin-top: 14px; }
-.own { margin: 26px 0 0; padding: 14px 16px 14px 48px; border-radius: 14px; background: #fff8e6; border: 1px solid #f3dd9c; color: #6b4e00; font-size: 15px; font-weight: 500; line-height: 1.45; position: relative; }
-.own::before { content: "!"; position: absolute; inset-inline-start: 16px; top: 13px; width: 22px; height: 22px; border-radius: 50%; background: #e8a900; color: #fff; font-weight: 700; font-size: 14px; display: grid; place-items: center; }
 @keyframes recpulse { 0% { box-shadow: 0 0 0 0 rgba(214, 48, 80, .5); } 80%, 100% { box-shadow: 0 0 0 10px rgba(214, 48, 80, 0); } }
 @media (max-width: 520px) {
   .src { grid-template-columns: 1fr; gap: 10px; }
