@@ -320,3 +320,57 @@ a.tile:hover { border-color: var(--indigo); transform: translateY(-2px); box-sha
 
 .plan.current { border: 2px solid var(--teal); }
 .plan .btn.cur { cursor: default; color: var(--teal); border-color: var(--teal); }
+
+/* ---- Home page: header buttons, motion, tool cards ---- */
+html { overflow-x: clip; }
+.top-right .btn.outline { background: transparent; color: var(--ink); border: 1px solid var(--line); font-weight: 600; }
+.top-right .btn.outline:hover { background: var(--white); border-color: var(--indigo); color: var(--indigo); text-decoration: none; }
+.top-right .btn.signup { box-shadow: 0 6px 16px -6px rgba(59, 63, 224, .55); }
+@media (max-width: 560px) { .top-right a.login { display: inline-flex; } .top-right .btn.small { padding: 7px 12px; font-size: 13px; } .top-right .lang { max-width: 74px; padding: 7px 10px; } }
+@media (max-width: 400px) { .top .wrap { gap: 10px; } .top-right { gap: 6px; } }
+
+.hero { position: relative; isolation: isolate; }
+.hero h1 { max-width: 17ch; }
+.aura { position: absolute; left: 50%; top: -70px; width: 100vw; height: 600px; transform: translateX(-50%); overflow: hidden; z-index: -1; pointer-events: none; }
+.aura i { position: absolute; width: 380px; height: 380px; border-radius: 50%; filter: blur(80px); opacity: .42; animation: drift 16s ease-in-out infinite alternate; }
+.aura i:nth-child(1) { background: var(--indigo); left: 12%; top: 40px; }
+.aura i:nth-child(2) { background: var(--teal); right: 10%; top: 120px; animation-duration: 20s; animation-delay: -6s; }
+.aura i:nth-child(3) { background: var(--rose); left: 42%; top: 260px; width: 300px; height: 300px; opacity: .28; animation-duration: 24s; animation-delay: -12s; }
+@keyframes drift { from { transform: translate(-40px, 0) scale(1); } to { transform: translate(60px, 50px) scale(1.18); } }
+@keyframes rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+.hero h1 { animation: rise .8s cubic-bezier(.2, .7, .2, 1) both; }
+.hero p { animation: rise .8s .12s cubic-bezier(.2, .7, .2, 1) both; }
+.hero .cta { animation: rise .8s .24s cubic-bezier(.2, .7, .2, 1) both; }
+.demo { animation: rise .9s .36s cubic-bezier(.2, .7, .2, 1) both; }
+.hero .cta .btn:not(.ghost) { position: relative; overflow: hidden; }
+.hero .cta .btn:not(.ghost)::after { content: ""; position: absolute; top: 0; bottom: 0; width: 40%; left: -60%; background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .35), transparent); animation: shine 4.5s ease-in-out 1.5s infinite; }
+@keyframes shine { 0% { left: -60%; } 40%, 100% { left: 130%; } }
+
+.demo .turn { animation: rise .6s cubic-bezier(.2, .7, .2, 1) both; }
+.demo .turn:nth-of-type(2) { animation-delay: .9s; }
+.demo .turn:nth-of-type(3) { animation-delay: 1.5s; }
+.demo .turn:nth-of-type(4) { animation-delay: 2.1s; }
+@keyframes breathe { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(.6); } }
+.wave { position: relative; }
+.wave span:not(.gap) { animation: grow .5s cubic-bezier(.2, .7, .2, 1) backwards, breathe 2.4s ease-in-out infinite; animation-delay: calc(var(--i) * 28ms + 300ms), calc(var(--i) * 70ms + 1.2s); }
+.wave::after { content: ""; position: absolute; top: -6px; bottom: -6px; left: 0; width: 2px; border-radius: 2px; background: var(--ink); opacity: .22; animation: sweep 6s linear 1.4s infinite; }
+@keyframes sweep { from { left: 0; } to { left: 100%; } }
+
+.tok { display: inline-block; padding: 0 .38em; border-radius: 8px; font-weight: 600; line-height: 1.45; animation: tokpulse 2.8s ease-out infinite; }
+.tok-sq { background: rgba(14, 159, 154, .13); color: #0a7773; --glow: rgba(14, 159, 154, .35); }
+.tok-rd { background: rgba(217, 130, 43, .15); color: #a2590e; --glow: rgba(217, 130, 43, .38); animation-delay: .9s; }
+@keyframes tokpulse { 0% { box-shadow: 0 0 0 0 var(--glow); } 70%, 100% { box-shadow: 0 0 0 7px transparent; } }
+
+html.js .rv { opacity: 0; transform: translateY(22px); transition: opacity .7s cubic-bezier(.2, .7, .2, 1), transform .7s cubic-bezier(.2, .7, .2, 1); transition-delay: var(--d, 0s); }
+html.js .rv.in { opacity: 1; transform: none; }
+#homeTiles .tile { cursor: pointer; }
+#homeTiles .tile.soon { cursor: default; }
+a.tile .ticon { transition: transform .25s; }
+a.tile:hover .ticon { transform: scale(1.08) rotate(-4deg); }
+.plan { transition: transform .2s, box-shadow .2s; }
+.plan:hover { transform: translateY(-4px); box-shadow: 0 18px 36px -18px rgba(40, 44, 120, .28); }
+@media (prefers-reduced-motion: reduce) {
+  .aura i, .hero h1, .hero p, .hero .cta, .demo, .demo .turn, .wave span:not(.gap), .wave::after, .tok, .hero .cta .btn::after { animation: none !important; }
+  html.js .rv { opacity: 1; transform: none; transition: none; }
+}
+.aura { -webkit-mask-image: linear-gradient(#000 55%, transparent); mask-image: linear-gradient(#000 55%, transparent); }

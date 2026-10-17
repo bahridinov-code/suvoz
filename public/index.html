@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Suvoz – Turn a script into a conversation</title>
-<meta name="description" content="Write a script, pick a voice for each speaker, and download one finished audio file in over 90 languages.">
+<title>Suvoz – AI voice studio for every language</title>
+<meta name="description" content="Dialogues with several voices, narration, sound effects, speech to text, voice cloning and translation in over 90 languages.">
 <link rel="icon" href="/logo.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,14 +27,15 @@
     </nav>
     <div class="top-right">
       <select id="langSel" class="lang" aria-label="Language"></select>
-      <a class="login" href="/login?mode=login" data-i18n="nav.login"></a>
-      <a class="btn small" href="/app" data-i18n="nav.try"></a>
+      <a class="btn small outline login" href="/login?mode=login" data-i18n="nav.login"></a>
+      <a class="btn small signup" href="/login?mode=signup" data-i18n="nav.signup"></a>
     </div>
   </div>
 </header>
 
 <main>
   <div class="hero wrap">
+    <div class="aura" aria-hidden="true"><i></i><i></i><i></i></div>
     <h1 data-i18n="hero.title"></h1>
     <p data-i18n="hero.sub"></p>
     <div class="cta">
@@ -46,9 +47,9 @@
   <div class="demo" aria-hidden="true">
     <div class="demo-script">
       <div class="demo-cap" data-i18n="demo.label"></div>
-      <div class="turn a"><span class="who"><i></i><span data-i18n="demo.s1"></span></span><span data-i18n="demo.t1"></span></div>
-      <div class="turn b"><span class="who"><i></i><span data-i18n="demo.s2"></span></span><span data-i18n="demo.t2"></span></div>
-      <div class="turn a"><span class="who"><i></i><span data-i18n="demo.s3"></span></span><span data-i18n="demo.t3"></span></div>
+      <div class="turn a"><span class="who"><i></i><span data-i18n="demo.s1"></span></span><span data-i18n="demo.t1" data-hl></span></div>
+      <div class="turn b"><span class="who"><i></i><span data-i18n="demo.s2"></span></span><span data-i18n="demo.t2" data-hl></span></div>
+      <div class="turn a"><span class="who"><i></i><span data-i18n="demo.s3"></span></span><span data-i18n="demo.t3" data-hl></span></div>
     </div>
     <div class="demo-wave">
       <div class="demo-cap" data-i18n="demo.out"></div>
@@ -60,19 +61,14 @@
     <h2 data-i18n="how.title"></h2>
     <div class="steps">
       <div class="step"><b>1</b><h3 data-i18n="how.1.t"></h3><p data-i18n="how.1.d"></p></div>
-      <div class="step"><b>2</b><h3 data-i18n="how.2.t"></h3><p data-i18n="how.2.d"></p></div>
+      <div class="step"><b>2</b><h3 data-i18n="how.2.t"></h3><p data-i18n="how.2.d" data-hl></p></div>
       <div class="step"><b>3</b><h3 data-i18n="how.3.t"></h3><p data-i18n="how.3.d"></p></div>
     </div>
   </section>
 
   <section id="features" class="wrap">
     <h2 data-i18n="feat.title"></h2>
-    <div class="feats">
-      <div class="feat"><h3 data-i18n="feat.1.t"></h3><p data-i18n="feat.1.d"></p></div>
-      <div class="feat"><h3 data-i18n="feat.2.t"></h3><p data-i18n="feat.2.d"></p></div>
-      <div class="feat"><h3 data-i18n="feat.3.t"></h3><p data-i18n="feat.3.d"></p></div>
-      <div class="feat"><h3 data-i18n="feat.4.t"></h3><p data-i18n="feat.4.d"></p></div>
-    </div>
+    <div class="tiles" id="homeTiles"></div>
   </section>
 
   <section id="languages" class="wrap">
@@ -114,6 +110,10 @@
       <details><summary data-i18n="faq.2.q"></summary><p data-i18n="faq.2.a"></p></details>
       <details><summary data-i18n="faq.3.q"></summary><p data-i18n="faq.3.a"></p></details>
       <details><summary data-i18n="faq.4.q"></summary><p data-i18n="faq.4.a"></p></details>
+      <details><summary data-i18n="faq.5.q"></summary><p data-i18n="faq.5.a"></p></details>
+      <details><summary data-i18n="faq.6.q"></summary><p data-i18n="faq.6.a"></p></details>
+      <details><summary data-i18n="faq.7.q"></summary><p data-i18n="faq.7.a"></p></details>
+      <details><summary data-i18n="faq.8.q"></summary><p data-i18n="faq.8.a"></p></details>
     </div>
   </section>
 
@@ -161,6 +161,8 @@ if(!r.ok)throw new Error(r.status);f.hidden=true;sub.hidden=true;done.hidden=fal
 <script src="/i18n-auth.js"></script>
 <script src="/i18n-pricing.js"></script>
 <script src="/i18n-hub.js"></script>
+<script src="/i18n-home.js"></script>
+<script src="/hl.js"></script>
 <script src="/auth.js"></script>
 <script src="/site.js"></script>
 </body>

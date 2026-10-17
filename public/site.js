@@ -53,7 +53,7 @@ window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(buil
     if (!s) return;
     const login = document.querySelector('.top-right a.login');
     if (login) login.hidden = true;
-    document.querySelectorAll('a[data-i18n="nav.try"], a[data-i18n="hero.cta1"]').forEach((a) => { a.href = '/app'; if (a.dataset.i18n === 'nav.try') a.dataset.i18n = 'nav.tools'; });
+    document.querySelectorAll('a[data-i18n="nav.signup"], a[data-i18n="hero.cta1"]').forEach((a) => { a.href = '/app'; if (a.dataset.i18n === 'nav.signup') a.dataset.i18n = 'nav.tools'; });
     const right = document.querySelector('.top-right');
     if (right && !document.getElementById('logout')) {
       const b = document.createElement('button');
@@ -93,3 +93,53 @@ window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(buil
     applyLang(currentLang);
   } catch (e) {}
 })();
+
+// ---- Home page life: tool cards, reveal on scroll ----
+document.documentElement.classList.add('js');
+const HOME_ICONS = {
+  dialogue: '<path d="M4 5h11a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H9l-4 3v-3H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/><path d="M19 9h1a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-1v3l-3-3h-4"/>',
+  story: '<path d="M4 5.5C6.5 4 9.5 4 12 5.5c2.5-1.5 5.5-1.5 8 0V19c-2.5-1.5-5.5-1.5-8 0-2.5-1.5-5.5-1.5-8 0z"/><path d="M12 5.5V19"/>',
+  sound: '<path d="M4 10v4"/><path d="M8 7v10"/><path d="M12 4v16"/><path d="M16 8v8"/><path d="M20 11v2"/>',
+  stt: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/>',
+  translate: '<path d="M4 6h9"/><path d="M8.5 4v2c0 4-2 7-5 8"/><path d="M6 10c1 2 3 4 6 5"/><path d="M13 20l4-9 4 9"/><path d="M14.5 17h5"/>',
+  design: '<path d="M12 3l1.8 4.7L18.5 9l-4.7 1.8L12 15.5l-1.8-4.7L5.5 9l4.7-1.3z"/><path d="M18 15l.8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8z"/>',
+  clone: '<circle cx="9" cy="9" r="4"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M17 6.5a4 4 0 0 1 0 5"/><path d="M19.5 4a7.5 7.5 0 0 1 0 10"/>',
+  dub: '<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.5v5l4-2.5z"/>',
+};
+const HOME_TOOLS = [
+  { id: 'dialogue', c: 'indigo' }, { id: 'story', c: 'teal' }, { id: 'sound', c: 'amber', hl: true }, { id: 'stt', c: 'rose' },
+  { id: 'translate', c: 'teal' }, { id: 'design', c: 'indigo' }, { id: 'clone', c: 'teal' }, { id: 'dub', c: 'gray', soon: true },
+];
+function buildHomeTiles() {
+  const box = document.getElementById('homeTiles');
+  if (!box) return;
+  box.textContent = '';
+  HOME_TOOLS.forEach((x, i) => {
+    const el = document.createElement(x.soon ? 'div' : 'a');
+    el.className = 'tile rv c-' + x.c + (x.soon ? ' soon' : '');
+    el.style.setProperty('--d', (i % 4) * 0.07 + 's');
+    if (!x.soon) el.href = '/app';
+    const ic = document.createElement('span'); ic.className = 'ticon';
+    ic.innerHTML = '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + HOME_ICONS[x.id] + '</svg>';
+    const b = document.createElement('span'); b.className = 'tbody';
+    const h = document.createElement('strong'); h.textContent = t('hub.' + x.id);
+    const p = document.createElement('span'); p.textContent = t('hub.' + x.id + '.d'); if (x.hl) p.dataset.hl = '1';
+    b.append(h, p); el.append(ic, b);
+    if (x.soon) { const s = document.createElement('em'); s.className = 'badge'; s.textContent = t('hub.soon'); el.append(s); }
+    box.appendChild(el);
+  });
+  if (window.hlRun) hlRun(box);
+  observeReveal(box);
+}
+let revealIO = null;
+function observeReveal(root) {
+  if (!('IntersectionObserver' in window)) { (root || document).querySelectorAll('.rv').forEach((e) => e.classList.add('in')); return; }
+  revealIO = revealIO || new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { const el = e.target; el.classList.add('in'); revealIO.unobserve(el); setTimeout(() => el.classList.remove('rv', 'in'), 1100); } }), { threshold: 0.12 });
+  (root || document).querySelectorAll('.rv:not(.in)').forEach((e) => revealIO.observe(e));
+}
+document.querySelectorAll('main section.wrap > *, .step, .feat, .plan, .faq details, .final').forEach((e, i) => {
+  if (!e.classList.contains('rv')) { e.classList.add('rv'); e.style.setProperty('--d', (i % 4) * 0.06 + 's'); }
+});
+buildHomeTiles();
+observeReveal(document);
+document.addEventListener('langchange', buildHomeTiles);
