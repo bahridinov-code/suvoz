@@ -97,7 +97,10 @@ document.addEventListener('langchange', render);
   if (config.dubOn) { const u = TOOLS.find((x) => x.id === 'dub'); u.soon = false; u.href = '/dubbing'; u.color = 'amber'; }
   if (config.designOn) { const d = TOOLS.find((x) => x.id === 'design'); d.soon = false; d.href = '/voice-design'; d.color = 'indigo'; const c = TOOLS.find((x) => x.id === 'clone'); c.soon = false; c.href = '/voice-clone'; c.color = 'teal'; }
   $('historyLink').hidden = !historyOn;
+  if (/type=recovery/.test(location.hash)) return location.replace('/login' + location.hash);
+  Auth.takeHash();   // Google sign-in and email links bring the login in the address
   if (!(await Auth.session())) return location.replace('/login');
+  if (location.hash) history.replaceState(null, '', location.pathname + location.search);
   $('logout').hidden = false;
   $('logout').onclick = async () => { await Auth.signOut(); location.replace('/'); };
   render();
