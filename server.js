@@ -21,6 +21,9 @@ const MAX_SPEAKERS = 4;
 const PORT = process.env.PORT || 3000;
 
 // ---- Stripe (payments). All optional: without STRIPE_SECRET_KEY the Subscribe button says "opening soon". ----
+// Community links shown in the profile menu. Each one appears only when its value is set (https:// or mailto: only).
+const linkEnv = (k) => { const v = String(process.env[k] || '').trim(); return /^(https:\/\/|mailto:)/i.test(v) ? v : ''; };
+const SOCIAL_LINKS = { discord: linkEnv('DISCORD_URL'), instagram: linkEnv('INSTAGRAM_URL'), tiktok: linkEnv('TIKTOK_URL'), affiliate: linkEnv('AFFILIATE_URL') };
 const STRIPE_KEY = process.env.STRIPE_SECRET_KEY || '';
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
 const STRIPE_BASE = (process.env.STRIPE_BASE || 'https://api.stripe.com').replace(/\/$/, '');
@@ -55,7 +58,7 @@ const TYPES = {
   '.png': 'image/png', '.jpg': 'image/jpeg', '.ico': 'image/x-icon',
   '.mp3': 'audio/mpeg', '.woff2': 'font/woff2', '.txt': 'text/plain; charset=utf-8',
 };
-const PAGES = { '/': 'index.html', '/app': 'hub.html', '/dialogue': 'app.html', '/login': 'login.html', '/terms': 'terms.html', '/privacy': 'privacy.html', '/refunds': 'refunds.html', '/history': 'history.html', '/transcribe': 'transcribe.html', '/voice-design': 'voicedesign.html', '/voice-clone': 'voiceclone.html', '/dubbing': 'dubbing.html', '/translate': 'translate.html', '/account': 'account.html' };
+const PAGES = { '/': 'index.html', '/app': 'hub.html', '/dialogue': 'app.html', '/login': 'login.html', '/terms': 'terms.html', '/privacy': 'privacy.html', '/refunds': 'refunds.html', '/history': 'history.html', '/transcribe': 'transcribe.html', '/voice-design': 'voicedesign.html', '/voice-clone': 'voiceclone.html', '/dubbing': 'dubbing.html', '/translate': 'translate.html', '/account': 'account.html', '/plans': 'plans.html' };
 
 // Serves files from /public only. Blocks anything outside that folder.
 function serveStatic(req, res, pathname) {
@@ -688,7 +691,7 @@ async function handleCheckout(req, res) {
       mode: 'subscription',
       locale: stripeLocale(String(body.lang || '')),
       success_url: SITE_URL + '/app?paid=1',
-      cancel_url: SITE_URL + '/#pricing',
+      cancel_url: SITE_URL + '/plans',
       client_reference_id: who.user.id,
       line_items: { 0: { quantity: 1, price_data: { currency: 'usd', unit_amount: plan.cents, recurring: { interval: 'month' }, product_data: { name: plan.name } } } },
       subscription_data: { metadata: { user_id: who.user.id, plan: String(body.plan) } },
@@ -718,12 +721,98 @@ async function handlePortal(req, res) {
     if (!info.customer) return sendJson(res, 404, { error: 'No plan found.' });
     let body = {};
     try { body = await readJson(req); } catch (e) {}
-    const s = await stripe('POST', '/v1/billing_portal/sessions', { customer: info.customer, return_url: SITE_URL + '/app', locale: stripeLocale(String((body && body.lang) || '')) });
+    const params = { customer: info.customer, return_url: SITE_URL + '/plans', locale: stripeLocale(String((body && body.lang) || '')) };
+    let s;
+    if (body && body.flow === 'payment') {   // straight to "update payment details"; if Stripe's settings do not allow it, open the normal page
+      try { s = await stripe('POST', '/v1/billing_portal/sessions', { ...params, flow_data: { type: 'payment_method_update' } }); }
+      catch (e) { console.error('portal flow:', e.message); }
+    }
+    if (!s) s = await stripe('POST', '/v1/billing_portal/sessions', params);
     return sendJson(res, 200, { url: s.url });
   } catch (e) {
     console.error(e.message);
     return sendJson(res, 502, { error: 'Could not open your plan page. Please try again.' });
   }
+}
+
+// ---- Plan page: show the plan, change it, cancel it, resume it ----
+const PLAN_KEYS = Object.keys(PLANS);
+const productIds = {};
+// One Stripe product per plan, so invoices show the right name. Found by label, created once if missing.
+async function productFor(key) {
+  if (productIds[key]) return productIds[key];
+  try {
+    const f = await stripe('GET', '/v1/products/search?query=' + encodeURIComponent("metadata['suvoz_plan']:'" + key + "' AND active:'true'"));
+    if (f.data && f.data[0]) return (productIds[key] = f.data[0].id);
+  } catch (e) { console.error('product search:', e.message); }
+  const p = await stripe('POST', '/v1/products', { name: PLANS[key].name, metadata: { suvoz_plan: key } });
+  return (productIds[key] = p.id);
+}
+const subPeriodEnd = (sub) => (sub.items && sub.items.data && sub.items.data[0] && sub.items.data[0].current_period_end) || sub.current_period_end || null;
+async function planContext(req, res) {
+  const who = await getUser(req);
+  if (!who) { sendJson(res, 401, { code: 'auth_required', error: 'Please log in.' }); return null; }
+  if (!PAY_ON) { sendJson(res, 503, { code: 'pay_off', error: 'Payments open soon.' }); return null; }
+  const info = await admin('sub_info', { p_user: who.user.id });
+  return { who, info };
+}
+async function handlePlanInfo(req, res) {
+  try {
+    const c = await planContext(req, res); if (!c) return;
+    const me = await rpc(c.who.token, 'credits_left');
+    const out = { payOn: true, plan: me.plan, left: me.left, active: !!c.info.active, hasCustomer: !!c.info.customer, exists: !!c.info.exists };
+    if (c.info.active && c.info.subscription) {
+      try {
+        const sub = await stripe('GET', '/v1/subscriptions/' + encodeURIComponent(c.info.subscription));
+        const pend = sub.metadata && PLANS[sub.metadata.plan] && sub.metadata.plan !== c.info.plan ? sub.metadata.plan : null;
+        out.periodEnd = subPeriodEnd(sub);
+        out.cancelAtPeriodEnd = !!(sub.cancel_at_period_end || sub.cancel_at);
+        out.pendingPlan = pend;
+      } catch (e) { console.error('plan info:', e.message); }
+    }
+    sendJson(res, 200, out);
+  } catch (e) { console.error(e.message); sendJson(res, 502, { error: 'Could not load your plan.' }); }
+}
+async function handlePlanChange(req, res) {
+  try {
+    const c = await planContext(req, res); if (!c) return;
+    let body; try { body = await readJson(req); } catch (e) { return sendJson(res, 400, { error: 'Bad request.' }); }
+    const next = String(body.plan || '');
+    if (!PLANS[next]) return sendJson(res, 400, { error: 'Unknown plan.' });
+    if (!c.info.active || !c.info.subscription) return sendJson(res, 409, { code: 'no_plan', error: 'You do not have a plan yet.' });
+    if (next === c.info.plan) return sendJson(res, 400, { error: 'This is already your plan.' });
+    const sub = await stripe('GET', '/v1/subscriptions/' + encodeURIComponent(c.info.subscription));
+    if (sub.cancel_at_period_end || sub.cancel_at) return sendJson(res, 409, { code: 'cancelling', error: 'Resume your plan first, then change it.' });
+    const item = sub.items && sub.items.data && sub.items.data[0];
+    if (!item) return sendJson(res, 502, { error: 'Could not change your plan. Please try again.' });
+    const upgrade = PLANS[next].cents > (PLANS[c.info.plan] ? PLANS[c.info.plan].cents : 0);
+    const params = {
+      items: { 0: { id: item.id, price_data: { currency: 'usd', product: await productFor(next), recurring: { interval: 'month' }, unit_amount: PLANS[next].cents } } },
+      metadata: { user_id: c.who.user.id, plan: next },
+      proration_behavior: upgrade ? 'always_invoice' : 'none',
+    };
+    if (upgrade) params.payment_behavior = 'error_if_incomplete';
+    try { await stripe('POST', '/v1/subscriptions/' + encodeURIComponent(c.info.subscription), params); }
+    catch (e) {
+      console.error(e.message);
+      if (e.stripe && (e.stripe.type === 'card_error' || /payment|card/i.test(e.stripe.message || ''))) return sendJson(res, 402, { code: 'pay_failed', error: 'The payment did not go through. Please check your card and try again.' });
+      return sendJson(res, 502, { error: 'Could not change your plan. Please try again.' });
+    }
+    if (upgrade) {
+      let ok = false;
+      for (let i = 0; i < 2 && !ok; i++) { try { await admin('change_plan', { p_user: c.who.user.id, p_plan: next }); ok = true; } catch (e) { console.error('change_plan:', e.message); } }
+      // If this failed, the payment webhook for the upgrade invoice repeats the same step.
+    }
+    sendJson(res, 200, { ok: true, mode: upgrade ? 'upgrade' : 'downgrade', plan: next, periodEnd: subPeriodEnd(sub) });
+  } catch (e) { console.error(e.message); sendJson(res, 502, { error: 'Could not change your plan. Please try again.' }); }
+}
+async function setCancel(req, res, cancel) {
+  try {
+    const c = await planContext(req, res); if (!c) return;
+    if (!c.info.active || !c.info.subscription) return sendJson(res, 409, { code: 'no_plan', error: 'You do not have a plan.' });
+    const sub = await stripe('POST', '/v1/subscriptions/' + encodeURIComponent(c.info.subscription), { cancel_at_period_end: cancel ? 'true' : 'false' });
+    sendJson(res, 200, { ok: true, cancelAtPeriodEnd: cancel, periodEnd: subPeriodEnd(sub) });
+  } catch (e) { console.error(e.message); sendJson(res, 502, { error: 'Could not update your plan. Please try again.' }); }
 }
 
 // Sends one email through Resend. Never throws: a failed email must not break a payment.
@@ -757,7 +846,9 @@ async function handleStripeWebhook(req, res) {
       if (subId && line && line.period) {
         const sub = await stripe('GET', '/v1/subscriptions/' + encodeURIComponent(subId));
         const m = sub.metadata || {};
-        if (m.user_id && PLANS[m.plan]) {
+        if (m.user_id && PLANS[m.plan] && obj.billing_reason === 'subscription_update') {
+          await admin('change_plan', { p_user: m.user_id, p_plan: m.plan });   // an upgrade paid mid-month: new plan now, same period
+        } else if (m.user_id && PLANS[m.plan]) {
           const end = new Date((line.period.end + 86400) * 1000).toISOString();   // one day of grace for late renewals
           await admin('activate_plan', { p_user: m.user_id, p_plan: m.plan, p_customer: sub.customer, p_sub: subId, p_period_end: end });
           if (obj.amount_paid > 0) {
@@ -1463,6 +1554,7 @@ const server = http.createServer(async (req, res) => {
         translateOn: TRANSLATE_ON,
         translateRatio: TRANSLATE_RATIO,
         translateMax: TRANSLATE_MAX_CHARS,
+        links: SOCIAL_LINKS,
       });
     }
     if (req.method === 'GET' && p === '/api/voices') return await handleVoices(req, res);
@@ -1484,6 +1576,10 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'POST' && p === '/api/sales') return await handleSales(req, res);
     if (req.method === 'POST' && p === '/api/checkout') return await handleCheckout(req, res);
     if (req.method === 'POST' && p === '/api/portal') return await handlePortal(req, res);
+    if (req.method === 'GET' && p === '/api/plan') return await handlePlanInfo(req, res);
+    if (req.method === 'POST' && p === '/api/plan-change') return await handlePlanChange(req, res);
+    if (req.method === 'POST' && p === '/api/plan-cancel') return await setCancel(req, res, true);
+    if (req.method === 'POST' && p === '/api/plan-resume') return await setCancel(req, res, false);
     if (req.method === 'POST' && p === '/api/stripe-webhook') return await handleStripeWebhook(req, res);
     if ((req.method === 'GET' || req.method === 'HEAD') && !p.startsWith('/api/') && serveStatic(req, res, p)) return;
     sendJson(res, 404, { error: 'Not found.' });
