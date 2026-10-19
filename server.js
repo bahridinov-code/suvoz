@@ -38,10 +38,10 @@ const PAY_ON = !!(STRIPE_KEY && STRIPE_WEBHOOK_SECRET && SUPABASE_SECRET && SUPA
 const HISTORY_ON = !!(AUTH_ON && SUPABASE_SECRET);   // saves each user's audios (needs supabase-history.sql)
 // Prices in US cents. firstOff = amount taken off the first month only (new customers).
 const PLANS = {
-  starter:  { name: 'Suvoz Starter',  minutes: 30,   cents: 900,   firstOff: 450 },
-  creator:  { name: 'Suvoz Creator',  minutes: 120,  cents: 2900,  firstOff: 1201 },
-  pro:      { name: 'Suvoz Pro',      minutes: 400,  cents: 7900,  firstOff: 2901 },
-  business: { name: 'Suvoz Business', minutes: 3000, cents: 49900, firstOff: 0 },
+  starter:  { name: 'Suvoz Starter',  minutes: 30,   cents: 900,   yearCents: 9700,   firstOff: 450 },
+  creator:  { name: 'Suvoz Creator',  minutes: 120,  cents: 2900,  yearCents: 31300,  firstOff: 1201 },
+  pro:      { name: 'Suvoz Pro',      minutes: 400,  cents: 7900,  yearCents: 85300,  firstOff: 2901 },
+  business: { name: 'Suvoz Business', minutes: 3000, cents: 49900, yearCents: 538900, firstOff: 0 },
 };
 
 // Browser safety headers on every answer: no framing by other sites, no content-type guessing, less referrer leakage.
@@ -781,6 +781,7 @@ async function handleCheckout(req, res) {
   try { body = await readJson(req); } catch (e) { return sendJson(res, 400, { error: 'Bad request.' }); }
   const plan = PLANS[String(body.plan || '')];
   if (!plan) return sendJson(res, 400, { error: 'Unknown plan.' });
+  const interval = body.interval === 'year' ? 'year' : 'month';
   try {
     const info = await admin('sub_info', { p_user: who.user.id });
     if (info.active) return sendJson(res, 409, { code: 'already_subscribed', error: 'You already have a plan.' });
@@ -790,12 +791,12 @@ async function handleCheckout(req, res) {
       success_url: SITE_URL + '/app?paid=1',
       cancel_url: SITE_URL + '/plans',
       client_reference_id: who.user.id,
-      line_items: { 0: { quantity: 1, price_data: { currency: 'usd', unit_amount: plan.cents, recurring: { interval: 'month' }, product_data: { name: plan.name } } } },
+      line_items: { 0: { quantity: 1, price_data: { currency: 'usd', unit_amount: interval === 'year' ? plan.yearCents : plan.cents, recurring: { interval }, product_data: { name: plan.name + (interval === 'year' ? ' (yearly)' : '') } } } },
       subscription_data: { metadata: { user_id: who.user.id, plan: String(body.plan) } },
       metadata: { user_id: who.user.id, plan: String(body.plan) },
     };
     if (info.customer) params.customer = info.customer; else params.customer_email = who.user.email;
-    if (!info.exists && plan.firstOff > 0) {
+    if (interval === 'month' && !info.exists && plan.firstOff > 0) {
       const id = 'suvoz-first-' + body.plan + '-' + plan.firstOff;
       try { await stripe('POST', '/v1/coupons', { id, amount_off: plan.firstOff, currency: 'usd', duration: 'once', name: 'First month' }); }
       catch (e) { if (!(e.stripe && e.stripe.code === 'resource_already_exists')) throw e; }
@@ -836,7 +837,8 @@ async function handlePortal(req, res) {
 const PLAN_KEYS = Object.keys(PLANS);
 const productIds = {};
 // One Stripe product per plan, so invoices show the right name. Found by label, created once if missing.
-async function productFor(key) {
+async function productFor(key, interval) {
+  if (interval === 'year') return productForYear(key);
   if (productIds[key]) return productIds[key];
   try {
     const f = await stripe('GET', '/v1/products/search?query=' + encodeURIComponent("metadata['suvoz_plan']:'" + key + "' AND active:'true'"));
@@ -845,6 +847,17 @@ async function productFor(key) {
   const p = await stripe('POST', '/v1/products', { name: PLANS[key].name, metadata: { suvoz_plan: key } });
   return (productIds[key] = p.id);
 }
+const productIdsY = {};
+async function productForYear(key) {
+  if (productIdsY[key]) return productIdsY[key];
+  try {
+    const f = await stripe('GET', '/v1/products/search?query=' + encodeURIComponent("metadata['suvoz_plan_year']:'" + key + "' AND active:'true'"));
+    if (f.data && f.data[0]) return (productIdsY[key] = f.data[0].id);
+  } catch (e) { console.error('product search:', e.message); }
+  const p = await stripe('POST', '/v1/products', { name: PLANS[key].name + ' (yearly)', metadata: { suvoz_plan_year: key } });
+  return (productIdsY[key] = p.id);
+}
+const subInterval = (sub) => { const it = sub.items && sub.items.data && sub.items.data[0]; return it && it.price && it.price.recurring && it.price.recurring.interval === 'year' ? 'year' : 'month'; };
 const subPeriodEnd = (sub) => (sub.items && sub.items.data && sub.items.data[0] && sub.items.data[0].current_period_end) || sub.current_period_end || null;
 async function planContext(req, res) {
   const who = await getUser(req);
@@ -863,6 +876,8 @@ async function handlePlanInfo(req, res) {
         const sub = await stripe('GET', '/v1/subscriptions/' + encodeURIComponent(c.info.subscription));
         const pend = sub.metadata && PLANS[sub.metadata.plan] && sub.metadata.plan !== c.info.plan ? sub.metadata.plan : null;
         out.periodEnd = subPeriodEnd(sub);
+        out.interval = subInterval(sub);
+        out.resets = me.resets || null;
         out.cancelAtPeriodEnd = !!(sub.cancel_at_period_end || sub.cancel_at);
         out.pendingPlan = pend;
       } catch (e) { console.error('plan info:', e.message); }
@@ -882,9 +897,10 @@ async function handlePlanChange(req, res) {
     if (sub.cancel_at_period_end || sub.cancel_at) return sendJson(res, 409, { code: 'cancelling', error: 'Resume your plan first, then change it.' });
     const item = sub.items && sub.items.data && sub.items.data[0];
     if (!item) return sendJson(res, 502, { error: 'Could not change your plan. Please try again.' });
-    const upgrade = PLANS[next].cents > (PLANS[c.info.plan] ? PLANS[c.info.plan].cents : 0);
+    const upgrade = PLAN_KEYS.indexOf(next) > PLAN_KEYS.indexOf(c.info.plan);
+    const interval = subInterval(sub);   // stays the same: a yearly plan changes to another yearly plan
     const params = {
-      items: { 0: { id: item.id, price_data: { currency: 'usd', product: await productFor(next), recurring: { interval: 'month' }, unit_amount: PLANS[next].cents } } },
+      items: { 0: { id: item.id, price_data: { currency: 'usd', product: await productFor(next, interval), recurring: { interval }, unit_amount: interval === 'year' ? PLANS[next].yearCents : PLANS[next].cents } } },
       metadata: { user_id: c.who.user.id, plan: next },
       proration_behavior: upgrade ? 'always_invoice' : 'none',
     };
@@ -947,12 +963,12 @@ async function handleStripeWebhook(req, res) {
           await admin('change_plan', { p_user: m.user_id, p_plan: m.plan });   // an upgrade paid mid-month: new plan now, same period
         } else if (m.user_id && PLANS[m.plan]) {
           const end = new Date((line.period.end + 86400) * 1000).toISOString();   // one day of grace for late renewals
-          await admin('activate_plan', { p_user: m.user_id, p_plan: m.plan, p_customer: sub.customer, p_sub: subId, p_period_end: end });
+          await admin('activate_plan', { p_user: m.user_id, p_plan: m.plan, p_customer: sub.customer, p_sub: subId, p_period_end: end, p_interval: subInterval(sub) });
           if (obj.amount_paid > 0) {
             const to = obj.customer_email || (await customerEmail(sub.customer));
             const mail = mailer.receiptEmail({
               planName: PLANS[m.plan].name, minutes: PLANS[m.plan].minutes, amount: obj.amount_paid, currency: obj.currency,
-              renewal: obj.billing_reason === 'subscription_cycle', until: mailer.dateText(line.period.end),
+              renewal: obj.billing_reason === 'subscription_cycle', yearly: subInterval(sub) === 'year', until: mailer.dateText(line.period.end),
             });
             await sendMail({ to, subject: mail.subject, html: mail.html, text: mail.text });
           }

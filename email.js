@@ -54,16 +54,18 @@ const money = (cents, cur) => {
 const dateText = (unixSeconds) => new Date(unixSeconds * 1000).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 
 // ---- The emails ----
-function receiptEmail({ planName, minutes, amount, currency, renewal, until }) {
+function receiptEmail({ planName, minutes, amount, currency, renewal, until, yearly }) {
   const parts = {
     preheader: renewal ? 'Your Suvoz plan was renewed.' : 'Your plan is active. Your minutes are ready.',
     title: renewal ? 'Your plan was renewed' : 'Thank you! Your plan is active',
     paragraphs: [
-      renewal ? 'We received your payment and added your minutes for the new month.' : 'We received your payment. Your minutes are ready, so you can start creating audio now.',
+      renewal ? (yearly ? 'We received your payment and renewed your plan for another year.' : 'We received your payment and added your minutes for the new month.') : 'We received your payment. Your minutes are ready, so you can start creating audio now.',
     ],
-    rows: [['Plan', planName], ['Minutes this month', String(minutes)], ['Paid', money(amount, currency)], ['Minutes valid until', until]],
+    rows: yearly
+      ? [['Plan', planName + ' (yearly)'], ['Minutes each month', String(minutes)], ['Paid', money(amount, currency)], ['Plan valid until', until]]
+      : [['Plan', planName], ['Minutes this month', String(minutes)], ['Paid', money(amount, currency)], ['Minutes valid until', until]],
     button: { text: 'Open Suvoz', url: SITE + '/app' },
-    note: 'Unused minutes do not carry over to the next month. You can cancel any time with the Manage plan button in the app.',
+    note: (yearly ? 'Your minutes refill every month. Unused minutes do not carry over to the next month. ' : 'Unused minutes do not carry over to the next month. ') + 'You can cancel any time with the Manage plan button in the app.',
   };
   return { subject: renewal ? 'Your Suvoz plan was renewed' : 'Your Suvoz plan is active', html: layout(parts), text: text(parts) };
 }
@@ -84,14 +86,22 @@ function cancelEmail({ planName, until }) {
 
 // ---- Templates pasted into Supabase (Authentication > Email). {{ ... }} are Supabase's own variables. ----
 const templates = {
+  // One template for two cases, so it holds both versions. People who signed up with a code are marked
+  // (signup_via) when we send the code, and Supabase shows only the matching version.
   confirm: {
     subject: 'Confirm your email for Suvoz',
     parts: {
       preheader: 'One click and your account is ready.',
       title: 'Confirm your email',
-      paragraphs: ['Welcome to Suvoz! Press the button to confirm your email and start turning scripts into conversations. Your free minutes are waiting.', 'Signing in with a code instead? Enter this code on the Suvoz page:'],
-      code: { raw: '{{ .Token }}' },
+      paragraphs: ['Welcome to Suvoz! Press the button to confirm your email and start turning scripts into conversations. Your free minutes are waiting.'],
       button: { text: 'Confirm email', url: { raw: '{{ .ConfirmationURL }}' } },
+      note: 'If you did not create a Suvoz account, you can safely ignore this email.',
+    },
+    codeParts: {
+      preheader: 'Your code to finish creating your Suvoz account.',
+      title: 'Your sign-up code',
+      paragraphs: ['Welcome to Suvoz! Enter this code on the Suvoz page to finish creating your account. Your free minutes are waiting.'],
+      code: { raw: '{{ .Token }}' },
       note: 'If you did not create a Suvoz account, you can safely ignore this email.',
     },
   },
