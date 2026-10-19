@@ -218,6 +218,18 @@ function openPayment() {
   });
 }
 
+// A link from the home page (/plans?plan=business&interval=year) opens the right confirm box straight away.
+function openFromLink() {
+  let plan = '', interval = 'month';
+  try { const q = new URLSearchParams(location.search); plan = q.get('plan') || ''; interval = q.get('interval') === 'year' ? 'year' : 'month'; history.replaceState(null, '', location.pathname); } catch (e) {}
+  if (!state || state.payOn === false || !ORDER.includes(plan)) return;
+  const paid = state.active && state.plan !== 'free';
+  if (!paid) { Billing.mode = interval; Billing.paint($('billMount').firstChild); render(); return; }   // no plan yet: just show the right prices
+  if (state.cancelAtPeriodEnd) return;
+  if (interval === 'year' && state.interval !== 'year') { Billing.mode = 'year'; Billing.paint($('billMount').firstChild); render(); if (ORDER.indexOf(plan) >= ORDER.indexOf(state.plan)) doYear(plan); return; }
+  if (state.interval === 'year' && interval === 'month') return;
+  if (plan !== state.plan) doChange(plan, ORDER.indexOf(plan) > ORDER.indexOf(state.plan));
+}
 document.addEventListener('langchange', render);
 const sw = Billing.make(() => render());
 $('billMount').append(sw);
@@ -229,4 +241,5 @@ $('billMount').append(sw);
   Auth.takeHash();
   if (!(await Auth.session())) return location.replace('/login');
   await load();
+  openFromLink();
 })();

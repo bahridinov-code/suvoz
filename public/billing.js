@@ -72,10 +72,15 @@ const Billing = {
     });
     if (note) { note.dataset.i18n = year() ? 'price.note.y' : 'price.note'; note.textContent = t(note.dataset.i18n); }
   }
-  const sw = Billing.make(() => { paint(); if (typeof applyLang === 'function') applyLang(currentLang); });
+  // buttons of people who already pay open the Plans page on the right plan and billing type
+  function links() {
+    document.querySelectorAll('#pricing a.btn[data-plan]').forEach((a) => { a.href = '/plans?plan=' + a.dataset.plan + (year() ? '&interval=year' : ''); });
+  }
+  const sw = Billing.make(() => { paint(); links(); if (typeof applyLang === 'function') applyLang(currentLang); });
   mount.append(sw);
   // after a language change the texts with numbers are rebuilt
   document.addEventListener('langchange', () => {
+    links();
     document.querySelectorAll('#pricing .disc[data-save]').forEach((e) => { e.textContent = t('price.save', { n: e.dataset.save }); });
     document.querySelectorAll('#pricing .perm[data-n]').forEach((e) => { e.textContent = t('price.perm', { n: e.dataset.n }); });
   });

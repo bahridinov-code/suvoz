@@ -86,7 +86,7 @@ window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(buil
             span.className = 'btn small ghost cur'; span.dataset.i18n = 'price.current';
             a.replaceWith(span);
           } else if (paid && i > 0) {
-            a.dataset.i18n = 'price.change'; a.href = '/plans'; a.onclick = null;   // changing a plan happens on the Plans page
+            a.dataset.i18n = 'price.change'; a.dataset.plan = keys[i]; a.href = '/plans?plan=' + keys[i]; a.onclick = null;   // changing a plan happens on the Plans page
           }
         });
       }
