@@ -69,7 +69,7 @@ const Billing = {
   // after a language change the texts with numbers are rebuilt
   document.addEventListener('langchange', () => {
     // someone who already has a plan changes it with the Manage plan button, so the switch is hidden for them
-    const has = !!document.querySelector('#pricing .plan.current');
+    const has = !!document.querySelector('#pricing .plan:not(:first-child).current');   // the Free card is marked too, that does not count
     mount.hidden = has;
     if (has && year()) { Billing.mode = 'month'; Billing.paint(sw); paint(); }
     document.querySelectorAll('#pricing .disc[data-save]').forEach((e) => { e.textContent = t('price.save', { n: e.dataset.save }); });
