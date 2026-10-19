@@ -90,6 +90,7 @@
   <section id="pricing" class="wrap">
     <h2 data-i18n="price.title"></h2>
     <p class="sub" data-i18n="price.sub"></p>
+    <div id="homeBill" class="bill-wrap"></div>
     <div class="plans">
       <div class="plan"><h3 data-i18n="price.free.n"></h3><div class="amt">$0</div><p class="pm" data-i18n="price.free.m"></p><p data-i18n="price.free.d"></p><a class="btn small" href="/login" data-i18n="price.cta.free"></a></div>
       <div class="plan"><h3 data-i18n="price.s.n"></h3><div class="amt"><s>$9</s> $4.50<small data-i18n="price.mo"></small></div><p class="disc" data-i18n="price.off.s"></p><p class="pm" data-i18n="price.s.m"></p><p data-i18n="price.s.d"></p><a class="btn small" href="/app?plan=starter" data-i18n="price.cta.buy"></a></div>
@@ -164,5 +165,6 @@ if(!r.ok)throw new Error(r.status);f.hidden=true;sub.hidden=true;done.hidden=fal
 <script src="/auth.js"></script>
 <script src="/profile.js"></script>
 <script src="/site.js"></script>
+<script src="/billing.js"></script>
 </body>
 </html>

@@ -547,3 +547,19 @@ html.in .top-right .who-mail, html.in .top-right #logout, html.in .top-right a.l
       radial-gradient(220px 200px at 50% 62%, rgba(214, 48, 120, .09), transparent 70%); }
   .aura i { display: none; }
 }
+
+/* ---- Monthly / yearly switch ---- */
+.bill-wrap { margin-top: 26px; display: flex; }
+.bill-wrap[hidden], .bill[hidden] { display: none; }
+.bill { position: relative; display: inline-grid; grid-template-columns: 1fr 1fr; padding: 5px; border-radius: 999px; background: var(--white); border: 1px solid var(--line); box-shadow: 0 8px 24px -14px rgba(40, 44, 120, .4); }
+.bill .knob { position: absolute; top: 5px; bottom: 5px; inset-inline-start: 5px; width: calc((100% - 10px) / 2); border-radius: 999px; background: linear-gradient(135deg, var(--indigo), #5b5ff0); box-shadow: 0 6px 16px -6px rgba(59, 63, 224, .7); transition: inset-inline-start .3s cubic-bezier(.4, .1, .2, 1); }
+.bill[data-mode="year"] .knob { inset-inline-start: calc(50% + 0px); }
+.bill button { position: relative; z-index: 1; border: 0; background: none; font: inherit; font-weight: 600; font-size: 15px; padding: 10px 24px; border-radius: 999px; color: var(--muted); cursor: pointer; white-space: nowrap; transition: color .25s; }
+.bill button.on { color: #fff; }
+.bill em { position: absolute; top: -13px; inset-inline-end: -4px; font-style: normal; font-size: 11px; font-weight: 700; line-height: 1; padding: 5px 9px; border-radius: 999px; background: linear-gradient(100deg, #0e9f9a, #2fd3a0); color: #fff; box-shadow: 0 4px 12px -4px rgba(14, 159, 154, .7); animation: billpop 2.6s ease-in-out infinite; }
+@keyframes billpop { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-2px) rotate(2deg); } }
+.plan .perm { font-size: 13px; margin-top: 4px; color: var(--muted); }
+.plan.yr .amt s { font-size: 18px; }
+.plan.yr .disc { background: linear-gradient(100deg, rgba(14, 159, 154, .14), rgba(47, 211, 160, .2)); }
+@media (max-width: 560px) { .bill button { padding: 9px 18px; font-size: 14px; } }
+@media (prefers-reduced-motion: reduce) { .bill em { animation: none; } .bill .knob { transition: none; } }

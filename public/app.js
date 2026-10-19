@@ -275,18 +275,19 @@ const PLAN_KEYS = ['starter', 'creator', 'pro', 'business'];
 // A plan picked on the pricing page is remembered for a day, so it survives sign-up and the email link.
 function rememberPlan() {
   try {
-    const q = new URLSearchParams(location.search).get('plan');
+    const sp = new URLSearchParams(location.search);
+    const q = sp.get('plan');
     if (q && PLAN_KEYS.includes(q)) {
-      localStorage.setItem('suvoz_plan', JSON.stringify({ plan: q, t: Date.now() }));
+      localStorage.setItem('suvoz_plan', JSON.stringify({ plan: q, interval: sp.get('interval') === 'year' ? 'year' : 'month', t: Date.now() }));
       history.replaceState(null, '', location.pathname + location.hash);
     }
   } catch (e) {}
 }
 
-async function goPay(plan) {
+async function goPay(plan, interval) {
   setStatus('app.pay.go');
   try {
-    const r = await fetch('/api/checkout', { method: 'POST', headers: await headers(), body: JSON.stringify({ plan, lang: currentLang }) });
+    const r = await fetch('/api/checkout', { method: 'POST', headers: await headers(), body: JSON.stringify({ plan, interval: interval === 'year' ? 'year' : 'month', lang: currentLang }) });
     const j = await r.json().catch(() => ({}));
     if (!r.ok || !j.url) throw new Error(errText(j, 'Could not start the payment.'));
     location.href = j.url;
@@ -300,7 +301,7 @@ async function startPendingPlan() {
   try { p = JSON.parse(localStorage.getItem('suvoz_plan') || 'null'); localStorage.removeItem('suvoz_plan'); } catch (e) {}
   if (!p || !PLAN_KEYS.includes(p.plan) || Date.now() - p.t > 24 * 3600 * 1000) return;
   if (plan !== 'free') return;
-  await goPay(p.plan);
+  await goPay(p.plan, p.interval);
 }
 
 async function afterPayment() {

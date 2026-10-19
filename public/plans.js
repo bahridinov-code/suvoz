@@ -6,7 +6,7 @@ const MINUTES = { free: 2, starter: 30, creator: 120, pro: 400, business: 3000 }
 const PRICE = { starter: [9, 4.5], creator: [29, 16.99], pro: [79, 49.99], business: [499, 0] };
 let state = null, token = '', busy = false;
 
-const money = (n) => '$' + (Number.isInteger(n) ? n : n.toFixed(2));
+const money = (n) => '$' + (Number.isInteger(n) ? n.toLocaleString('en-US') : n.toLocaleString('en-US', { minimumFractionDigits: 2 }));
 const planName = (p) => (p === 'free' ? t('pl.trial') : t('price.' + KEY[p] + '.n'));
 const MONTHS = {
   tg: ['январ', 'феврал', 'март', 'апрел', 'май', 'июн', 'июл', 'август', 'сентябр', 'октябр', 'ноябр', 'декабр'],
@@ -66,6 +66,7 @@ function renderCurrent() {
     if (state.cancelAtPeriodEnd) info.append(el('p', 'cur-warn', t('pl.ends', { d: fmtDate(state.periodEnd) })));
     else if (state.pendingPlan) info.append(el('p', '', t('pl.switching', { p: planName(state.pendingPlan), d: fmtDate(state.periodEnd) })));
     else info.append(el('p', '', t('pl.renews', { d: fmtDate(state.periodEnd) })));
+    if (state.interval === 'year' && state.resets) info.append(el('p', '', t('pl.yearly', { d: fmtDate(state.resets) })));
   }
   const use = el('div', 'cur-use');
   use.append(el('b', '', t('pl.left', { m: mins(left), t: String(total / 900) })));
@@ -92,21 +93,28 @@ function renderGrid() {
   const paid = state.active && state.plan !== 'free';
   const isNew = !state.exists;
   $('note').hidden = !paid;
+  // Yearly or monthly prices: someone who pays already sees their own kind; a new customer picks with the switch.
+  const yr = paid ? state.interval === 'year' : Billing.mode === 'year';
+  $('billMount').hidden = paid;
+  const pn = $('pnote2'); pn.dataset.i18n = yr ? 'price.note.y' : 'price.note'; pn.textContent = t(pn.dataset.i18n);
   ORDER.forEach((p) => {
     const k = KEY[p];
-    const card = el('div', 'plan' + (p === 'creator' ? ' hot' : '') + (paid && state.plan === p ? ' current' : ''));
+    const card = el('div', 'plan' + (p === 'creator' ? ' hot' : '') + (paid && state.plan === p ? ' current' : '') + (yr ? ' yr' : ''));
     if (p === 'creator') card.append(el('span', 'pop', t('price.pop')));
     card.append(el('h3', '', t('price.' + k + '.n')));
     const amt = el('div', 'amt');
     const [reg, first] = PRICE[p];
-    if (isNew && first) { const s = document.createElement('s'); s.textContent = money(reg); amt.append(s, document.createTextNode(' ' + money(first))); }
+    const Y = YEARLY[p];
+    if (yr) { const s = document.createElement('s'); s.textContent = money(Y.full); amt.append(s, document.createTextNode(' ' + money(Y.y))); amt.append(el('small', '', t('price.yr'))); }
+    else if (isNew && first) { const s = document.createElement('s'); s.textContent = money(reg); amt.append(s, document.createTextNode(' ' + money(first))); }
     else amt.append(document.createTextNode(money(reg)));
-    amt.append(el('small', '', t('price.mo')));
+    if (!yr) amt.append(el('small', '', t('price.mo')));
     card.append(amt);
-    if (isNew && first) card.append(el('p', 'disc', t('price.off.' + k)));
+    if (yr) { card.append(el('p', 'disc', t('price.save', { n: money(Y.save) })), el('p', 'perm', t('price.perm', { n: money(Math.round((Y.y / 12) * 100) / 100) }))); }
+    else if (isNew && first) card.append(el('p', 'disc', t('price.off.' + k)));
     card.append(el('p', 'pm', t('price.' + k + '.m')), el('p', '', t('price.' + k + '.d')));
     let btn;
-    if (!paid) { btn = el('button', 'btn small', t('pl.buy')); btn.onclick = () => doBuy(p); }
+    if (!paid) { btn = el('button', 'btn small', t('pl.buy')); btn.onclick = () => doBuy(p, yr ? 'year' : 'month'); }
     else if (state.plan === p) { btn = el('span', 'btn small ghost cur', t('pl.cur')); }
     else {
       const up = ORDER.indexOf(p) > ORDER.indexOf(state.plan);
@@ -149,9 +157,9 @@ async function run(fn) {
 }
 const errKey = (r) => (r.j && r.j.code === 'pay_failed' ? 'pl.err.pay' : 'pl.err');
 
-function doBuy(plan) {
+function doBuy(plan, interval) {
   return run(async () => {
-    const r = await api('POST', '/api/checkout', { plan, lang: currentLang });
+    const r = await api('POST', '/api/checkout', { plan, interval, lang: currentLang });
     if (r.ok && r.j.url) { location.href = r.j.url; return; }
     if (r.j && r.j.code === 'already_subscribed') return load();
     setMsg('pl.err', null, true);
@@ -194,6 +202,8 @@ function openPayment() {
 }
 
 document.addEventListener('langchange', render);
+const sw = Billing.make(() => render());
+$('billMount').append(sw);
 (async function init() {
   initLang();
   let cfg = {};

@@ -89,3 +89,35 @@ Object.assign(T.uz, {
   'price.cta.buy': 'Obuna bo‘lish', 'app.plans': 'Tariflar', 'app.manage': 'Tarifni boshqarish', 'app.paid': 'To‘lov qabul qilindi. Daqiqalaringiz bir zumda paydo bo‘ladi.', 'app.pay.go': 'Xavfsiz to‘lov sahifasiga o‘tkazilmoqda…',
   'err.pay_off': 'To‘lov tez orada ochiladi. Keyinroq urinib ko‘ring.', 'err.already_subscribed': 'Sizda allaqachon tarif bor.',
 });
+
+// Monthly / yearly switch. Tajik (tg) and Uzbek (uz) need a native-speaker check before launch.
+Object.assign(T.en, {
+  'price.monthly': 'Monthly', 'price.yearly': 'Yearly', 'price.save10': 'Save 10%', 'price.yr': '/ year',
+  'price.save': 'You save {n} a year', 'price.perm': 'Only {n} a month',
+  'price.note.y': 'Yearly plans are paid once a year. Your minutes refill every month. Prices are in US dollars.',
+  'pl.yearly': 'Billed yearly. Your minutes refill on {d}.',
+});
+Object.assign(T.ar, {
+  'price.monthly': 'شهري', 'price.yearly': 'سنوي', 'price.save10': 'وفّر 10%', 'price.yr': '/ سنويًا',
+  'price.save': 'توفّر {n} سنويًا', 'price.perm': 'فقط {n} شهريًا',
+  'price.note.y': 'تُدفع الخطط السنوية مرة واحدة في السنة، وتتجدد دقائقك كل شهر. الأسعار بالدولار الأمريكي.',
+  'pl.yearly': 'يُحاسَب سنويًا. تتجدد دقائقك في {d}.',
+});
+Object.assign(T.ru, {
+  'price.monthly': 'Ежемесячно', 'price.yearly': 'Ежегодно', 'price.save10': 'Скидка 10%', 'price.yr': '/ год',
+  'price.save': 'Экономия {n} в год', 'price.perm': 'Всего {n} в месяц',
+  'price.note.y': 'Годовой план оплачивается раз в год, а минуты обновляются каждый месяц. Цены в долларах США.',
+  'pl.yearly': 'Оплата раз в год. Минуты обновятся {d}.',
+});
+Object.assign(T.tg, {
+  'price.monthly': 'Ҳармоҳа', 'price.yearly': 'Солона', 'price.save10': 'Тахфиф 10%', 'price.yr': '/ сол',
+  'price.save': 'Дар як сол {n} сарфа мекунед', 'price.perm': 'Ҳамагӣ {n} дар як моҳ',
+  'price.note.y': 'Нақшаи солона як бор дар як сол пардохт мешавад, дақиқаҳо бошад ҳар моҳ нав мешаванд. Нархҳо бо доллари ИМА.',
+  'pl.yearly': 'Пардохт солона. Дақиқаҳо {d} нав мешаванд.',
+});
+Object.assign(T.uz, {
+  'price.monthly': 'Oylik', 'price.yearly': 'Yillik', 'price.save10': '10% tejang', 'price.yr': '/ yil',
+  'price.save': 'Yiliga {n} tejaysiz', 'price.perm': 'Oyiga atigi {n}',
+  'price.note.y': 'Yillik tarif yilda bir marta to‘lanadi, daqiqalar esa har oy yangilanadi. Narxlar AQSh dollarida.',
+  'pl.yearly': 'Yillik to‘lov. Daqiqalar {d} sanada yangilanadi.',
+});
