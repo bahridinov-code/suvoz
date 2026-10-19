@@ -70,11 +70,13 @@ window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(buil
     // Show which plan the visitor has now.
     try {
       const me = await (await fetch('/api/me', { headers: { Authorization: 'Bearer ' + s.access_token } })).json();
+      if (me.hadPlan) document.querySelectorAll('#pricing').forEach((x) => x.classList.add('no-first')); if (me.hadPlan) document.dispatchEvent(new Event('nofirst'));   // first-month discount is for first plan only
       const keys = ['free', 'starter', 'creator', 'pro', 'business'];
       const idx = keys.indexOf(me.plan || 'free');
       const cards = document.querySelectorAll('#pricing .plan');
       if (idx >= 0 && cards[idx]) {
         const paid = idx > 0;
+        if (paid && cards[0]) cards[0].hidden = true;   // the Free card is only for people without a plan
         cards.forEach((card, i) => {
           const a = card.querySelector('a.btn');
           if (!a || i > 4) return;
@@ -84,14 +86,7 @@ window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(buil
             span.className = 'btn small ghost cur'; span.dataset.i18n = 'price.current';
             a.replaceWith(span);
           } else if (paid && i > 0) {
-            a.dataset.i18n = 'price.change'; a.href = '#';
-            a.onclick = async (ev) => {
-              ev.preventDefault();
-              try {
-                const r = await fetch('/api/portal', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + s.access_token }, body: JSON.stringify({ lang: currentLang }) });
-                const j = await r.json(); if (j.url) location.href = j.url;
-              } catch (e) {}
-            };
+            a.dataset.i18n = 'price.change'; a.href = '/plans'; a.onclick = null;   // changing a plan happens on the Plans page
           }
         });
       }

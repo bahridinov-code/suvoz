@@ -563,3 +563,4 @@ html.in .top-right .who-mail, html.in .top-right #logout, html.in .top-right a.l
 .plan.yr .disc { background: linear-gradient(100deg, rgba(14, 159, 154, .14), rgba(47, 211, 160, .2)); }
 @media (max-width: 560px) { .bill button { padding: 9px 18px; font-size: 14px; } }
 @media (prefers-reduced-motion: reduce) { .bill em { animation: none; } .bill .knob { transition: none; } }
+.plan[hidden] { display: none; }

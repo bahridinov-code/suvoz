@@ -6,6 +6,7 @@ const YEARLY = {
   pro: { y: 853, full: 948, save: 95 },
   business: { y: 5389, full: 5988, save: 599 },
 };
+const MONTHLY = { starter: 9, creator: 29, pro: 79, business: 499 };
 const Billing = {
   mode: 'month',
   // The switch. onChange(mode) runs when the visitor presses a side.
@@ -41,6 +42,8 @@ const Billing = {
   const saved = cards.map((c) => ({ amt: c.querySelector('.amt').innerHTML, disc: (c.querySelector('.disc') || {}).outerHTML || '' }));
   const note = document.querySelector('#pricing .pnote');
   const year = () => Billing.mode === 'year';
+  const nofirst = () => document.getElementById('pricing').classList.contains('no-first');
+  document.addEventListener('nofirst', () => { paint(); if (typeof applyLang === 'function') applyLang(currentLang); });
   function paint() {
     cards.forEach((c, i) => {
       const k = KEYS[i], y = YEARLY[k];
@@ -49,8 +52,13 @@ const Billing = {
       const buy = c.querySelector('a.btn[href^="/app?plan="]');
       if (buy) buy.href = '/app?plan=' + k + (year() ? '&interval=year' : '');
       if (!year()) {
-        amt.innerHTML = saved[i].amt;
-        if (saved[i].disc) amt.insertAdjacentHTML('afterend', saved[i].disc);
+        if (nofirst()) {   // already had a plan: full price, no first-month discount
+          amt.textContent = Billing.usd(MONTHLY[k]);
+          const sm = document.createElement('small'); sm.dataset.i18n = 'price.mo'; sm.textContent = t('price.mo'); amt.append(sm);
+        } else {
+          amt.innerHTML = saved[i].amt;
+          if (saved[i].disc) amt.insertAdjacentHTML('afterend', saved[i].disc);
+        }
       } else {
         amt.textContent = '';
         const s = document.createElement('s'); s.textContent = Billing.usd(y.full);
@@ -64,20 +72,10 @@ const Billing = {
     });
     if (note) { note.dataset.i18n = year() ? 'price.note.y' : 'price.note'; note.textContent = t(note.dataset.i18n); }
   }
-  const keep = new WeakMap();
-  function paid() {
-    document.querySelectorAll('#pricing .plan a.btn[data-i18n="price.change"]').forEach((a) => {
-      if (!keep.has(a)) keep.set(a, { href: a.getAttribute('href'), click: a.onclick });
-      const k = keep.get(a);
-      if (year()) { a.onclick = null; a.setAttribute('href', '/plans'); } else { a.onclick = k.click; a.setAttribute('href', k.href); }
-    });
-  }
-  const sw = Billing.make(() => { paint(); paid(); if (typeof applyLang === 'function') applyLang(currentLang); });
+  const sw = Billing.make(() => { paint(); if (typeof applyLang === 'function') applyLang(currentLang); });
   mount.append(sw);
   // after a language change the texts with numbers are rebuilt
   document.addEventListener('langchange', () => {
-    // people who already pay: in the yearly view their change buttons open the Plans page, where the switch to yearly happens
-    paid();
     document.querySelectorAll('#pricing .disc[data-save]').forEach((e) => { e.textContent = t('price.save', { n: e.dataset.save }); });
     document.querySelectorAll('#pricing .perm[data-n]').forEach((e) => { e.textContent = t('price.perm', { n: e.dataset.n }); });
   });
