@@ -94,8 +94,10 @@ function renderGrid() {
   const isNew = !state.exists;
   $('note').hidden = !paid;
   // Yearly or monthly prices: someone who pays already sees their own kind; a new customer picks with the switch.
-  const yr = paid ? state.interval === 'year' : Billing.mode === 'year';
-  $('billMount').hidden = paid;
+  const yearly = paid && state.interval === 'year';
+  const yr = yearly || Billing.mode === 'year';
+  const toYearView = paid && yr && !yearly;   // a monthly customer looking at yearly prices
+  $('billMount').hidden = yearly;   // a yearly plan cannot go back to monthly until it ends
   const pn = $('pnote2'); pn.dataset.i18n = yr ? 'price.note.y' : 'price.note'; pn.textContent = t(pn.dataset.i18n);
   ORDER.forEach((p) => {
     const k = KEY[p];
@@ -115,6 +117,11 @@ function renderGrid() {
     card.append(el('p', 'pm', t('price.' + k + '.m')), el('p', '', t('price.' + k + '.d')));
     let btn;
     if (!paid) { btn = el('button', 'btn small', t('pl.buy')); btn.onclick = () => doBuy(p, yr ? 'year' : 'month'); }
+    else if (toYearView) {
+      btn = el('button', 'btn small', t('pl.toyear'));
+      if (ORDER.indexOf(p) < ORDER.indexOf(state.plan) || state.cancelAtPeriodEnd) { btn.disabled = true; if (state.cancelAtPeriodEnd) btn.title = t('pl.cancelling'); }
+      else btn.onclick = () => doYear(p);
+    }
     else if (state.plan === p) { btn = el('span', 'btn small ghost cur', t('pl.cur')); }
     else {
       const up = ORDER.indexOf(p) > ORDER.indexOf(state.plan);
@@ -173,6 +180,15 @@ function doChange(plan, up) {
     if (!r.ok) return setMsg(errKey(r), null, true);
     await load();
     setMsg(r.j.mode === 'upgrade' ? 'pl.ok.up' : 'pl.ok.down', { p: planName(plan), d: fmtDate(r.j.periodEnd || state.periodEnd) });
+  });
+}
+function doYear(plan) {
+  return run(async () => {
+    if (!(await confirmDialog('pl.c.year.t', 'pl.c.year.d', { p: planName(plan), a: money(YEARLY[plan].y) }))) return;
+    const r = await api('POST', '/api/plan-change', { plan, interval: 'year' });
+    if (!r.ok) return setMsg(errKey(r), null, true);
+    await load();
+    setMsg('pl.ok.year', { p: planName(plan), d: fmtDate(r.j.periodEnd || state.periodEnd) });
   });
 }
 function doCancel() {

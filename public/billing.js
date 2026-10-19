@@ -64,14 +64,20 @@ const Billing = {
     });
     if (note) { note.dataset.i18n = year() ? 'price.note.y' : 'price.note'; note.textContent = t(note.dataset.i18n); }
   }
-  const sw = Billing.make(() => { paint(); if (typeof applyLang === 'function') applyLang(currentLang); });
+  const keep = new WeakMap();
+  function paid() {
+    document.querySelectorAll('#pricing .plan a.btn[data-i18n="price.change"]').forEach((a) => {
+      if (!keep.has(a)) keep.set(a, { href: a.getAttribute('href'), click: a.onclick });
+      const k = keep.get(a);
+      if (year()) { a.onclick = null; a.setAttribute('href', '/plans'); } else { a.onclick = k.click; a.setAttribute('href', k.href); }
+    });
+  }
+  const sw = Billing.make(() => { paint(); paid(); if (typeof applyLang === 'function') applyLang(currentLang); });
   mount.append(sw);
   // after a language change the texts with numbers are rebuilt
   document.addEventListener('langchange', () => {
-    // someone who already has a plan changes it with the Manage plan button, so the switch is hidden for them
-    const has = !!document.querySelector('#pricing .plan:not(:first-child).current');   // the Free card is marked too, that does not count
-    mount.hidden = has;
-    if (has && year()) { Billing.mode = 'month'; Billing.paint(sw); paint(); }
+    // people who already pay: in the yearly view their change buttons open the Plans page, where the switch to yearly happens
+    paid();
     document.querySelectorAll('#pricing .disc[data-save]').forEach((e) => { e.textContent = t('price.save', { n: e.dataset.save }); });
     document.querySelectorAll('#pricing .perm[data-n]').forEach((e) => { e.textContent = t('price.perm', { n: e.dataset.n }); });
   });

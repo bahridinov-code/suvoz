@@ -121,3 +121,30 @@ Object.assign(T.uz, {
   'price.note.y': 'Yillik tarif yilda bir marta to‘lanadi, daqiqalar esa har oy yangilanadi. Narxlar AQSh dollarida.',
   'pl.yearly': 'Yillik to‘lov. Daqiqalar {d} sanada yangilanadi.',
 });
+
+// Monthly -> yearly for people who already have a plan.
+Object.assign(T.en, {
+  'pl.toyear': 'Switch to yearly', 'pl.c.year.t': 'Switch to yearly?',
+  'pl.c.year.d': 'You pay {a} now for a full year of {p}, minus credit for the unused part of this month. Your yearly period starts today, and your minutes refill every month.',
+  'pl.ok.year': 'Done! Your {p} yearly plan is active until {d}.',
+});
+Object.assign(T.ar, {
+  'pl.toyear': 'التحويل إلى السنوي', 'pl.c.year.t': 'التحويل إلى الخطة السنوية؟',
+  'pl.c.year.d': 'ستدفع {a} الآن مقابل سنة كاملة من خطة {p}، مع خصم رصيد الجزء غير المستخدم من هذا الشهر. تبدأ فترتك السنوية اليوم، وتتجدد دقائقك كل شهر.',
+  'pl.ok.year': 'تم! خطتك السنوية {p} فعّالة حتى {d}.',
+});
+Object.assign(T.ru, {
+  'pl.toyear': 'Перейти на годовой', 'pl.c.year.t': 'Перейти на годовой план?',
+  'pl.c.year.d': 'Сейчас вы оплатите {a} за целый год плана {p}, за вычетом неиспользованной части этого месяца. Годовой период начнётся сегодня, а минуты будут обновляться каждый месяц.',
+  'pl.ok.year': 'Готово! Годовой план {p} активен до {d}.',
+});
+Object.assign(T.tg, {
+  'pl.toyear': 'Гузаштан ба солона', 'pl.c.year.t': 'Ба нақшаи солона мегузаред?',
+  'pl.c.year.d': 'Ҳозир {a} барои як соли пурраи нақшаи {p} пардохт мекунед, бо ҳисоби қисми истифоданашудаи ин моҳ. Давраи солона имрӯз оғоз мешавад ва дақиқаҳо ҳар моҳ нав мешаванд.',
+  'pl.ok.year': 'Тайёр! Нақшаи солонаи {p} то {d} фаъол аст.',
+});
+Object.assign(T.uz, {
+  'pl.toyear': 'Yillikka o‘tish', 'pl.c.year.t': 'Yillik tarifga o‘tasizmi?',
+  'pl.c.year.d': 'Hozir {p} tarifining to‘liq bir yili uchun {a} to‘laysiz, bu oyning ishlatilmagan qismi hisobga olinadi. Yillik davr bugun boshlanadi, daqiqalar esa har oy yangilanadi.',
+  'pl.ok.year': 'Tayyor! {p} yillik tarifi {d} gacha faol.',
+});
