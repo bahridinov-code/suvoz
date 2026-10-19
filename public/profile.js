@@ -77,8 +77,8 @@
     head.append(big, mail);
 
     const box = document.createElement('div'); box.className = 'prof-use';
-    const total = TOTAL[me.plan] || TOTAL.free;
-    const left = me.left == null ? null : Math.min(me.left, total);
+    const total = Math.max(TOTAL[me.plan] || TOTAL.free, me.left || 0);   // carried-over minutes can make it bigger than the plan
+    const left = me.left == null ? null : me.left;
     const r1 = document.createElement('div'); r1.className = 'prof-row';
     const l1 = document.createElement('span'); l1.textContent = t('prof.plan');
     const chip = document.createElement('b'); chip.className = 'prof-chip' + (me.plan === 'free' ? ' free' : ''); chip.textContent = me.plan === 'free' ? t('prof.trial') : planName(me.plan);

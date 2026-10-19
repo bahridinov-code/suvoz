@@ -57,8 +57,8 @@ function renderCurrent() {
   if (!state || state.payOn === false) { box.hidden = true; return; }
   box.hidden = false;
   const paid = state.active && state.plan !== 'free';
-  const total = (MINUTES[state.plan] || MINUTES.free) * 900;
-  const left = Math.min(state.left == null ? 0 : state.left, total);
+  const left = state.left == null ? 0 : state.left;
+  const total = Math.max((MINUTES[state.plan] || MINUTES.free) * 900, left);   // carried-over minutes can make it bigger than the plan
 
   const info = el('div', 'cur-info');
   info.append(el('small', '', t('pl.yours')), el('h2', '', planName(state.plan)));
