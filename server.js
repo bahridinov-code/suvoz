@@ -1665,7 +1665,9 @@ const server = http.createServer(async (req, res) => {
       if (!a) return sendJson(res, 401, { code: 'auth_required', error: 'Please log in.' });
       try {
         const me = await rpc(a.token, 'credits_left');
-        return sendJson(res, 200, { auth: true, email: a.user.email, plan: me.plan, trialChars: me.left });
+        let hadPlan = me.plan !== 'free';   // had a paid plan before: no more first-month discount
+        if (!hadPlan && PAY_ON) { try { hadPlan = !!(await admin('sub_info', { p_user: a.user.id })).exists; } catch (e) {} }
+        return sendJson(res, 200, { auth: true, email: a.user.email, plan: me.plan, trialChars: me.left, hadPlan });
       } catch (e) {
         console.error(e.message);
         return sendJson(res, 502, { error: 'Could not load your account.' });
