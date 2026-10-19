@@ -907,10 +907,15 @@ async function handlePlanChange(req, res) {
     const params = {
       items: { 0: { id: item.id, price_data: { currency: 'usd', product: await productFor(next, interval), recurring: { interval }, unit_amount: interval === 'year' ? PLANS[next].yearCents : PLANS[next].cents } } },
       metadata: { user_id: c.who.user.id, plan: next },
-      proration_behavior: (upgrade || toYear) ? 'always_invoice' : 'none',
+      proration_behavior: 'none',
     };
-    if (upgrade || toYear) params.payment_behavior = 'error_if_incomplete';
-    if (toYear) params.billing_cycle_anchor = 'now';   // the year starts today; the unused part of the month is credited
+    if (upgrade || toYear) {
+      // Upgrade: the new plan starts today and is paid in full; the minutes left carry over (upgrade_plan).
+      // A yearly plan gets credit for its unused time, a monthly plan does not (it keeps its minutes instead).
+      params.proration_behavior = curInt === 'year' ? 'always_invoice' : 'none';
+      params.payment_behavior = 'error_if_incomplete';
+      params.billing_cycle_anchor = 'now';
+    }
     let upd;
     try { upd = await stripe('POST', '/v1/subscriptions/' + encodeURIComponent(c.info.subscription), params); }
     catch (e) {
@@ -918,20 +923,15 @@ async function handlePlanChange(req, res) {
       if (e.stripe && (e.stripe.type === 'card_error' || /payment|card/i.test(e.stripe.message || ''))) return sendJson(res, 402, { code: 'pay_failed', error: 'The payment did not go through. Please check your card and try again.' });
       return sendJson(res, 502, { error: 'Could not change your plan. Please try again.' });
     }
-    if (toYear) {
+    if (upgrade || toYear) {
       const endTs = subPeriodEnd(upd) || subPeriodEnd(sub);
       let ok = false;
       for (let i = 0; i < 2 && !ok; i++) {
-        try { await admin('activate_plan', { p_user: c.who.user.id, p_plan: next, p_customer: sub.customer, p_sub: c.info.subscription, p_period_end: new Date((endTs + 86400) * 1000).toISOString(), p_interval: 'year' }); ok = true; }
-        catch (e) { console.error('activate_plan:', e.message); }
+        try { await admin('upgrade_plan', { p_user: c.who.user.id, p_plan: next, p_period_end: new Date((endTs + 86400) * 1000).toISOString(), p_interval: interval }); ok = true; }
+        catch (e) { console.error('upgrade_plan:', e.message); }
       }
       // If this failed, the payment webhook for this change repeats the same step.
-      return sendJson(res, 200, { ok: true, mode: 'year', plan: next, periodEnd: endTs });
-    }
-    if (upgrade) {
-      let ok = false;
-      for (let i = 0; i < 2 && !ok; i++) { try { await admin('change_plan', { p_user: c.who.user.id, p_plan: next }); ok = true; } catch (e) { console.error('change_plan:', e.message); } }
-      // If this failed, the payment webhook for the upgrade invoice repeats the same step.
+      return sendJson(res, 200, { ok: true, mode: toYear ? 'year' : 'upgrade', plan: next, periodEnd: endTs });
     }
     sendJson(res, 200, { ok: true, mode: upgrade ? 'upgrade' : 'downgrade', plan: next, periodEnd: subPeriodEnd(sub) });
   } catch (e) { console.error(e.message); sendJson(res, 502, { error: 'Could not change your plan. Please try again.' }); }
@@ -977,10 +977,11 @@ async function handleStripeWebhook(req, res) {
         const sub = await stripe('GET', '/v1/subscriptions/' + encodeURIComponent(subId));
         const m = sub.metadata || {};
         if (m.user_id && PLANS[m.plan] && obj.billing_reason === 'subscription_update') {
-          if (subInterval(sub) === 'year') {   // yearly: the same step also moves a monthly plan that just became yearly
+          // An upgrade was paid: new plan from today, minutes left carry over. (Same step the server already did; repeating it changes nothing.)
+          if (obj.amount_paid > 0) {
             const e2 = subPeriodEnd(sub);
-            await admin('activate_plan', { p_user: m.user_id, p_plan: m.plan, p_customer: sub.customer, p_sub: subId, p_period_end: new Date(((e2 || line.period.end) + 86400) * 1000).toISOString(), p_interval: 'year' });
-          } else await admin('change_plan', { p_user: m.user_id, p_plan: m.plan });   // an upgrade paid mid-month: new plan now, same period
+            await admin('upgrade_plan', { p_user: m.user_id, p_plan: m.plan, p_period_end: new Date(((e2 || line.period.end) + 86400) * 1000).toISOString(), p_interval: subInterval(sub) });
+          }
         } else if (m.user_id && PLANS[m.plan]) {
           const end = new Date((line.period.end + 86400) * 1000).toISOString();   // one day of grace for late renewals
           await admin('activate_plan', { p_user: m.user_id, p_plan: m.plan, p_customer: sub.customer, p_sub: subId, p_period_end: end, p_interval: subInterval(sub) });
