@@ -917,7 +917,15 @@ async function handlePlanChange(req, res) {
       params.billing_cycle_anchor = 'now';
     }
     let upd;
-    try { upd = await stripe('POST', '/v1/subscriptions/' + encodeURIComponent(c.info.subscription), params); }
+    try {
+      const path = '/v1/subscriptions/' + encodeURIComponent(c.info.subscription);
+      try { upd = await stripe('POST', path, params); }
+      catch (e0) {
+        // Newer Stripe accounts want the billing date written as an object; try that form once if Stripe complains about it.
+        if (params.billing_cycle_anchor && e0.stripe && /billing_cycle_anchor/i.test(e0.stripe.message || '')) { console.error('retrying anchor as object:', e0.message); upd = await stripe('POST', path, { ...params, billing_cycle_anchor: { type: 'now' } }); }
+        else throw e0;
+      }
+    }
     catch (e) {
       console.error(e.message);
       if (e.stripe && (e.stripe.type === 'card_error' || /payment|card/i.test(e.stripe.message || ''))) return sendJson(res, 402, { code: 'pay_failed', error: 'The payment did not go through. Please check your card and try again.' });
