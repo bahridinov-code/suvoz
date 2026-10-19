@@ -93,6 +93,7 @@ function renderGrid() {
   const paid = state.active && state.plan !== 'free';
   const isNew = !state.exists;
   $('note').hidden = !paid;
+  if (paid && state.cancelAtPeriodEnd && !$('msg').textContent) setMsg('pl.cancelling');   // visible reason why the buttons are grey (phones have no hover)
   // Yearly or monthly prices: someone who pays already sees their own kind; a new customer picks with the switch.
   const yearly = paid && state.interval === 'year';
   const yr = yearly || Billing.mode === 'year';
