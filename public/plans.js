@@ -175,8 +175,9 @@ function doBuy(plan, interval) {
 }
 function doChange(plan, up) {
   return run(async () => {
-    const vars = { p: planName(plan), d: fmtDate(state.periodEnd) };
-    if (!(await confirmDialog(up ? 'pl.c.up.t' : 'pl.c.down.t', up ? 'pl.c.up.d' : 'pl.c.down.d', vars))) return;
+    const yearly = state.interval === 'year';
+    const vars = { p: planName(plan), d: fmtDate(state.periodEnd), a: money(yearly ? YEARLY[plan].y : PRICE[plan][0]), m: mins(state.left) };
+    if (!(await confirmDialog(up ? 'pl.c.up.t' : 'pl.c.down.t', up ? (yearly ? 'pl.c.upy.d' : 'pl.c.up.d') : 'pl.c.down.d', vars))) return;
     const r = await api('POST', '/api/plan-change', { plan });
     if (!r.ok) return setMsg(errKey(r), null, true);
     await load();
@@ -185,7 +186,7 @@ function doChange(plan, up) {
 }
 function doYear(plan) {
   return run(async () => {
-    if (!(await confirmDialog('pl.c.year.t', 'pl.c.year.d', { p: planName(plan), a: money(YEARLY[plan].y) }))) return;
+    if (!(await confirmDialog('pl.c.year.t', 'pl.c.year.d', { p: planName(plan), a: money(YEARLY[plan].y), m: mins(state.left) }))) return;
     const r = await api('POST', '/api/plan-change', { plan, interval: 'year' });
     if (!r.ok) return setMsg(errKey(r), null, true);
     await load();
