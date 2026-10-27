@@ -1261,13 +1261,14 @@ async function handleSubStyleLink(req, res) {
       '--max-filesize', String(LINK_MAX_BYTES), '--match-filter', 'duration <= ' + LINK_MAX_SECONDS,
       '-f', 'bv*[height<=720][vcodec^=avc1]/bv*[height<=720][ext=mp4]/b[height<=720][ext=mp4]/b[height<=720]/b',
       '-o', out];
+    args.push('--js-runtimes', 'node:' + process.execPath);   // YouTube needs a JavaScript runtime; the server's own Node works
     if (process.env.YTDLP_PROXY) args.push('--proxy', process.env.YTDLP_PROXY);
     if (FFMPEG && FFMPEG !== 'ffmpeg') args.push('--ffmpeg-location', FFMPEG);
     args.push('--', url);
     const r = await runYtdlp(bin, args, 90000);
     const files = (await fsp.readdir(dir)).filter((f) => f.startsWith('v.'));
     if (r.code !== 0 || !files.length) {
-      console.error('yt-dlp failed', r.code, String(r.err).slice(-400));
+      console.error('yt-dlp failed', r.code, String(r.err).slice(-900));
       if (/does not pass filter|duration/i.test(r.err)) return sendJson(res, 400, { code: 'link_long', error: 'This video is longer than 5 minutes.' });
       if (/larger than max-filesize|File is larger/i.test(r.err)) return sendJson(res, 400, { code: 'link_long', error: 'This video is too big.' });
       return sendJson(res, 502, { code: 'link_failed', error: 'Could not open this link. Upload the video instead.' });
