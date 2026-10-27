@@ -59,7 +59,7 @@ const TYPES = {
   '.png': 'image/png', '.jpg': 'image/jpeg', '.ico': 'image/x-icon',
   '.mp3': 'audio/mpeg', '.woff2': 'font/woff2', '.txt': 'text/plain; charset=utf-8',
 };
-const PAGES = { '/': 'index.html', '/app': 'hub.html', '/dialogue': 'app.html', '/login': 'login.html', '/terms': 'terms.html', '/privacy': 'privacy.html', '/refunds': 'refunds.html', '/history': 'history.html', '/transcribe': 'transcribe.html', '/voice-design': 'voicedesign.html', '/voice-clone': 'voiceclone.html', '/dubbing': 'dubbing.html', '/translate': 'translate.html', '/account': 'account.html', '/plans': 'plans.html', '/feedback': 'feedback.html' };
+const PAGES = { '/': 'index.html', '/app': 'hub.html', '/dialogue': 'app.html', '/login': 'login.html', '/terms': 'terms.html', '/privacy': 'privacy.html', '/refunds': 'refunds.html', '/history': 'history.html', '/transcribe': 'transcribe.html', '/voice-design': 'voicedesign.html', '/voice-clone': 'voiceclone.html', '/dubbing': 'dubbing.html', '/translate': 'translate.html', '/account': 'account.html', '/plans': 'plans.html', '/feedback': 'feedback.html', '/subtitles': 'subtitles.html' };
 
 // Serves files from /public only. Blocks anything outside that folder.
 // Speed: text files are compressed once (brotli or gzip) and kept in memory; every file has an ETag so a repeat visit
@@ -1076,10 +1076,13 @@ async function handleTranscribe(req, res) {
 
   try {
     const type = String(req.headers['content-type'] || 'application/octet-stream').split(';')[0];
+    const wantWords = req.headers['x-words'] === '1';   // the subtitles page needs every word with its time
+    const lang = String(req.headers['x-lang'] || '').toLowerCase();
     const send = (model) => {
       const form = new FormData();
       form.append('model_id', model);
-      form.append('diarize', 'true');
+      form.append('diarize', wantWords ? 'false' : 'true');
+      if (/^[a-z]{2,3}$/.test(lang)) form.append('language_code', lang);
       form.append('tag_audio_events', 'false');
       form.append('file', new Blob([body], { type }), 'audio');
       return fetch(`${BASE}/v1/speech-to-text`, { method: 'POST', headers: { 'xi-api-key': API_KEY }, body: form });
@@ -1132,7 +1135,18 @@ async function handleTranscribe(req, res) {
       const extra = Math.min(10000, Math.ceil(actual * STT_CHARS_PER_SECOND) - cost);
       if (extra > 0) { try { await rpc(who.token, 'credits_use', { n: extra }); } catch (e) { console.error(e.message); } }
     }
-    sendJson(res, 200, { segments: clean, speakers: ids.size, language: j.language_code || '', seconds: Math.round(Math.max(actual, 0)) });
+    const out = { segments: clean, speakers: ids.size, language: j.language_code || '', seconds: Math.round(Math.max(actual, 0)) };
+    if (wantWords) {
+      out.words = [];
+      for (const w of words) {
+        if (!w || w.type !== 'word' || typeof w.text !== 'string' || !w.text.trim()) continue;
+        const s0 = Number(w.start), e0 = Number(w.end);
+        if (!isFinite(s0) || !isFinite(e0)) continue;
+        out.words.push({ t: w.text.trim(), s: Math.round(s0 * 1000) / 1000, e: Math.round(Math.max(e0, s0 + 0.05) * 1000) / 1000 });
+        if (out.words.length >= 20000) break;
+      }
+    }
+    sendJson(res, 200, out);
   } catch (e) {
     console.error(e.message);
     await refund();

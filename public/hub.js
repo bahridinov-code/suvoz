@@ -12,12 +12,14 @@ const ICONS = {
   translate: '<path d="M4 6h9"/><path d="M8.5 4v2c0 4-2 7-5 8"/><path d="M6 10c1 2 3 4 6 5"/><path d="M13 20l4-9 4 9"/><path d="M14.5 17h5"/>',
   design: '<path d="M12 3l1.8 4.7L18.5 9l-4.7 1.8L12 15.5l-1.8-4.7L5.5 9l4.7-1.3z"/><path d="M18 15l.8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8z"/>',
   clone: '<circle cx="9" cy="9" r="4"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M17 6.5a4 4 0 0 1 0 5"/><path d="M19.5 4a7.5 7.5 0 0 1 0 10"/>',
+  subs: '<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 14h4"/><path d="M13 14h4"/><path d="M7 17h7"/>',
   dub: '<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.5v5l4-2.5z"/>',
 };
 const TOOLS = [
   { id: 'dialogue', color: 'indigo', href: '/dialogue', ex: 'hub.ex.dialogue' },
   { id: 'story', color: 'teal', href: '/dialogue', ex: 'hub.ex.story' },
   { id: 'sound', color: 'amber', href: '/dialogue', ex: 'hub.ex.sound' },
+  { id: 'subs', color: 'indigo', href: '/subtitles', isNew: true },
   { id: 'stt', color: 'rose', href: '/transcribe' },
   { id: 'translate', soon: true }, { id: 'design', soon: true }, { id: 'clone', soon: true }, { id: 'dub', soon: true },
   { id: 'history', color: 'gray', href: '/history', needsHistory: true },
@@ -42,6 +44,12 @@ function tile(x) {
   p.textContent = t('hub.' + x.id + '.d'); p.dataset.hl = '1';
   b.append(h, p);
   el.append(ic, b);
+  if (x.isNew) {
+    const s = document.createElement('em');
+    s.className = 'badge new';
+    s.textContent = t('subs.badge');
+    el.append(s);
+  }
   if (x.soon) {
     const s = document.createElement('em');
     s.className = 'badge';
