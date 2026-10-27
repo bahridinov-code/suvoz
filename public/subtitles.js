@@ -53,11 +53,13 @@ async function loadMe() {
     if (r.status === 401) { await Auth.signOut(); return location.replace('/login'); }
     if (!r.ok) return;
     plan = j.plan || 'free';
+    if (plan !== 'free') canMake = true;   // paid plan: may save styles even if the styles list could not load
     trialChars = j.trialChars;
     $('who').textContent = j.email || '';
     $('who').hidden = !j.email;
     renderTrial();
     $('wmNote').hidden = plan !== 'free';
+    if (ed && canMake) { editNote(null); aiNote(null); }
   } catch (e) {}
 }
 
@@ -341,7 +343,7 @@ async function loadStyles() {
     const r = await fetch('/api/sub-styles', { headers: await headers() });
     if (!r.ok) return;
     const j = await r.json();
-    canMake = !!j.canMake;
+    canMake = !!j.canMake || plan !== 'free';
     myStyles = j.styles || [];
     for (const st of myStyles) Captions.setCustom('c_' + st.id, st.name, st.settings);
     if (project && /^c_/.test(project.template) && !Captions.has(project.template)) project.template = 'bold';
@@ -440,6 +442,7 @@ $('edSave').onclick = async () => {
     const j = await r.json().catch(() => ({}));
     if (r.status === 402) { editNote('subs.ed.paid', true); return; }
     if (r.status === 409) { editNote('subs.ed.limit'); return; }
+    if (r.status === 503) { editNote('subs.ed.setup'); return; }
     if (!r.ok || !j.id) { editNote('subs.ed.err'); return; }
     Captions.setCustom('c_' + j.id, name, settings);
     const i = myStyles.findIndex((x) => x.id === j.id);

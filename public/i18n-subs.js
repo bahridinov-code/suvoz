@@ -303,3 +303,8 @@ Object.assign(T.uz, {
   'subs.up.title': 'Endi videongizni yuklang', 'subs.demo.note': 'Bu oldindan koʻrish. Uslubni tanlang, soʻng videoni uslublar ostida yuklang.',
   'subs.demo.text': 'Subtitrlaringiz shunday koʻrinadi. Har bir soʻz aytilganda yonadi!',
 });
+Object.assign(T.en, { 'subs.ed.setup': 'Saving styles is not set up yet. (Site owner: run supabase-styles.sql in Supabase.)' });
+Object.assign(T.ar, { 'subs.ed.setup': 'حفظ الأنماط غير مُعدّ بعد.' });
+Object.assign(T.ru, { 'subs.ed.setup': 'Сохранение стилей ещё не настроено.' });
+Object.assign(T.tg, { 'subs.ed.setup': 'Нигоҳ доштани услубҳо ҳанӯз танзим нашудааст.' });
+Object.assign(T.uz, { 'subs.ed.setup': 'Uslublarni saqlash hali sozlanmagan.' });

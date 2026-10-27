@@ -1058,8 +1058,10 @@ async function handleSubStyles(req, res, url) {
     const uid = who.user.id;
     if (req.method === 'GET') {
       const me = await rpc(who.token, 'credits_left');
-      const rows = (await admin('styles_list', { p_user: uid })) || [];
-      return sendJson(res, 200, { canMake: !!me && me.plan !== 'free', max: STYLE_MAX, styles: rows.map((r) => ({ id: r.id, name: r.name, settings: cleanStyle(r.settings) })) });
+      let rows = [], ready = true;
+      try { rows = (await admin('styles_list', { p_user: uid })) || []; }
+      catch (e) { ready = false; console.error('styles_list failed (was supabase-styles.sql run?):', e.message); }
+      return sendJson(res, 200, { canMake: !!me && me.plan !== 'free', ready, max: STYLE_MAX, styles: rows.map((r) => ({ id: r.id, name: r.name, settings: cleanStyle(r.settings) })) });
     }
     if (req.method === 'DELETE') {
       const id = url.searchParams.get('id') || '';
@@ -1074,7 +1076,9 @@ async function handleSubStyles(req, res, url) {
     const id = body.id && UUID_RE.test(String(body.id)) ? String(body.id) : null;
     const me = await rpc(who.token, 'credits_left');
     if (!me || me.plan === 'free') return sendJson(res, 402, { code: 'style_paid', error: 'Saving your own styles is for paid plans.' });
-    const saved = await admin('styles_save', { p_user: uid, p_id: id, p_name: name, p_settings: cleanStyle(body.settings), p_max: STYLE_MAX });
+    let saved;
+    try { saved = await admin('styles_save', { p_user: uid, p_id: id, p_name: name, p_settings: cleanStyle(body.settings), p_max: STYLE_MAX }); }
+    catch (e) { console.error('styles_save failed (was supabase-styles.sql run?):', e.message); return sendJson(res, 503, { code: 'style_setup', error: 'Saving styles is not set up yet.' }); }
     if (!saved) return sendJson(res, id ? 404 : 409, { code: id ? 'style_gone' : 'style_limit', error: id ? 'This style no longer exists.' : 'You have reached the most styles you can save.' });
     sendJson(res, 200, { id: saved, name });
   } catch (e) {
