@@ -511,33 +511,99 @@ function frameFrom(file) {
     }
   });
 }
+// Several frames of a video: 5 close together (to see the animation) and 3 from other parts.
+function videoFrames(blob) {
+  return new Promise((ok, no) => {
+    const url = URL.createObjectURL(blob);
+    const v = document.createElement('video');
+    v.muted = true; v.playsInline = true; v.preload = 'auto';
+    const frames = [], times = [];
+    let plan = [], w = 0, h = 0;
+    const fail = () => { URL.revokeObjectURL(url); no(new Error('frame')); };
+    const next = () => {
+      if (!plan.length) { URL.revokeObjectURL(url); return ok({ frames, times, w, h }); }
+      v.currentTime = plan.shift();
+    };
+    v.onloadedmetadata = () => {
+      const d = v.duration;
+      if (!isFinite(d) || d <= 0 || !v.videoWidth) return fail();
+      const k = Math.min(1, 720 / Math.max(v.videoWidth, v.videoHeight));
+      w = Math.round(v.videoWidth * k); h = Math.round(v.videoHeight * k);
+      const t0 = Math.min(Math.max(0, d * 0.35), Math.max(0, d - 0.8));
+      const set = [d * 0.12, d * 0.62, d * 0.85];
+      for (let i = 0; i < 5; i++) set.push(t0 + i * 0.15);
+      plan = set.map((x) => Math.max(0, Math.min(d - 0.05, x))).sort((a, b) => a - b);
+      next();
+    };
+    v.onseeked = () => {
+      const c = document.createElement('canvas'); c.width = w; c.height = h;
+      c.getContext('2d').drawImage(v, 0, 0, w, h);
+      frames.push(c.toDataURL('image/jpeg', 0.82).split(',')[1]);
+      times.push(Math.round(v.currentTime * 100) / 100);
+      next();
+    };
+    v.onerror = fail;
+    v.src = url;
+  });
+}
+async function askStyleAi(body, isJson, w, h) {
+  const hd = await headers();
+  hd['Content-Type'] = isJson ? 'application/json' : 'image/jpeg';
+  if (!isJson) { hd['X-Img-W'] = String(w); hd['X-Img-H'] = String(h); }
+  const r = await fetch('/api/sub-style-ai', { method: 'POST', headers: hd, body });
+  const j = await r.json().catch(() => ({}));
+  if (r.status === 402) { editNote('subs.ed.paid', true); return; }
+  if (r.status === 422) { editNote('subs.ai.none'); return; }
+  if (r.status === 429) { editNote('subs.ai.many'); return; }
+  if (!r.ok || !j.settings) { editNote('subs.ai.err'); return; }
+  showEditorFields({ ...readEditor(), ...j.settings }, j.name || $('edName').value);
+  if (j.pos != null) { project.pos = j.pos; syncControls(); }
+  editorChanged();
+  editNote('subs.ai.done');
+}
+async function copyFromVideo(blob) {
+  const fr = await videoFrames(blob);
+  const note = 'Frame times in seconds: ' + fr.times.join(', ') + '.';
+  await askStyleAi(JSON.stringify({ frames: fr.frames, w: fr.w, h: fr.h, note }), true);
+}
+function aiStart() { if (aiBusy || !ed) return false; if (!canMake) { editNote('subs.ed.paid', true); return false; } aiBusy = true; $('aiPick').disabled = true; $('aiLinkGo').disabled = true; return true; }
+function aiEnd() { aiBusy = false; $('aiPick').disabled = false; $('aiLinkGo').disabled = false; }
 $('aiPick').onclick = () => { if (!aiBusy) $('aiFile').click(); };
 $('aiFile').onchange = async () => {
   const f = $('aiFile').files[0];
   $('aiFile').value = '';
-  if (!f || !ed || aiBusy) return;
-  if (!canMake) { editNote('subs.ed.paid', true); return; }
-  aiBusy = true; $('aiPick').disabled = true;
+  if (!f || !aiStart()) return;
   editNote('subs.ai.working');
   try {
-    const fr = await frameFrom(f);
-    const h = await headers();
-    h['Content-Type'] = 'image/jpeg'; h['X-Img-W'] = String(fr.w); h['X-Img-H'] = String(fr.h);
-    const r = await fetch('/api/sub-style-ai', { method: 'POST', headers: h, body: fr.blob });
-    const j = await r.json().catch(() => ({}));
-    if (r.status === 402) { editNote('subs.ed.paid', true); return; }
-    if (r.status === 422) { editNote('subs.ai.none'); return; }
-    if (r.status === 429) { editNote('subs.ai.many'); return; }
-    if (!r.ok || !j.settings) { editNote('subs.ai.err'); return; }
-    showEditorFields({ ...readEditor(), ...j.settings }, j.name || $('edName').value);
-    if (j.pos != null) { project.pos = j.pos; syncControls(); }
-    editorChanged();
-    editNote('subs.ai.done');
+    if (/^video\//.test(f.type)) await copyFromVideo(f);
+    else { const fr = await frameFrom(f); await askStyleAi(fr.blob, false, fr.w, fr.h); }
   } catch (e) {
     if (e.message !== 'login') editNote('subs.ai.err');
-  } finally { aiBusy = false; $('aiPick').disabled = false; }
+  } finally { aiEnd(); }
 };
-
+$('aiLinkGo').onclick = async () => {
+  const link = $('aiLink').value.trim();
+  if (!link) { $('aiLink').focus(); return; }
+  if (!aiStart()) return;
+  editNote('subs.link.working');
+  try {
+    const h = await headers(); h['Content-Type'] = 'application/json';
+    const r = await fetch('/api/sub-style-link', { method: 'POST', headers: h, body: JSON.stringify({ url: link }) });
+    if (!r.ok) {
+      const j = await r.json().catch(() => ({}));
+      if (r.status === 402) { editNote('subs.ed.paid', true); return; }
+      if (r.status === 429) { editNote('subs.ai.many'); return; }
+      editNote({ link_bad: 'subs.link.bad', link_long: 'subs.link.long', link_busy: 'subs.link.busy' }[j.code] || 'subs.link.fail');
+      return;
+    }
+    const blob = await r.blob();
+    editNote('subs.ai.working');
+    await copyFromVideo(blob);
+  } catch (e) {
+    if (e.message !== 'login') editNote(e.message === 'frame' ? 'subs.link.fail' : 'subs.ai.err');
+  } finally { aiEnd(); }
+};
+$('aiLink').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('aiLinkGo').click(); });
 // ---------- export ----------
 $('srt').onclick = () => {
   const blob = new Blob([Captions.srt(groups)], { type: 'application/x-subrip;charset=utf-8' });
@@ -600,6 +666,7 @@ document.addEventListener('langchange', () => {
   if (!(await Auth.session())) return location.replace('/login');
   aiOn = !!config.styleAiOn;
   $('aiBox').hidden = !aiOn;
+  $('linkRow').hidden = !config.styleLinkOn;
   $('logout').hidden = false;
   $('logout').onclick = async () => { await Auth.signOut(); location.replace('/'); };
   loadMe();

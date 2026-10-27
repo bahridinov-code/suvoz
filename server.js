@@ -1116,28 +1116,41 @@ Answer with ONLY one JSON object, no other text:
  "capHeight": height of one capital letter as a percent of the picture width (for example 6),
  "pos": vertical centre of the captions from 0 (top) to 1 (bottom)
 }`;
+// Body: one picture (image/jpeg|png|webp), or JSON { frames: [base64 jpeg, ...], w, h, note } for several frames of a video.
 async function handleSubStyleAi(req, res) {
   const who = await gate(req, res);
   if (!who) return;
   if (!AUTH_ON || !ANTHROPIC_KEY) return sendJson(res, 503, { code: 'style_ai_off', error: 'This is not available right now.' });
   if (rateLimited('style:' + clientIp(req))) return sendJson(res, 429, { error: 'Too many requests. Please try again in a few minutes.' });
   const type = String(req.headers['content-type'] || '').split(';')[0];
-  if (!['image/jpeg', 'image/png', 'image/webp'].includes(type)) return sendJson(res, 400, { code: 'style_ai_bad', error: 'Please use a JPG, PNG or WebP picture.' });
-  let body;
-  try { body = await readRaw(req, 5 * 1024 * 1024); } catch (e) { return sendJson(res, 413, { code: 'style_ai_bad', error: 'This picture is too big.' }); }
-  if (!body.length) return sendJson(res, 400, { code: 'style_ai_bad', error: 'Please use a JPG, PNG or WebP picture.' });
+  let images = [], w = Number(req.headers['x-img-w']) || 0, h = Number(req.headers['x-img-h']) || 0, note = '';
+  if (type === 'application/json') {
+    let body;
+    try { body = await readJson(req, 8 * 1024 * 1024); } catch (e) { return sendJson(res, 413, { code: 'style_ai_bad', error: 'These pictures are too big.' }); }
+    const frames = Array.isArray(body && body.frames) ? body.frames.slice(0, 8) : [];
+    for (const f of frames) if (typeof f === 'string' && /^[A-Za-z0-9+/=]{100,}$/.test(f)) images.push({ media: 'image/jpeg', data: f });
+    w = Number(body.w) || 0; h = Number(body.h) || 0;
+    note = String(body.note || '').slice(0, 300);
+  } else if (['image/jpeg', 'image/png', 'image/webp'].includes(type)) {
+    let body;
+    try { body = await readRaw(req, 5 * 1024 * 1024); } catch (e) { return sendJson(res, 413, { code: 'style_ai_bad', error: 'This picture is too big.' }); }
+    if (body.length) images.push({ media: type, data: body.toString('base64') });
+  }
+  if (!images.length) return sendJson(res, 400, { code: 'style_ai_bad', error: 'Please use a JPG, PNG or WebP picture.' });
   try {
     const me = await rpc(who.token, 'credits_left');
     if (!me || me.plan === 'free') return sendJson(res, 402, { code: 'style_paid', error: 'This is for paid plans.' });
   } catch (e) { console.error(e.message); return sendJson(res, 502, { error: 'Could not check your plan. Please try again.' }); }
-  const w = Number(req.headers['x-img-w']) || 0, h = Number(req.headers['x-img-h']) || 0;
+  const intro = images.length > 1
+    ? 'You get ' + images.length + ' frames from the same video, in time order. ' + (note ? note + ' ' : '') + 'Use the frames to see the animation: whether words appear one by one, whether the spoken word changes colour, pops, sits on a box, or fills like karaoke, and how many words are shown at once.\n\n'
+    : '';
   try {
     const r = await fetch(ANTHROPIC_BASE + '/v1/messages', {
       method: 'POST',
       headers: { 'x-api-key': ANTHROPIC_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-      body: JSON.stringify({ model: STYLE_AI_MODEL, max_tokens: 800, messages: [{ role: 'user', content: [
-        { type: 'image', source: { type: 'base64', media_type: type, data: body.toString('base64') } },
-        { type: 'text', text: STYLE_AI_PROMPT },
+      body: JSON.stringify({ model: STYLE_AI_MODEL, max_tokens: 900, messages: [{ role: 'user', content: [
+        ...images.map((im) => ({ type: 'image', source: { type: 'base64', media_type: im.media, data: im.data } })),
+        { type: 'text', text: intro + STYLE_AI_PROMPT },
       ] }] }),
     });
     if (!r.ok) {
@@ -1163,6 +1176,111 @@ async function handleSubStyleAi(req, res) {
   } catch (e) {
     console.error(e.message);
     sendJson(res, 502, { code: 'style_ai_failed', error: 'Could not read the picture. Please try again.' });
+  }
+}
+
+// ---- Get a video from a YouTube Shorts or Instagram link, only to copy its caption style ----
+// Uses yt-dlp (downloaded once from its GitHub page, or YTDLP_PATH). The file is sent to the browser and deleted right away; nothing is kept.
+const LINK_ON = process.env.SUBS_LINK_ON !== '0';
+const YTDLP_URL = 'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux';
+const YTDLP_FILE = path.join(os.tmpdir(), 'suvoz-yt-dlp');
+const LINK_MAX_BYTES = 80 * 1024 * 1024, LINK_MAX_SECONDS = 300, LINK_CONCURRENCY = 2;
+let linkActive = 0, ytdlpReady = null;
+function linkOk(u) {
+  let x;
+  try { x = new URL(String(u || '').trim()); } catch (e) { return null; }
+  if (x.protocol !== 'https:' && x.protocol !== 'http:') return null;
+  const host = x.hostname.toLowerCase().replace(/^(www\.|m\.)/, '');
+  if (host === 'youtu.be' && /^\/[\w-]{6,20}$/.test(x.pathname)) return 'https://youtu.be' + x.pathname;
+  if (host === 'youtube.com') {
+    const sm = x.pathname.match(/^\/shorts\/([\w-]{6,20})/);
+    if (sm) return 'https://www.youtube.com/shorts/' + sm[1];
+    const v = x.searchParams.get('v');
+    if (x.pathname === '/watch' && v && /^[\w-]{6,20}$/.test(v)) return 'https://www.youtube.com/watch?v=' + v;
+  }
+  if (host === 'instagram.com') {
+    const im = x.pathname.match(/^\/(reel|reels|p|tv)\/([\w-]{5,40})/);
+    if (im) return 'https://www.instagram.com/' + (im[1] === 'reels' ? 'reel' : im[1]) + '/' + im[2] + '/';
+  }
+  return null;
+}
+function ytdlpPath() {
+  if (process.env.YTDLP_PATH) return Promise.resolve(process.env.YTDLP_PATH);
+  if (ytdlpReady) return ytdlpReady;
+  ytdlpReady = (async () => {
+    try {
+      const st = await fsp.stat(YTDLP_FILE);
+      if (Date.now() - st.mtimeMs < 3 * 86400000 && st.size > 1000000) return YTDLP_FILE;   // refreshed every 3 days: sites change often
+    } catch (e) {}
+    const r = await fetch(YTDLP_URL, { redirect: 'follow' });
+    if (!r.ok) throw new Error('yt-dlp download ' + r.status);
+    const buf = Buffer.from(await r.arrayBuffer());
+    const tmp = YTDLP_FILE + '.' + process.pid;
+    await fsp.writeFile(tmp, buf, { mode: 0o755 });
+    await fsp.rename(tmp, YTDLP_FILE);
+    return YTDLP_FILE;
+  })();
+  ytdlpReady.catch((e) => { console.error('yt-dlp setup failed:', e.message); ytdlpReady = null; });
+  return ytdlpReady;
+}
+function runYtdlp(bin, args, ms) {
+  return new Promise((resolve) => {
+    const p = spawn(bin, args, { stdio: ['ignore', 'ignore', 'pipe'] });
+    let err = '';
+    const timer = setTimeout(() => { p.kill('SIGKILL'); }, ms);
+    p.stderr.on('data', (d) => { if (err.length < 20000) err += d; });
+    p.on('error', (e) => { clearTimeout(timer); resolve({ code: -1, err: e.message }); });
+    p.on('close', (code) => { clearTimeout(timer); resolve({ code, err }); });
+  });
+}
+async function handleSubStyleLink(req, res) {
+  const who = await gate(req, res);
+  if (!who) return;
+  if (!AUTH_ON || !LINK_ON || !ANTHROPIC_KEY) return sendJson(res, 503, { code: 'style_ai_off', error: 'This is not available right now.' });
+  if (rateLimited('link:' + clientIp(req))) return sendJson(res, 429, { error: 'Too many requests. Please try again in a few minutes.' });
+  let body;
+  try { body = await readJson(req, 4096); } catch (e) { return sendJson(res, 400, { error: 'Bad request.' }); }
+  const url = linkOk(body && body.url);
+  if (!url) return sendJson(res, 400, { code: 'link_bad', error: 'Paste a YouTube Shorts or Instagram Reel link.' });
+  try {
+    const me = await rpc(who.token, 'credits_left');
+    if (!me || me.plan === 'free') return sendJson(res, 402, { code: 'style_paid', error: 'This is for paid plans.' });
+  } catch (e) { console.error(e.message); return sendJson(res, 502, { error: 'Could not check your plan. Please try again.' }); }
+  if (linkActive >= LINK_CONCURRENCY) return sendJson(res, 503, { code: 'link_busy', error: 'Busy right now. Please try again in a minute.' });
+  linkActive++;
+  const dir = await fsp.mkdtemp(path.join(os.tmpdir(), 'suvoz-link-'));
+  try {
+    let bin;
+    try { bin = await ytdlpPath(); } catch (e) { return sendJson(res, 502, { code: 'link_failed', error: 'Could not open this link. Upload the video instead.' }); }
+    const out = path.join(dir, 'v.%(ext)s');
+    const args = ['--no-playlist', '--no-warnings', '--no-part', '--no-cache-dir', '--no-mtime', '--socket-timeout', '20',
+      '--max-filesize', String(LINK_MAX_BYTES), '--match-filter', 'duration <= ' + LINK_MAX_SECONDS,
+      '-f', 'bv*[height<=720][vcodec^=avc1]/bv*[height<=720][ext=mp4]/b[height<=720][ext=mp4]/b[height<=720]/b',
+      '-o', out];
+    if (process.env.YTDLP_PROXY) args.push('--proxy', process.env.YTDLP_PROXY);
+    if (FFMPEG && FFMPEG !== 'ffmpeg') args.push('--ffmpeg-location', FFMPEG);
+    args.push('--', url);
+    const r = await runYtdlp(bin, args, 90000);
+    const files = (await fsp.readdir(dir)).filter((f) => f.startsWith('v.'));
+    if (r.code !== 0 || !files.length) {
+      console.error('yt-dlp failed', r.code, String(r.err).slice(-400));
+      if (/does not pass filter|duration/i.test(r.err)) return sendJson(res, 400, { code: 'link_long', error: 'This video is longer than 5 minutes.' });
+      if (/larger than max-filesize|File is larger/i.test(r.err)) return sendJson(res, 400, { code: 'link_long', error: 'This video is too big.' });
+      return sendJson(res, 502, { code: 'link_failed', error: 'Could not open this link. Upload the video instead.' });
+    }
+    const file = path.join(dir, files[0]);
+    const st = await fsp.stat(file);
+    if (st.size > LINK_MAX_BYTES) return sendJson(res, 400, { code: 'link_long', error: 'This video is too big.' });
+    const ext = path.extname(file).toLowerCase();
+    res.writeHead(200, { 'Content-Type': ext === '.webm' ? 'video/webm' : 'video/mp4', 'Content-Length': st.size, 'Cache-Control': 'no-store', ...SEC_HEADERS });
+    await new Promise((ok) => { const s2 = fs.createReadStream(file); s2.on('end', ok); s2.on('error', ok); res.on('close', ok); s2.pipe(res); });
+  } catch (e) {
+    console.error('link:', e.message);
+    if (!res.headersSent) sendJson(res, 502, { code: 'link_failed', error: 'Could not open this link. Upload the video instead.' });
+    else res.end();
+  } finally {
+    linkActive--;
+    fsp.rm(dir, { recursive: true, force: true }).catch(() => {});
   }
 }
 
@@ -1849,6 +1967,7 @@ const server = http.createServer(async (req, res) => {
         dubOn: DUB_ON,
         translateOn: TRANSLATE_ON,
         styleAiOn: !!ANTHROPIC_KEY && AUTH_ON,
+        styleLinkOn: !!ANTHROPIC_KEY && AUTH_ON && LINK_ON,
         translateRatio: TRANSLATE_RATIO,
         translateMax: TRANSLATE_MAX_CHARS,
         links: SOCIAL_LINKS,
@@ -1860,6 +1979,7 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'POST' && p === '/api/translate') return await handleTranslate(req, res);
     if (req.method === 'POST' && p === '/api/transcribe') return await handleTranscribe(req, res);
     if (req.method === 'POST' && p === '/api/sub-style-ai') return await handleSubStyleAi(req, res);
+    if (req.method === 'POST' && p === '/api/sub-style-link') return await handleSubStyleLink(req, res);
     if (p === '/api/sub-styles' && ['GET', 'POST', 'DELETE'].includes(req.method)) return await handleSubStyles(req, res, new URL(req.url, 'http://localhost'));
     if (p === '/api/my-voices' && (req.method === 'GET' || req.method === 'DELETE')) return await handleMyVoices(req, res, new URL(req.url, 'http://localhost'));
     if (req.method === 'POST' && p === '/api/voice-design') return await handleVoiceDesign(req, res);
@@ -1892,6 +2012,7 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => console.log(`Suvoz running on port ${PORT}`));
+if (LINK_ON && ANTHROPIC_KEY && AUTH_ON && !process.env.YTDLP_PATH) setTimeout(() => ytdlpPath().catch(() => {}), 15000);
 if (HISTORY_ON) {
   const sweep = () => expireHistory().catch((e) => console.error('history cleanup failed:', e.message));
   setTimeout(sweep, parseInt(process.env.HISTORY_SWEEP_FIRST_MS || '60000', 10));

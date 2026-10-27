@@ -631,3 +631,6 @@ html.in .top-right .who-mail, html.in .top-right #logout, html.in .top-right a.l
 .subs-ai { margin-top: 12px; }
 .subs-ai .srcbtn { width: 100%; min-height: 84px; padding: 14px; font-size: 14px; }
 .subs-ai .srcbtn small { font-weight: 500; font-size: 12px; }
+.subs-link { display: flex; gap: 8px; margin-bottom: 10px; }
+.subs-link .field { flex: 1; min-width: 0; padding: 10px 12px; font-size: 15px; }
+.subs-link .btn { padding: 10px 18px; font-size: 15px; }

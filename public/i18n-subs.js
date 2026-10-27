@@ -234,3 +234,45 @@ Object.assign(T.uz, {
   'subs.ai.none': 'Bu rasmda subtitr topilmadi. Aniqroq skrinshotni sinab koʻring.', 'subs.ai.many': 'Juda koʻp urinish. Bir necha daqiqa kuting.',
   'subs.ai.err': 'Rasmni oʻqiy olmadik. Qayta urinib koʻring.',
 });
+
+// Copy a style from a link.
+Object.assign(T.en, {
+  'subs.link.ph': 'Paste a YouTube Shorts or Instagram Reel link', 'subs.link.go': 'Copy',
+  'subs.link.working': 'Opening the video from the link… this can take up to a minute.',
+  'subs.link.bad': 'This link does not work here. Paste a YouTube Shorts or Instagram Reel link.',
+  'subs.link.long': 'This video is too long or too big (5 minutes at most).',
+  'subs.link.busy': 'Busy right now. Please try again in a minute.',
+  'subs.link.fail': 'We could not open this link (the site may have blocked it). Save the video and upload it below instead.',
+});
+Object.assign(T.ar, {
+  'subs.link.ph': 'الصق رابط YouTube Shorts أو Instagram Reel', 'subs.link.go': 'نسخ',
+  'subs.link.working': 'نفتح الفيديو من الرابط… قد يستغرق ذلك حتى دقيقة.',
+  'subs.link.bad': 'هذا الرابط لا يعمل هنا. الصق رابط YouTube Shorts أو Instagram Reel.',
+  'subs.link.long': 'هذا الفيديو طويل جدًا أو كبير جدًا (5 دقائق كحد أقصى).',
+  'subs.link.busy': 'مشغول الآن. حاول مرة أخرى بعد دقيقة.',
+  'subs.link.fail': 'تعذّر فتح هذا الرابط (ربما حظره الموقع). احفظ الفيديو وارفعه في الأسفل بدلًا من ذلك.',
+});
+Object.assign(T.ru, {
+  'subs.link.ph': 'Вставьте ссылку на YouTube Shorts или Instagram Reels', 'subs.link.go': 'Скопировать',
+  'subs.link.working': 'Открываем видео по ссылке… это может занять до минуты.',
+  'subs.link.bad': 'Эта ссылка здесь не работает. Вставьте ссылку на YouTube Shorts или Instagram Reels.',
+  'subs.link.long': 'Видео слишком длинное или большое (не больше 5 минут).',
+  'subs.link.busy': 'Сейчас занято. Попробуйте через минуту.',
+  'subs.link.fail': 'Не удалось открыть ссылку (сайт мог её заблокировать). Сохраните видео и загрузите его ниже.',
+});
+Object.assign(T.tg, {
+  'subs.link.ph': 'Пайванди YouTube Shorts ё Instagram Reels-ро гузоред', 'subs.link.go': 'Нусха',
+  'subs.link.working': 'Видеоро аз пайванд мекушоем… ин метавонад то як дақиқа гирад.',
+  'subs.link.bad': 'Ин пайванд дар ин ҷо кор намекунад. Пайванди YouTube Shorts ё Instagram Reels-ро гузоред.',
+  'subs.link.long': 'Ин видео хеле дароз ё калон аст (на зиёда аз 5 дақиқа).',
+  'subs.link.busy': 'Ҳоло банд аст. Пас аз як дақиқа боз кӯшиш кунед.',
+  'subs.link.fail': 'Ин пайвандро кушода натавонистем (шояд сайт онро манъ кардааст). Видеоро захира карда, дар поён бор кунед.',
+});
+Object.assign(T.uz, {
+  'subs.link.ph': 'YouTube Shorts yoki Instagram Reels havolasini qoʻying', 'subs.link.go': 'Nusxalash',
+  'subs.link.working': 'Videoni havoladan ochyapmiz… bu bir daqiqagacha vaqt olishi mumkin.',
+  'subs.link.bad': 'Bu havola bu yerda ishlamaydi. YouTube Shorts yoki Instagram Reels havolasini qoʻying.',
+  'subs.link.long': 'Bu video juda uzun yoki katta (koʻpi bilan 5 daqiqa).',
+  'subs.link.busy': 'Hozir band. Bir daqiqadan soʻng qayta urinib koʻring.',
+  'subs.link.fail': 'Bu havolani ocha olmadik (sayt uni bloklagan boʻlishi mumkin). Videoni saqlab, pastda yuklang.',
+});
