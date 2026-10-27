@@ -614,3 +614,20 @@ html.in .top-right .who-mail, html.in .top-right #logout, html.in .top-right a.l
 }
 @media (max-width: 460px) { .tpls { grid-template-columns: repeat(2, 1fr); } }
 .app.subs > section { padding: 0; }
+.subs-h { margin: 16px 0 8px; font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+#mySection .subs-h:first-child { margin-top: 0; }
+.subs-mk { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.subs-ed h3 { font-size: 20px; letter-spacing: -0.01em; }
+.subs-ed .subs-opt { margin-top: 12px; }
+.subs-ed .field { padding: 9px 11px; font-size: 15px; }
+.subs-two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.subs-colors { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.subs-colors label { display: grid; justify-items: center; gap: 4px; font-size: 12px; font-weight: 600; color: var(--ink); cursor: pointer; }
+.subs-colors input[type=color] { width: 44px; height: 36px; border: 1px solid var(--line); border-radius: 10px; padding: 2px; background: var(--white); cursor: pointer; }
+.subs-note { margin-top: 12px; padding: 10px 12px; border-radius: 12px; background: var(--indigo-soft); color: var(--indigo-deep); font-size: 14px; }
+.subs-note a { font-weight: 700; color: var(--indigo); }
+.linkbtn.danger { color: var(--err); }
+.tpl { position: relative; }
+.subs-ai { margin-top: 12px; }
+.subs-ai .srcbtn { width: 100%; min-height: 84px; padding: 14px; font-size: 14px; }
+.subs-ai .srcbtn small { font-weight: 500; font-size: 12px; }

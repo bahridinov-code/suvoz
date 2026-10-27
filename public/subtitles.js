@@ -195,6 +195,7 @@ function openEditor() {
   renderTemplates();
   syncControls();
   renderLines();
+  Captions.ensureFont(Captions.byId(project.template).font);
   Captions.ready().then(() => { sizeOverlay(); paint(); });
   startLoop();
 }
@@ -236,33 +237,45 @@ window.addEventListener('resize', () => { sizeOverlay(); paint(); });
 
 // Template picker with small animated previews.
 const SAMPLE = [{ t: 'Make', s: 0, e: 0.45 }, { t: 'your', s: 0.45, e: 0.8 }, { t: 'videos', s: 0.8, e: 1.35 }, { t: 'pop!', s: 1.35, e: 2 }];
+function tile(tp) {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'tpl' + (tp.id === project.template ? ' on' : '');
+  b.dataset.id = tp.id;
+  b.setAttribute('aria-pressed', tp.id === project.template ? 'true' : 'false');
+  const c = document.createElement('canvas');
+  c.width = 240; c.height = 300;
+  const name = document.createElement('span');
+  name.textContent = tp.name;
+  name.dir = 'auto';
+  b.append(c, name);
+  b.onclick = () => pickTemplate(tp.id);
+  return b;
+}
 function renderTemplates() {
   const box = $('tpls');
   box.textContent = '';
-  for (const tp of Captions.TEMPLATES) {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'tpl' + (tp.id === project.template ? ' on' : '');
-    b.dataset.id = tp.id;
-    b.setAttribute('aria-pressed', tp.id === project.template ? 'true' : 'false');
-    const c = document.createElement('canvas');
-    c.width = 240; c.height = 300;
-    const name = document.createElement('span');
-    name.textContent = tp.name;
-    b.append(c, name);
-    b.onclick = () => {
-      project.template = tp.id;
-      project.color = null;
-      regroup(); save(); syncControls(); renderLines();
-      box.querySelectorAll('.tpl').forEach((x) => { const on = x.dataset.id === tp.id; x.classList.toggle('on', on); x.setAttribute('aria-pressed', on ? 'true' : 'false'); });
-      paint();
-    };
-    box.appendChild(b);
-  }
+  for (const tp of Captions.TEMPLATES) box.appendChild(tile(tp));
+  const mine = $('myTpls');
+  mine.textContent = '';
+  for (const st of myStyles) if (Captions.has('c_' + st.id)) mine.appendChild(tile(Captions.byId('c_' + st.id)));
+  $('mySection').hidden = !myStyles.length;
+  markPicked();
+}
+function markPicked() {
+  document.querySelectorAll('#tabStyle .tpl').forEach((x) => { const on = x.dataset.id === project.template; x.classList.toggle('on', on); x.setAttribute('aria-pressed', on ? 'true' : 'false'); });
+  $('editStyle').hidden = !/^c_/.test(project.template);
+}
+function pickTemplate(id) {
+  project.template = id;
+  project.color = null;
+  regroup(); save(); syncControls(); renderLines(); markPicked();
+  Captions.ensureFont(Captions.byId(id).font);
+  paint();
 }
 function paintThumbs() {
   const now = (performance.now() / 1000) % 2.6;
-  document.querySelectorAll('#tpls .tpl').forEach((b) => {
+  document.querySelectorAll('#tabStyle .tpl').forEach((b) => {
     const c = b.querySelector('canvas');
     const ctx = c.getContext('2d');
     const g = ctx.createLinearGradient(0, 0, c.width, c.height);
@@ -273,6 +286,138 @@ function paintThumbs() {
     Captions.draw(ctx, c.width, c.height, now, { groups: gs, template: tp.id, pos: 0.55, size: 1.5, upper: null, color: b.dataset.id === project.template ? project.color : null });
   });
 }
+
+// ---------- people's own styles ----------
+let myStyles = [], canMake = false, ed = null;
+async function loadStyles() {
+  try {
+    const r = await fetch('/api/sub-styles', { headers: await headers() });
+    if (!r.ok) return;
+    const j = await r.json();
+    canMake = !!j.canMake;
+    myStyles = j.styles || [];
+    for (const st of myStyles) Captions.setCustom('c_' + st.id, st.name, st.settings);
+    if (project && /^c_/.test(project.template) && !Captions.has(project.template)) project.template = 'bold';
+    if (project && !$('step2').hidden) { regroup(); renderTemplates(); syncControls(); renderLines(); Captions.ensureFont(Captions.byId(project.template).font); }
+  } catch (e) {}
+}
+function fillEditorLists() {
+  const base = $('edBase'), font = $('edFont');
+  if (!base.options.length) {
+    for (const tp of Captions.TEMPLATES) { const o = document.createElement('option'); o.value = tp.id; o.textContent = tp.name; base.appendChild(o); }
+    for (const f of Captions.FONTS) { const o = document.createElement('option'); o.value = f.key; o.textContent = f.name; font.appendChild(o); }
+  }
+}
+function fillWeights(fontKey, want) {
+  const sel = $('edWeight');
+  const f = Captions.FONTS.find((x) => x.key === fontKey) || Captions.FONTS[0];
+  sel.textContent = '';
+  for (const w of f.weights) { const o = document.createElement('option'); o.value = w; o.textContent = String(w); sel.appendChild(o); }
+  const best = f.weights.reduce((a, b) => (Math.abs(b - want) < Math.abs(a - want) ? b : a), f.weights[0]);
+  sel.value = String(best);
+}
+function showEditorFields(st, name) {
+  fillEditorLists();
+  $('edName').value = name;
+  $('edBase').value = st.base;
+  $('edFont').value = st.font;
+  fillWeights(st.font, st.weight);
+  $('edWords').value = st.maxWords; $('edWordsN').textContent = String(st.maxWords);
+  $('edUpper').checked = !!st.upper;
+  $('edText').value = st.text.toLowerCase(); $('edAccent').value = st.accent.toLowerCase();
+  $('edOutline').value = st.outline.toLowerCase(); $('edBg').value = st.bg.toLowerCase();
+  $('edOutlineW').value = st.outlineW; $('edShadow').value = st.shadow; $('edBgA').value = st.bgAlpha; $('edScale').value = st.scale;
+}
+function readEditor() {
+  return {
+    base: $('edBase').value, font: $('edFont').value, weight: Number($('edWeight').value), maxWords: Number($('edWords').value),
+    upper: $('edUpper').checked, scale: Number($('edScale').value),
+    text: $('edText').value, accent: $('edAccent').value, outline: $('edOutline').value, bg: $('edBg').value,
+    outlineW: Number($('edOutlineW').value), shadow: Number($('edShadow').value), bgAlpha: Number($('edBgA').value),
+  };
+}
+function editNote(key, withPlans) {
+  $('edNote').hidden = !key;
+  $('edNoteText').textContent = key ? t(key) : '';
+  $('edPlans').hidden = !withPlans;
+}
+function openStyleEditor(existingId) {
+  const from = Captions.byId(project.template);
+  const st = Captions.settingsOf(from);
+  if (project.color) st.accent = project.color.toUpperCase();
+  if (project.upper != null) st.upper = !!project.upper;
+  ed = { id: existingId || null, prev: { template: project.template, color: project.color, upper: project.upper } };
+  project.color = null; project.upper = null;
+  const name = existingId ? from.name : t('subs.ed.defname');
+  showEditorFields(st, name);
+  Captions.setCustom('__draft', name, st);
+  project.template = '__draft';
+  regroup();
+  $('tabEdit').hidden = false; $('tabStyle').hidden = true; $('tabText').hidden = true;
+  document.querySelector('.subs-tabs').hidden = true; $('mainActions').hidden = true;
+  $('edDelete').hidden = !existingId;
+  editNote(canMake ? null : 'subs.ed.paid', !canMake);
+  paint();
+}
+function closeStyleEditor() {
+  Captions.removeCustom('__draft');
+  ed = null;
+  $('tabEdit').hidden = true; $('tabStyle').hidden = false;
+  document.querySelector('.subs-tabs').hidden = false; $('mainActions').hidden = false;
+  document.querySelectorAll('.subs-tabs button').forEach((x) => x.classList.toggle('on', x.dataset.tab === 'style'));
+  regroup(); renderTemplates(); syncControls(); renderLines(); paint();
+}
+function editorChanged() {
+  if (!ed) return;
+  const st = readEditor();
+  $('edWordsN').textContent = String(st.maxWords);
+  Captions.setCustom('__draft', $('edName').value, st);
+  regroup();
+  Captions.ensureFont(st.font);
+  paint();
+}
+['edBase', 'edWeight', 'edWords', 'edUpper', 'edText', 'edAccent', 'edOutline', 'edBg', 'edOutlineW', 'edShadow', 'edBgA', 'edScale'].forEach((id) => { $(id).addEventListener('input', editorChanged); $(id).addEventListener('change', editorChanged); });
+$('edFont').onchange = () => { fillWeights($('edFont').value, Number($('edWeight').value)); editorChanged(); };
+$('makeStyle').onclick = () => openStyleEditor(null);
+$('editStyle').onclick = () => { if (/^c_/.test(project.template)) openStyleEditor(project.template.slice(2)); };
+$('edCancel').onclick = () => { if (!ed) return; Object.assign(project, ed.prev); closeStyleEditor(); };
+$('edSave').onclick = async () => {
+  if (!ed) return;
+  const name = $('edName').value.trim();
+  if (!name) { editNote('subs.ed.noname'); $('edName').focus(); return; }
+  const settings = readEditor();
+  $('edSave').disabled = true;
+  try {
+    const h = await headers(); h['Content-Type'] = 'application/json';
+    const r = await fetch('/api/sub-styles', { method: 'POST', headers: h, body: JSON.stringify({ id: ed.id, name, settings }) });
+    const j = await r.json().catch(() => ({}));
+    if (r.status === 402) { editNote('subs.ed.paid', true); return; }
+    if (r.status === 409) { editNote('subs.ed.limit'); return; }
+    if (!r.ok || !j.id) { editNote('subs.ed.err'); return; }
+    Captions.setCustom('c_' + j.id, name, settings);
+    const i = myStyles.findIndex((x) => x.id === j.id);
+    if (i >= 0) myStyles[i] = { id: j.id, name, settings }; else myStyles.unshift({ id: j.id, name, settings });
+    project.template = 'c_' + j.id;
+    save();
+    closeStyleEditor();
+    setStatus('subs.ed.saved');
+  } catch (e) {
+    if (e.message !== 'login') editNote('subs.ed.err');
+  } finally { $('edSave').disabled = false; }
+};
+$('edDelete').onclick = async () => {
+  if (!ed || !ed.id || !confirm(t('subs.ed.delq'))) return;
+  try {
+    const r = await fetch('/api/sub-styles?id=' + encodeURIComponent(ed.id), { method: 'DELETE', headers: await headers() });
+    if (!r.ok) { editNote('subs.ed.err'); return; }
+    Captions.removeCustom('c_' + ed.id);
+    myStyles = myStyles.filter((x) => x.id !== ed.id);
+    project.template = 'bold'; project.color = null; project.upper = null;
+    save();
+    closeStyleEditor();
+    setStatus('subs.ed.deleted');
+  } catch (e) { if (e.message !== 'login') editNote('subs.ed.err'); }
+};
 
 function syncControls() {
   const tp = Captions.byId(project.template);
@@ -297,6 +442,7 @@ document.querySelectorAll('.subs-tabs button').forEach((b) => {
   b.onclick = () => {
     document.querySelectorAll('.subs-tabs button').forEach((x) => x.classList.toggle('on', x === b));
     $('tabStyle').hidden = b.dataset.tab !== 'style';
+    $('tabEdit').hidden = true;
     $('tabText').hidden = b.dataset.tab !== 'text';
   };
 });
@@ -335,6 +481,63 @@ function editGroup(gi, text) {
   regroup(); save(); renderLines(); paint();
 }
 
+
+// ---------- copy a style from a picture (AI) ----------
+let aiOn = false, aiBusy = false;
+function frameFrom(file) {
+  // A picture as it is, or one frame from the middle of a video, made smaller (max 1280 px).
+  return new Promise((ok, no) => {
+    const url = URL.createObjectURL(file);
+    const done = (src, w, h) => {
+      const k = Math.min(1, 1280 / Math.max(w, h));
+      const c = document.createElement('canvas');
+      c.width = Math.round(w * k); c.height = Math.round(h * k);
+      c.getContext('2d').drawImage(src, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      c.toBlob((b) => (b ? ok({ blob: b, w: c.width, h: c.height }) : no(new Error('frame'))), 'image/jpeg', 0.88);
+    };
+    if (/^video\//.test(file.type)) {
+      const v = document.createElement('video');
+      v.muted = true; v.playsInline = true; v.preload = 'auto';
+      v.onloadedmetadata = () => { v.currentTime = Math.min(v.duration * 0.4, Math.max(0, v.duration - 0.1)); };
+      v.onseeked = () => done(v, v.videoWidth, v.videoHeight);
+      v.onerror = () => { URL.revokeObjectURL(url); no(new Error('frame')); };
+      v.src = url;
+    } else {
+      const im = new Image();
+      im.onload = () => done(im, im.naturalWidth, im.naturalHeight);
+      im.onerror = () => { URL.revokeObjectURL(url); no(new Error('frame')); };
+      im.src = url;
+    }
+  });
+}
+$('aiPick').onclick = () => { if (!aiBusy) $('aiFile').click(); };
+$('aiFile').onchange = async () => {
+  const f = $('aiFile').files[0];
+  $('aiFile').value = '';
+  if (!f || !ed || aiBusy) return;
+  if (!canMake) { editNote('subs.ed.paid', true); return; }
+  aiBusy = true; $('aiPick').disabled = true;
+  editNote('subs.ai.working');
+  try {
+    const fr = await frameFrom(f);
+    const h = await headers();
+    h['Content-Type'] = 'image/jpeg'; h['X-Img-W'] = String(fr.w); h['X-Img-H'] = String(fr.h);
+    const r = await fetch('/api/sub-style-ai', { method: 'POST', headers: h, body: fr.blob });
+    const j = await r.json().catch(() => ({}));
+    if (r.status === 402) { editNote('subs.ed.paid', true); return; }
+    if (r.status === 422) { editNote('subs.ai.none'); return; }
+    if (r.status === 429) { editNote('subs.ai.many'); return; }
+    if (!r.ok || !j.settings) { editNote('subs.ai.err'); return; }
+    showEditorFields({ ...readEditor(), ...j.settings }, j.name || $('edName').value);
+    if (j.pos != null) { project.pos = j.pos; syncControls(); }
+    editorChanged();
+    editNote('subs.ai.done');
+  } catch (e) {
+    if (e.message !== 'login') editNote('subs.ai.err');
+  } finally { aiBusy = false; $('aiPick').disabled = false; }
+};
+
 // ---------- export ----------
 $('srt').onclick = () => {
   const blob = new Blob([Captions.srt(groups)], { type: 'application/x-subrip;charset=utf-8' });
@@ -357,6 +560,7 @@ $('export').onclick = async () => {
   bar(0);
   try {
     if (!audio) { try { audio = await decodeAudio(file); } catch (e) { audio = null; } }
+    await Captions.ensureFont(Captions.byId(project.template).font);
     const out = await SubExport.run({
       file, project: view(), audio, signal: exporting.signal,
       onProgress: (p) => { bar(p); setStatus('subs.exporting', false, null, { p: String(Math.round(p * 100)) }); },
@@ -394,7 +598,10 @@ document.addEventListener('langchange', () => {
   try { config = await getConfig(); } catch (e) {}
   if (!config.authOn) return location.replace('/dialogue');
   if (!(await Auth.session())) return location.replace('/login');
+  aiOn = !!config.styleAiOn;
+  $('aiBox').hidden = !aiOn;
   $('logout').hidden = false;
   $('logout').onclick = async () => { await Auth.signOut(); location.replace('/'); };
   loadMe();
+  loadStyles();
 })();

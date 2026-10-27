@@ -140,3 +140,97 @@ Object.assign(T.uz, {
   'subs.cancelled': 'Toʻxtatildi.',
   'subs.wm': 'Bepul sinov videolarida kichik «Made with suvoz.io» belgisi bor. Pullik tariflarda yoʻq.',
 });
+
+// Own styles (style editor).
+Object.assign(T.en, {
+  'subs.my': 'My styles', 'subs.ready': 'Ready styles', 'subs.make': '+ Create my style', 'subs.edit': 'Edit this style',
+  'subs.ed.title': 'Your style', 'subs.ed.name': 'Name', 'subs.ed.defname': 'My style',
+  'subs.ed.anim': 'Animation', 'subs.ed.font': 'Font', 'subs.ed.weight': 'Boldness', 'subs.ed.words': 'Words on screen',
+  'subs.ed.colors': 'Colours', 'subs.ed.text': 'Text', 'subs.ed.accent': 'Highlight', 'subs.ed.outline': 'Outline', 'subs.ed.bg': 'Background',
+  'subs.ed.outlineW': 'Outline thickness', 'subs.ed.shadow': 'Shadow / glow', 'subs.ed.bgA': 'Background strength', 'subs.ed.scale': 'Size',
+  'subs.ed.save': 'Save style', 'subs.ed.cancel': 'Cancel', 'subs.ed.delete': 'Delete style', 'subs.ed.delq': 'Delete this style?',
+  'subs.ed.saved': 'Saved! Your style is now in "My styles".', 'subs.ed.deleted': 'Style deleted.',
+  'subs.ed.paid': 'Saving your own styles is for paid plans. You can still try them here.', 'subs.ed.plans': 'See plans',
+  'subs.ed.limit': 'You have saved the most styles you can (30). Delete one first.',
+  'subs.ed.err': 'Could not save your style. Please try again.', 'subs.ed.noname': 'Give your style a name.',
+});
+Object.assign(T.ar, {
+  'subs.my': 'أنماطي', 'subs.ready': 'أنماط جاهزة', 'subs.make': '+ أنشئ نمطي', 'subs.edit': 'تعديل هذا النمط',
+  'subs.ed.title': 'نمطك', 'subs.ed.name': 'الاسم', 'subs.ed.defname': 'نمطي',
+  'subs.ed.anim': 'الحركة', 'subs.ed.font': 'الخط', 'subs.ed.weight': 'السماكة', 'subs.ed.words': 'الكلمات على الشاشة',
+  'subs.ed.colors': 'الألوان', 'subs.ed.text': 'النص', 'subs.ed.accent': 'التمييز', 'subs.ed.outline': 'الحدود', 'subs.ed.bg': 'الخلفية',
+  'subs.ed.outlineW': 'سماكة الحدود', 'subs.ed.shadow': 'الظل / التوهج', 'subs.ed.bgA': 'قوة الخلفية', 'subs.ed.scale': 'الحجم',
+  'subs.ed.save': 'حفظ النمط', 'subs.ed.cancel': 'إلغاء', 'subs.ed.delete': 'حذف النمط', 'subs.ed.delq': 'حذف هذا النمط؟',
+  'subs.ed.saved': 'تم الحفظ! نمطك الآن في "أنماطي".', 'subs.ed.deleted': 'حُذف النمط.',
+  'subs.ed.paid': 'حفظ أنماطك الخاصة متاح في الخطط المدفوعة. يمكنك تجربتها هنا.', 'subs.ed.plans': 'عرض الخطط',
+  'subs.ed.limit': 'لقد حفظت الحد الأقصى من الأنماط (30). احذف واحدًا أولًا.',
+  'subs.ed.err': 'تعذّر حفظ نمطك. حاول مرة أخرى.', 'subs.ed.noname': 'أعطِ نمطك اسمًا.',
+});
+Object.assign(T.ru, {
+  'subs.my': 'Мои стили', 'subs.ready': 'Готовые стили', 'subs.make': '+ Создать свой стиль', 'subs.edit': 'Изменить этот стиль',
+  'subs.ed.title': 'Ваш стиль', 'subs.ed.name': 'Название', 'subs.ed.defname': 'Мой стиль',
+  'subs.ed.anim': 'Анимация', 'subs.ed.font': 'Шрифт', 'subs.ed.weight': 'Жирность', 'subs.ed.words': 'Слов на экране',
+  'subs.ed.colors': 'Цвета', 'subs.ed.text': 'Текст', 'subs.ed.accent': 'Выделение', 'subs.ed.outline': 'Обводка', 'subs.ed.bg': 'Фон',
+  'subs.ed.outlineW': 'Толщина обводки', 'subs.ed.shadow': 'Тень / свечение', 'subs.ed.bgA': 'Плотность фона', 'subs.ed.scale': 'Размер',
+  'subs.ed.save': 'Сохранить стиль', 'subs.ed.cancel': 'Отмена', 'subs.ed.delete': 'Удалить стиль', 'subs.ed.delq': 'Удалить этот стиль?',
+  'subs.ed.saved': 'Сохранено! Ваш стиль теперь в «Моих стилях».', 'subs.ed.deleted': 'Стиль удалён.',
+  'subs.ed.paid': 'Сохранять свои стили можно на платных тарифах. Попробовать можно и здесь.', 'subs.ed.plans': 'Посмотреть тарифы',
+  'subs.ed.limit': 'Вы сохранили максимум стилей (30). Сначала удалите один.',
+  'subs.ed.err': 'Не удалось сохранить стиль. Попробуйте ещё раз.', 'subs.ed.noname': 'Дайте стилю название.',
+});
+Object.assign(T.tg, {
+  'subs.my': 'Услубҳои ман', 'subs.ready': 'Услубҳои тайёр', 'subs.make': '+ Услуби худро созед', 'subs.edit': 'Тағйир додани ин услуб',
+  'subs.ed.title': 'Услуби шумо', 'subs.ed.name': 'Ном', 'subs.ed.defname': 'Услуби ман',
+  'subs.ed.anim': 'Аниматсия', 'subs.ed.font': 'Ҳарф', 'subs.ed.weight': 'Ғафсӣ', 'subs.ed.words': 'Калимаҳо дар экран',
+  'subs.ed.colors': 'Рангҳо', 'subs.ed.text': 'Матн', 'subs.ed.accent': 'Таъкид', 'subs.ed.outline': 'Ҳошия', 'subs.ed.bg': 'Замина',
+  'subs.ed.outlineW': 'Ғафсии ҳошия', 'subs.ed.shadow': 'Соя / дурахш', 'subs.ed.bgA': 'Қувваи замина', 'subs.ed.scale': 'Андоза',
+  'subs.ed.save': 'Нигоҳ доштани услуб', 'subs.ed.cancel': 'Бекор кардан', 'subs.ed.delete': 'Нест кардани услуб', 'subs.ed.delq': 'Ин услуб нест карда шавад?',
+  'subs.ed.saved': 'Нигоҳ дошта шуд! Услуби шумо ҳоло дар «Услубҳои ман» аст.', 'subs.ed.deleted': 'Услуб нест карда шуд.',
+  'subs.ed.paid': 'Нигоҳ доштани услубҳои худ барои тарифҳои пулакӣ аст. Шумо метавонед онҳоро дар ин ҷо санҷед.', 'subs.ed.plans': 'Дидани тарифҳо',
+  'subs.ed.limit': 'Шумо ҳадди аксари услубҳоро (30) нигоҳ доштед. Аввал якеро нест кунед.',
+  'subs.ed.err': 'Услуби шуморо нигоҳ дошта натавонистем. Боз кӯшиш кунед.', 'subs.ed.noname': 'Ба услуби худ ном диҳед.',
+});
+Object.assign(T.uz, {
+  'subs.my': 'Mening uslublarim', 'subs.ready': 'Tayyor uslublar', 'subs.make': '+ Oʻz uslubimni yaratish', 'subs.edit': 'Bu uslubni tahrirlash',
+  'subs.ed.title': 'Sizning uslubingiz', 'subs.ed.name': 'Nomi', 'subs.ed.defname': 'Mening uslubim',
+  'subs.ed.anim': 'Animatsiya', 'subs.ed.font': 'Shrift', 'subs.ed.weight': 'Qalinlik', 'subs.ed.words': 'Ekrandagi soʻzlar',
+  'subs.ed.colors': 'Ranglar', 'subs.ed.text': 'Matn', 'subs.ed.accent': 'Ajratish', 'subs.ed.outline': 'Hoshiya', 'subs.ed.bg': 'Fon',
+  'subs.ed.outlineW': 'Hoshiya qalinligi', 'subs.ed.shadow': 'Soya / yorqinlik', 'subs.ed.bgA': 'Fon kuchi', 'subs.ed.scale': 'Oʻlcham',
+  'subs.ed.save': 'Uslubni saqlash', 'subs.ed.cancel': 'Bekor qilish', 'subs.ed.delete': 'Uslubni oʻchirish', 'subs.ed.delq': 'Bu uslub oʻchirilsinmi?',
+  'subs.ed.saved': 'Saqlandi! Uslubingiz endi «Mening uslublarim»da.', 'subs.ed.deleted': 'Uslub oʻchirildi.',
+  'subs.ed.paid': 'Oʻz uslublaringizni saqlash pullik tariflar uchun. Bu yerda sinab koʻrishingiz mumkin.', 'subs.ed.plans': 'Tariflarni koʻrish',
+  'subs.ed.limit': 'Siz eng koʻp uslubni (30) saqladingiz. Avval bittasini oʻchiring.',
+  'subs.ed.err': 'Uslubingizni saqlay olmadik. Qayta urinib koʻring.', 'subs.ed.noname': 'Uslubingizga nom bering.',
+});
+
+// Copy a style from a picture (AI).
+Object.assign(T.en, {
+  'subs.ai.pick': 'Copy a style from a picture', 'subs.ai.help': 'Upload a screenshot or short clip with captions you like',
+  'subs.ai.working': 'Looking at your picture… a few seconds.', 'subs.ai.done': 'Done! Check the result in the video, change anything, then press Save.',
+  'subs.ai.none': 'We could not find captions in this picture. Try a clearer screenshot.', 'subs.ai.many': 'Too many tries. Please wait a few minutes.',
+  'subs.ai.err': 'Could not read the picture. Please try again.',
+});
+Object.assign(T.ar, {
+  'subs.ai.pick': 'انسخ نمطًا من صورة', 'subs.ai.help': 'ارفع لقطة شاشة أو مقطعًا قصيرًا بترجمة تعجبك',
+  'subs.ai.working': 'ننظر إلى صورتك… بضع ثوانٍ.', 'subs.ai.done': 'تم! تحقق من النتيجة في الفيديو، غيّر ما تريد، ثم اضغط حفظ.',
+  'subs.ai.none': 'لم نجد ترجمة في هذه الصورة. جرّب لقطة شاشة أوضح.', 'subs.ai.many': 'محاولات كثيرة. انتظر بضع دقائق.',
+  'subs.ai.err': 'تعذّرت قراءة الصورة. حاول مرة أخرى.',
+});
+Object.assign(T.ru, {
+  'subs.ai.pick': 'Скопировать стиль с картинки', 'subs.ai.help': 'Загрузите скриншот или короткий ролик с понравившимися субтитрами',
+  'subs.ai.working': 'Смотрим на вашу картинку… пара секунд.', 'subs.ai.done': 'Готово! Проверьте результат на видео, измените что нужно и нажмите «Сохранить».',
+  'subs.ai.none': 'На этой картинке не найдено субтитров. Попробуйте более чёткий скриншот.', 'subs.ai.many': 'Слишком много попыток. Подождите несколько минут.',
+  'subs.ai.err': 'Не удалось прочитать картинку. Попробуйте ещё раз.',
+});
+Object.assign(T.tg, {
+  'subs.ai.pick': 'Нусхабардории услуб аз расм', 'subs.ai.help': 'Скриншот ё клипи кӯтоҳро бо субтитрҳое, ки ба шумо маъқуланд, бор кунед',
+  'subs.ai.working': 'Ба расми шумо нигоҳ мекунем… чанд сония.', 'subs.ai.done': 'Тайёр! Натиҷаро дар видео санҷед, ҳар чизро иваз кунед, баъд «Нигоҳ доштан»-ро пахш кунед.',
+  'subs.ai.none': 'Дар ин расм субтитр наёфтем. Скриншоти равшантарро санҷед.', 'subs.ai.many': 'Кӯшишҳо хеле зиёданд. Чанд дақиқа интизор шавед.',
+  'subs.ai.err': 'Расмро хонда натавонистем. Боз кӯшиш кунед.',
+});
+Object.assign(T.uz, {
+  'subs.ai.pick': 'Rasmdan uslubni nusxalash', 'subs.ai.help': 'Sizga yoqqan subtitrli skrinshot yoki qisqa klipni yuklang',
+  'subs.ai.working': 'Rasmingizni koʻryapmiz… bir necha soniya.', 'subs.ai.done': 'Tayyor! Natijani videoda tekshiring, xohlaganingizni oʻzgartiring, soʻng «Saqlash»ni bosing.',
+  'subs.ai.none': 'Bu rasmda subtitr topilmadi. Aniqroq skrinshotni sinab koʻring.', 'subs.ai.many': 'Juda koʻp urinish. Bir necha daqiqa kuting.',
+  'subs.ai.err': 'Rasmni oʻqiy olmadik. Qayta urinib koʻring.',
+});

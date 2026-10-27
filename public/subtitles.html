@@ -58,7 +58,16 @@
         <button type="button" data-tab="text" role="tab" data-i18n="subs.tab.text"></button>
       </div>
       <div id="tabStyle">
+        <div id="mySection" hidden>
+          <h4 class="subs-h" data-i18n="subs.my"></h4>
+          <div id="myTpls" class="tpls"></div>
+          <h4 class="subs-h" data-i18n="subs.ready"></h4>
+        </div>
         <div id="tpls" class="tpls"></div>
+        <div class="subs-mk">
+          <button id="makeStyle" class="pbtn" type="button" data-i18n="subs.make"></button>
+          <button id="editStyle" class="pbtn" type="button" hidden data-i18n="subs.edit"></button>
+        </div>
         <div class="subs-opt">
           <span data-i18n="subs.pos"></span>
           <div class="seg" id="posSeg">
@@ -78,11 +87,46 @@
           <button id="colorReset" class="linkbtn" type="button" data-i18n="subs.color.reset"></button>
         </div>
       </div>
+      <div id="tabEdit" class="subs-ed" hidden>
+        <h3 data-i18n="subs.ed.title"></h3>
+        <div id="aiBox" class="subs-ai" hidden>
+          <input id="aiFile" type="file" accept="image/*,video/*" hidden>
+          <button id="aiPick" class="srcbtn" type="button"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9l-4.7 1.8L12 15.5l-1.8-4.7L5.5 9l4.7-1.3z"/><path d="M18 15l.8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8z"/></svg><span data-i18n="subs.ai.pick"></span><small class="meta" data-i18n="subs.ai.help"></small></button>
+        </div>
+        <label class="subs-opt"><span data-i18n="subs.ed.name"></span><input id="edName" class="field" maxlength="40" dir="auto"></label>
+        <div class="subs-two">
+          <label class="subs-opt"><span data-i18n="subs.ed.anim"></span><select id="edBase" class="field"></select></label>
+          <label class="subs-opt"><span data-i18n="subs.ed.font"></span><select id="edFont" class="field"></select></label>
+        </div>
+        <div class="subs-two">
+          <label class="subs-opt"><span data-i18n="subs.ed.weight"></span><select id="edWeight" class="field"></select></label>
+          <label class="subs-opt"><span><span data-i18n="subs.ed.words"></span> <b id="edWordsN"></b></span><input id="edWords" type="range" min="1" max="8" step="1"></label>
+        </div>
+        <label class="chk subs-opt row"><input id="edUpper" type="checkbox"> <span data-i18n="subs.upper"></span></label>
+        <div class="subs-opt"><span data-i18n="subs.ed.colors"></span>
+          <div class="subs-colors">
+            <label><input id="edText" type="color"><span data-i18n="subs.ed.text"></span></label>
+            <label><input id="edAccent" type="color"><span data-i18n="subs.ed.accent"></span></label>
+            <label><input id="edOutline" type="color"><span data-i18n="subs.ed.outline"></span></label>
+            <label><input id="edBg" type="color"><span data-i18n="subs.ed.bg"></span></label>
+          </div>
+        </div>
+        <label class="subs-opt"><span data-i18n="subs.ed.outlineW"></span><input id="edOutlineW" type="range" min="0" max="0.3" step="0.01"></label>
+        <label class="subs-opt"><span data-i18n="subs.ed.shadow"></span><input id="edShadow" type="range" min="0" max="1" step="0.05"></label>
+        <label class="subs-opt"><span data-i18n="subs.ed.bgA"></span><input id="edBgA" type="range" min="0" max="1" step="0.05"></label>
+        <label class="subs-opt"><span data-i18n="subs.ed.scale"></span><input id="edScale" type="range" min="0.5" max="2" step="0.05"></label>
+        <p id="edNote" class="subs-note" hidden><span id="edNoteText"></span> <a id="edPlans" href="/plans" hidden data-i18n="subs.ed.plans"></a></p>
+        <div class="subs-actions">
+          <button id="edSave" class="btn" type="button" data-i18n="subs.ed.save"></button>
+          <button id="edCancel" class="pbtn" type="button" data-i18n="subs.ed.cancel"></button>
+          <button id="edDelete" class="linkbtn danger" type="button" hidden data-i18n="subs.ed.delete"></button>
+        </div>
+      </div>
       <div id="tabText" hidden>
         <p class="meta" data-i18n="subs.text.help"></p>
         <div id="lines" class="subs-lines"></div>
       </div>
-      <div class="subs-actions">
+      <div id="mainActions" class="subs-actions">
         <button id="export" class="btn" type="button" data-i18n="subs.export"></button>
         <button id="srt" class="pbtn" type="button" data-i18n="subs.srt"></button>
         <button id="again" class="pbtn" type="button" data-i18n="subs.new"></button>

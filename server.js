@@ -1030,6 +1030,142 @@ async function handleStripeWebhook(req, res) {
 }
 
 
+// ---- Caption styles people make on the subtitles page (paid plans) ----
+const STYLE_MAX = 30;
+const STYLE_BASES = ['bold', 'box', 'karaoke', 'neon', 'oneword', 'comic', 'gradient', 'pill', 'type', 'clean'];
+const STYLE_FONTS = ['inter', 'montserrat', 'oswald', 'rubik', 'unbounded', 'russo', 'comfortaa', 'bebas', 'anton', 'bangers'];
+function cleanStyle(x) {
+  x = x && typeof x === 'object' ? x : {};
+  const num = (v, a, b, d) => { v = Number(v); return isFinite(v) ? Math.round(Math.max(a, Math.min(b, v)) * 1000) / 1000 : d; };
+  const hex = (v, d) => (/^#[0-9a-f]{6}$/i.test(String(v || '')) ? String(v).toUpperCase() : d);
+  return {
+    base: STYLE_BASES.includes(x.base) ? x.base : 'bold',
+    font: STYLE_FONTS.includes(x.font) ? x.font : 'inter',
+    weight: Math.round(num(x.weight, 400, 900, 800) / 100) * 100,
+    maxWords: Math.round(num(x.maxWords, 1, 10, 3)),
+    upper: !!x.upper,
+    scale: num(x.scale, 0.5, 2, 1),
+    accent: hex(x.accent, '#FFE600'), text: hex(x.text, '#FFFFFF'), outline: hex(x.outline, '#000000'),
+    outlineW: num(x.outlineW, 0, 0.3, 0.12), shadow: num(x.shadow, 0, 1, 0.4),
+    bg: hex(x.bg, '#000000'), bgAlpha: num(x.bgAlpha, 0, 1, 0),
+  };
+}
+async function handleSubStyles(req, res, url) {
+  const who = await gate(req, res);
+  if (!who) return;
+  if (!AUTH_ON || !SUPABASE_SECRET) return sendJson(res, 503, { error: 'Not available.' });
+  try {
+    const uid = who.user.id;
+    if (req.method === 'GET') {
+      const me = await rpc(who.token, 'credits_left');
+      const rows = (await admin('styles_list', { p_user: uid })) || [];
+      return sendJson(res, 200, { canMake: !!me && me.plan !== 'free', max: STYLE_MAX, styles: rows.map((r) => ({ id: r.id, name: r.name, settings: cleanStyle(r.settings) })) });
+    }
+    if (req.method === 'DELETE') {
+      const id = url.searchParams.get('id') || '';
+      if (!UUID_RE.test(id)) return sendJson(res, 400, { error: 'Bad request.' });
+      await admin('styles_remove', { p_user: uid, p_id: id });
+      return sendJson(res, 200, { ok: true });
+    }
+    let body;
+    try { body = await readJson(req, 20 * 1024); } catch (e) { return sendJson(res, 400, { error: 'Bad request.' }); }
+    const name = String((body && body.name) || '').replace(/[\u0000-\u001f]/g, '').trim().slice(0, 40);
+    if (!name) return sendJson(res, 400, { code: 'style_name', error: 'Give your style a name.' });
+    const id = body.id && UUID_RE.test(String(body.id)) ? String(body.id) : null;
+    const me = await rpc(who.token, 'credits_left');
+    if (!me || me.plan === 'free') return sendJson(res, 402, { code: 'style_paid', error: 'Saving your own styles is for paid plans.' });
+    const saved = await admin('styles_save', { p_user: uid, p_id: id, p_name: name, p_settings: cleanStyle(body.settings), p_max: STYLE_MAX });
+    if (!saved) return sendJson(res, id ? 404 : 409, { code: id ? 'style_gone' : 'style_limit', error: id ? 'This style no longer exists.' : 'You have reached the most styles you can save.' });
+    sendJson(res, 200, { id: saved, name });
+  } catch (e) {
+    console.error(e.message);
+    sendJson(res, 502, { error: 'Could not save your style. Please try again.' });
+  }
+}
+
+// ---- Copy a caption style from a picture (Claude looks at a screenshot) ----
+const STYLE_AI_MODEL = process.env.STYLE_AI_MODEL || process.env.TRANSLATE_MODEL || 'claude-sonnet-5-5';
+const STYLE_BASE_SCALE = { bold: 1, box: 0.95, karaoke: 0.72, neon: 0.9, oneword: 1.45, comic: 1, gradient: 1, pill: 0.75, type: 0.78, clean: 0.66 };
+const STYLE_AI_PROMPT = `You look at a frame from a short vertical video that has burned-in captions (subtitles) and describe the caption style so we can copy it.
+Answer with ONLY one JSON object, no other text:
+{
+ "found": true or false (false if there are no captions in the picture),
+ "name": short name for this style, 2-3 words,
+ "base": the closest animation family, one of:
+   "bold" (big heavy words with outline, the spoken word changes colour),
+   "box" (the spoken word sits on a coloured rounded box),
+   "karaoke" (a full sentence, words fill with colour as they are spoken),
+   "neon" (glowing text),
+   "oneword" (only one big word at a time),
+   "comic" (3D extruded / offset shadow letters, slightly tilted),
+   "gradient" (gradient-filled letters),
+   "pill" (the whole line sits on a dark rounded pill),
+   "type" (words appear one by one, plain),
+   "clean" (simple small text, often on a soft dark band),
+ "font": closest of "inter" (clean modern sans), "montserrat" (geometric sans), "oswald" (tall condensed), "rubik" (rounded sans), "unbounded" (very wide), "russo" (blocky techno), "comfortaa" (round thin), "bebas" (tall condensed all caps), "anton" (very heavy condensed), "bangers" (comic book),
+ "weight": 400 to 900,
+ "upper": true if the captions are in capital letters,
+ "maxWords": how many words are shown at once (1-8),
+ "text": main text colour as #RRGGBB,
+ "accent": colour of the highlighted / spoken word as #RRGGBB (same as text if nothing is highlighted),
+ "outline": outline colour #RRGGBB,
+ "outlineW": outline thickness from 0 (none) to 0.3 (very thick), relative to the letter size,
+ "shadow": shadow or glow strength from 0 to 1,
+ "bg": background box colour #RRGGBB (for a box or band behind the text),
+ "bgAlpha": how solid that background is from 0 (no background) to 1,
+ "capHeight": height of one capital letter as a percent of the picture width (for example 6),
+ "pos": vertical centre of the captions from 0 (top) to 1 (bottom)
+}`;
+async function handleSubStyleAi(req, res) {
+  const who = await gate(req, res);
+  if (!who) return;
+  if (!AUTH_ON || !ANTHROPIC_KEY) return sendJson(res, 503, { code: 'style_ai_off', error: 'This is not available right now.' });
+  if (rateLimited('style:' + clientIp(req))) return sendJson(res, 429, { error: 'Too many requests. Please try again in a few minutes.' });
+  const type = String(req.headers['content-type'] || '').split(';')[0];
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(type)) return sendJson(res, 400, { code: 'style_ai_bad', error: 'Please use a JPG, PNG or WebP picture.' });
+  let body;
+  try { body = await readRaw(req, 5 * 1024 * 1024); } catch (e) { return sendJson(res, 413, { code: 'style_ai_bad', error: 'This picture is too big.' }); }
+  if (!body.length) return sendJson(res, 400, { code: 'style_ai_bad', error: 'Please use a JPG, PNG or WebP picture.' });
+  try {
+    const me = await rpc(who.token, 'credits_left');
+    if (!me || me.plan === 'free') return sendJson(res, 402, { code: 'style_paid', error: 'This is for paid plans.' });
+  } catch (e) { console.error(e.message); return sendJson(res, 502, { error: 'Could not check your plan. Please try again.' }); }
+  const w = Number(req.headers['x-img-w']) || 0, h = Number(req.headers['x-img-h']) || 0;
+  try {
+    const r = await fetch(ANTHROPIC_BASE + '/v1/messages', {
+      method: 'POST',
+      headers: { 'x-api-key': ANTHROPIC_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+      body: JSON.stringify({ model: STYLE_AI_MODEL, max_tokens: 800, messages: [{ role: 'user', content: [
+        { type: 'image', source: { type: 'base64', media_type: type, data: body.toString('base64') } },
+        { type: 'text', text: STYLE_AI_PROMPT },
+      ] }] }),
+    });
+    if (!r.ok) {
+      console.error('style AI error', r.status, (await r.text().catch(() => '')).slice(0, 300));
+      return sendJson(res, 502, { code: 'style_ai_failed', error: 'Could not read the picture. Please try again.' });
+    }
+    const j = await r.json();
+    const text = ((j.content || []).find((c) => c.type === 'text') || {}).text || '';
+    const m = text.match(/\{[\s\S]*\}/);
+    let out = null;
+    try { out = m ? JSON.parse(m[0]) : null; } catch (e) { out = null; }
+    if (!out) { console.error('style AI unreadable', text.slice(0, 200)); return sendJson(res, 502, { code: 'style_ai_failed', error: 'Could not read the picture. Please try again.' }); }
+    if (out.found === false) return sendJson(res, 422, { code: 'style_ai_none', error: 'We could not find captions in this picture.' });
+    const st = cleanStyle(out);
+    // Turn "capital letter height as % of width" into our size setting.
+    const cap = Number(out.capHeight);
+    if (isFinite(cap) && cap > 0 && w > 0 && h > 0) {
+      const fs = (cap / 100) * w / 0.72;
+      st.scale = Math.round(Math.max(0.5, Math.min(2, fs / (0.1 * Math.min(w, h) * STYLE_BASE_SCALE[st.base]))) * 100) / 100;
+    } else st.scale = 1;
+    const pos = Number(out.pos);
+    sendJson(res, 200, { name: String(out.name || '').replace(/[\u0000-\u001f]/g, '').trim().slice(0, 40), settings: st, pos: isFinite(pos) ? Math.max(0.08, Math.min(0.92, pos)) : null });
+  } catch (e) {
+    console.error(e.message);
+    sendJson(res, 502, { code: 'style_ai_failed', error: 'Could not read the picture. Please try again.' });
+  }
+}
+
 // ---- Speech to text ----
 const STT_MODEL = process.env.ELEVEN_STT_MODEL || 'scribe_v2';
 const STT_MAX_BYTES = 60 * 1024 * 1024;     // biggest upload
@@ -1712,6 +1848,7 @@ const server = http.createServer(async (req, res) => {
         designOn: DESIGN_ON,
         dubOn: DUB_ON,
         translateOn: TRANSLATE_ON,
+        styleAiOn: !!ANTHROPIC_KEY && AUTH_ON,
         translateRatio: TRANSLATE_RATIO,
         translateMax: TRANSLATE_MAX_CHARS,
         links: SOCIAL_LINKS,
@@ -1722,6 +1859,8 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'POST' && p === '/api/account-delete') return await handleAccountDelete(req, res);
     if (req.method === 'POST' && p === '/api/translate') return await handleTranslate(req, res);
     if (req.method === 'POST' && p === '/api/transcribe') return await handleTranscribe(req, res);
+    if (req.method === 'POST' && p === '/api/sub-style-ai') return await handleSubStyleAi(req, res);
+    if (p === '/api/sub-styles' && ['GET', 'POST', 'DELETE'].includes(req.method)) return await handleSubStyles(req, res, new URL(req.url, 'http://localhost'));
     if (p === '/api/my-voices' && (req.method === 'GET' || req.method === 'DELETE')) return await handleMyVoices(req, res, new URL(req.url, 'http://localhost'));
     if (req.method === 'POST' && p === '/api/voice-design') return await handleVoiceDesign(req, res);
     if (req.method === 'POST' && p === '/api/voice-save') return await handleVoiceSave(req, res);
