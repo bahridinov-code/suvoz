@@ -1263,6 +1263,11 @@ async function handleSubStyleLink(req, res) {
       '-o', out];
     args.push('--js-runtimes', 'node:' + process.execPath);   // YouTube needs a JavaScript runtime; the server's own Node works
     if (process.env.YTDLP_PROXY) args.push('--proxy', process.env.YTDLP_PROXY);
+    // Optional YouTube/Instagram cookies (a Render "Secret File"). Copied first, because yt-dlp writes back to the file and secret files are read-only.
+    if (process.env.YTDLP_COOKIES) {
+      try { const ck = path.join(dir, 'cookies.txt'); await fsp.copyFile(process.env.YTDLP_COOKIES, ck); args.push('--cookies', ck); }
+      catch (e) { console.error('yt-dlp cookies file not readable:', e.message); }
+    }
     if (FFMPEG && FFMPEG !== 'ffmpeg') args.push('--ffmpeg-location', FFMPEG);
     args.push('--', url);
     const r = await runYtdlp(bin, args, 90000);
