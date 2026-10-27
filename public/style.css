@@ -634,3 +634,15 @@ html.in .top-right .who-mail, html.in .top-right #logout, html.in .top-right a.l
 .subs-link { display: flex; gap: 8px; margin-bottom: 10px; }
 .subs-link .field { flex: 1; min-width: 0; padding: 10px 12px; font-size: 15px; }
 .subs-link .btn { padding: 10px 18px; font-size: 15px; }
+#aiNote { margin: 0 0 10px; }
+#aiNote.busy::before { content: ""; display: inline-block; width: 12px; height: 12px; margin-inline-end: 8px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; vertical-align: -1px; animation: subspin .8s linear infinite; }
+@keyframes subspin { to { transform: rotate(360deg); } }
+.subs-edit.subs-pre .subs-tabs { display: none; }
+.subs-edit.subs-pre .subs-frame { width: min(100%, calc(min(72vh, 680px) * 9 / 16)); aspect-ratio: 9 / 16; margin-inline: auto; }
+.subs-edit.subs-pre .subs-frame canvas { inset: 0; }
+#demoNote { text-align: center; }
+.subs-up { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--line); }
+.subs-up h3 { font-size: 18px; letter-spacing: -0.01em; margin-bottom: 12px; }
+.subs-up .btn { width: 100%; margin-top: 16px; }
+@media (max-width: 900px) { .subs-edit.subs-pre .subs-frame { width: min(100%, calc(56vh * 9 / 16)); } }
+.subs-frame video[hidden], .subs-side [hidden] { display: none; }

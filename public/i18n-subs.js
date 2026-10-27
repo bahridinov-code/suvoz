@@ -276,3 +276,30 @@ Object.assign(T.uz, {
   'subs.link.busy': 'Hozir band. Bir daqiqadan soʻng qayta urinib koʻring.',
   'subs.link.fail': 'Bu havolani ocha olmadik (sayt uni bloklagan boʻlishi mumkin). Videoni saqlab, pastda yuklang.',
 });
+
+// Style first, video second.
+Object.assign(T.en, {
+  'subs.sub': 'Pick a style (or make your own), upload your video, and we write the captions word by word. Then *download the finished video*.',
+  'subs.up.title': 'Now upload your video', 'subs.demo.note': 'This is a preview. Pick a style, then upload your video below the styles.',
+  'subs.demo.text': 'This is how your captions will look. Every word lights up when you say it!',
+});
+Object.assign(T.ar, {
+  'subs.sub': 'اختر نمطًا (أو اصنع نمطك)، ارفع الفيديو، ونكتب النص كلمة بكلمة. ثم *نزّل الفيديو جاهزًا*.',
+  'subs.up.title': 'الآن ارفع الفيديو', 'subs.demo.note': 'هذه معاينة. اختر نمطًا، ثم ارفع الفيديو أسفل الأنماط.',
+  'subs.demo.text': 'هكذا ستبدو ترجمتك. كل كلمة تضيء عندما تنطقها!',
+});
+Object.assign(T.ru, {
+  'subs.sub': 'Выберите стиль (или создайте свой), загрузите видео, и мы напишем субтитры слово за словом. Потом *скачайте готовое видео*.',
+  'subs.up.title': 'Теперь загрузите видео', 'subs.demo.note': 'Это предпросмотр. Выберите стиль, затем загрузите видео под стилями.',
+  'subs.demo.text': 'Так будут выглядеть ваши субтитры. Каждое слово загорается, когда вы его говорите!',
+});
+Object.assign(T.tg, {
+  'subs.sub': 'Услубро интихоб кунед (ё худатон созед), видеоро бор кунед ва мо субтитрҳоро калима ба калима менависем. Баъд *видеои тайёрро зеркашӣ кунед*.',
+  'subs.up.title': 'Акнун видеоро бор кунед', 'subs.demo.note': 'Ин пешнамоиш аст. Услубро интихоб кунед, баъд видеоро дар зери услубҳо бор кунед.',
+  'subs.demo.text': 'Субтитрҳои шумо ҳамин тавр менамоянд. Ҳар калима ҳангоми гуфтан равшан мешавад!',
+});
+Object.assign(T.uz, {
+  'subs.sub': 'Uslubni tanlang (yoki oʻzingiz yarating), videoni yuklang va biz subtitrlarni soʻzma-soʻz yozamiz. Soʻng *tayyor videoni yuklab oling*.',
+  'subs.up.title': 'Endi videongizni yuklang', 'subs.demo.note': 'Bu oldindan koʻrish. Uslubni tanlang, soʻng videoni uslublar ostida yuklang.',
+  'subs.demo.text': 'Subtitrlaringiz shunday koʻrinadi. Har bir soʻz aytilganda yonadi!',
+});

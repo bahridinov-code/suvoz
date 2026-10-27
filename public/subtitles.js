@@ -104,7 +104,7 @@ $('file').onchange = async () => {
   try {
     const saved = JSON.parse(localStorage.getItem(keyFor(f)) || 'null');
     if (saved && Array.isArray(saved.words) && saved.words.length) {
-      project = saved;
+      project.words = saved.words; project.lang = saved.lang || '';
       openEditor();
       setStatus('subs.restored');
       return;
@@ -159,21 +159,49 @@ $('go').onclick = async () => {
     if (!r.ok) throw new Error(errText(j, t('err.stt_failed')));
     const words = (j.words || []).filter((w) => w && w.t);
     if (!words.length) throw new Error(t('err.stt_empty'));
-    project = { words, template: 'bold', pos: 0.72, size: 1, upper: null, color: null, lang: j.language || '' };
-    save();
+    project.words = words; project.lang = j.language || '';   // the style picked before upload stays
     openEditor();
+    save();
     setStatus(null);
     loadMe();
   } catch (e) {
     if (e.message !== 'login') setStatus(null, true, e.message === 'Failed to fetch' ? t('err.stt_failed') : e.message);
   } finally {
-    busy = false; Busy.stop($('go')); $('go').disabled = !file || !$('step2').hidden;
+    busy = false; Busy.stop($('go')); $('go').disabled = !file || !demo;
   }
 };
 
 function save() {
-  if (!file || !project) return;
-  try { localStorage.setItem(keyFor(file), JSON.stringify(project)); } catch (e) {}
+  if (!project) return;
+  const style = { template: project.template === '__draft' ? 'bold' : project.template, pos: project.pos, size: project.size, upper: project.upper, color: project.color };
+  try { localStorage.setItem('suvoz_subs_style', JSON.stringify(style)); } catch (e) {}
+  if (!file || demo) return;
+  try { localStorage.setItem(keyFor(file), JSON.stringify({ ...project, ...style })); } catch (e) {}
+}
+
+// ---------- before a video: live demo of the styles ----------
+let demo = true;
+function demoWords() {
+  const parts = t('subs.demo.text').split(/\s+/).filter(Boolean);
+  let at = 0.4;
+  return parts.map((x) => { const d = 0.2 + Math.min(14, x.length) * 0.035; const w = { t: x, s: at, e: at + d }; at += d + 0.07 + (/[.!?,]$/.test(x) ? 0.3 : 0); return w; });
+}
+function demoLength() { const w = project.words; return (w.length ? w[w.length - 1].e : 3) + 1.2; }
+function enterDemo() {
+  demo = true;
+  let style = {};
+  try { style = JSON.parse(localStorage.getItem('suvoz_subs_style') || '{}') || {}; } catch (e) {}
+  project = { words: demoWords(), template: style.template || 'bold', pos: style.pos == null ? 0.72 : style.pos, size: style.size || 1, upper: style.upper == null ? null : style.upper, color: style.color || null, lang: '' };
+  $('step2').hidden = false;
+  $('step2').classList.add('subs-pre');
+  $('video').pause(); $('video').hidden = true; $('video').removeAttribute('src'); $('video').load();
+  $('demoNote').hidden = false; $('uploadBox').hidden = false; $('mainActions').hidden = true; $('textTab').hidden = true;
+  if (!$('tabEdit').hidden) { /* keep the editor open */ } else { $('tabStyle').hidden = false; $('tabText').hidden = true; }
+  document.querySelectorAll('.subs-tabs button').forEach((x) => x.classList.toggle('on', x.dataset.tab === 'style'));
+  regroup(); renderTemplates(); syncControls(); renderLines();
+  Captions.ensureFont(Captions.byId(project.template).font);
+  Captions.ready().then(() => { sizeOverlay(); paint(); });
+  startLoop();
 }
 
 // ---------- step 2: editor ----------
@@ -186,8 +214,12 @@ function view() {
 }
 
 function openEditor() {
-  $('step1').hidden = true;
+  demo = false;
   $('step2').hidden = false;
+  $('step2').classList.remove('subs-pre');
+  $('video').hidden = false;
+  $('demoNote').hidden = true; $('uploadBox').hidden = true; $('textTab').hidden = false;
+  if ($('tabEdit').hidden) $('mainActions').hidden = false;
   if (videoUrl) URL.revokeObjectURL(videoUrl);
   videoUrl = URL.createObjectURL(file);
   $('video').src = videoUrl;
@@ -203,6 +235,12 @@ function openEditor() {
 // Overlay canvas sits exactly on the picture.
 function sizeOverlay() {
   const v = $('video'), c = $('overlay');
+  if (demo) {   // a phone-shaped preview
+    const f = $('frame').getBoundingClientRect();
+    c.style.left = '0px'; c.style.top = '0px'; c.style.width = f.width + 'px'; c.style.height = f.height + 'px';
+    c.width = 540; c.height = 960;
+    return;
+  }
   if (!v.videoWidth) return;
   const box = v.getBoundingClientRect();
   const ar = v.videoWidth / v.videoHeight;
@@ -218,6 +256,15 @@ function paint() {
   if (!c.width || !project) return;
   const ctx = c.getContext('2d');
   ctx.clearRect(0, 0, c.width, c.height);
+  if (demo) {
+    const g = ctx.createLinearGradient(0, 0, c.width * 0.6, c.height);
+    g.addColorStop(0, '#5b6b8c'); g.addColorStop(0.55, '#b9a58a'); g.addColorStop(1, '#2f3b33');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, c.width, c.height);
+    ctx.fillStyle = 'rgba(255,255,255,.14)'; ctx.beginPath(); ctx.arc(c.width * 0.5, c.height * 0.34, c.width * 0.26, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(c.width * 0.5, c.height * 0.78, c.width * 0.42, c.height * 0.2, 0, 0, Math.PI * 2); ctx.fill();
+    Captions.draw(ctx, c.width, c.height, (performance.now() / 1000) % demoLength(), { ...view(), watermark: false });
+    return;
+  }
   Captions.draw(ctx, c.width, c.height, $('video').currentTime, view());
 }
 let loopOn = false;
@@ -298,7 +345,7 @@ async function loadStyles() {
     myStyles = j.styles || [];
     for (const st of myStyles) Captions.setCustom('c_' + st.id, st.name, st.settings);
     if (project && /^c_/.test(project.template) && !Captions.has(project.template)) project.template = 'bold';
-    if (project && !$('step2').hidden) { regroup(); renderTemplates(); syncControls(); renderLines(); Captions.ensureFont(Captions.byId(project.template).font); }
+    if (project && !$('step2').hidden && !ed) { regroup(); renderTemplates(); syncControls(); renderLines(); Captions.ensureFont(Captions.byId(project.template).font); }
   } catch (e) {}
 }
 function fillEditorLists() {
@@ -354,17 +401,17 @@ function openStyleEditor(existingId) {
   project.template = '__draft';
   regroup();
   $('tabEdit').hidden = false; $('tabStyle').hidden = true; $('tabText').hidden = true;
-  document.querySelector('.subs-tabs').hidden = true; $('mainActions').hidden = true;
+  document.querySelector('.subs-tabs').hidden = true; $('mainActions').hidden = true; $('uploadBox').hidden = true;
   $('edDelete').hidden = !existingId;
   editNote(canMake ? null : 'subs.ed.paid', !canMake);
+  aiNote(null);
   paint();
 }
 function closeStyleEditor() {
   Captions.removeCustom('__draft');
   ed = null;
   $('tabEdit').hidden = true; $('tabStyle').hidden = false;
-  document.querySelector('.subs-tabs').hidden = false; $('mainActions').hidden = false;
-  document.querySelectorAll('.subs-tabs button').forEach((x) => x.classList.toggle('on', x.dataset.tab === 'style'));
+  document.querySelector('.subs-tabs').hidden = false; $('mainActions').hidden = demo; $('uploadBox').hidden = !demo;
   regroup(); renderTemplates(); syncControls(); renderLines(); paint();
 }
 function editorChanged() {
@@ -546,61 +593,69 @@ function videoFrames(blob) {
     v.src = url;
   });
 }
+function aiNote(key, withPlans) {
+  $('aiNote').hidden = !key;
+  $('aiNote').classList.toggle('busy', key === 'subs.link.working' || key === 'subs.ai.working');
+  $('aiNoteText').textContent = key ? t(key) : '';
+  $('aiPlans').hidden = !withPlans;
+  if (key) $('aiNote').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
 async function askStyleAi(body, isJson, w, h) {
   const hd = await headers();
   hd['Content-Type'] = isJson ? 'application/json' : 'image/jpeg';
   if (!isJson) { hd['X-Img-W'] = String(w); hd['X-Img-H'] = String(h); }
   const r = await fetch('/api/sub-style-ai', { method: 'POST', headers: hd, body });
   const j = await r.json().catch(() => ({}));
-  if (r.status === 402) { editNote('subs.ed.paid', true); return; }
-  if (r.status === 422) { editNote('subs.ai.none'); return; }
-  if (r.status === 429) { editNote('subs.ai.many'); return; }
-  if (!r.ok || !j.settings) { editNote('subs.ai.err'); return; }
+  if (r.status === 402) { aiNote('subs.ed.paid', true); return; }
+  if (r.status === 422) { aiNote('subs.ai.none'); return; }
+  if (r.status === 429) { aiNote('subs.ai.many'); return; }
+  if (!r.ok || !j.settings) { aiNote('subs.ai.err'); return; }
   showEditorFields({ ...readEditor(), ...j.settings }, j.name || $('edName').value);
   if (j.pos != null) { project.pos = j.pos; syncControls(); }
   editorChanged();
-  editNote('subs.ai.done');
+  aiNote('subs.ai.done');
 }
 async function copyFromVideo(blob) {
   const fr = await videoFrames(blob);
   const note = 'Frame times in seconds: ' + fr.times.join(', ') + '.';
   await askStyleAi(JSON.stringify({ frames: fr.frames, w: fr.w, h: fr.h, note }), true);
 }
-function aiStart() { if (aiBusy || !ed) return false; if (!canMake) { editNote('subs.ed.paid', true); return false; } aiBusy = true; $('aiPick').disabled = true; $('aiLinkGo').disabled = true; return true; }
-function aiEnd() { aiBusy = false; $('aiPick').disabled = false; $('aiLinkGo').disabled = false; }
+function aiStart() { if (aiBusy || !ed) return false; if (!canMake) { aiNote('subs.ed.paid', true); return false; } aiBusy = true; $('aiPick').disabled = true; $('aiLinkGo').disabled = true; $('aiLinkGo').textContent = '…'; return true; }
+function aiEnd() { aiBusy = false; $('aiPick').disabled = false; $('aiLinkGo').disabled = false; $('aiLinkGo').textContent = t('subs.link.go'); }
 $('aiPick').onclick = () => { if (!aiBusy) $('aiFile').click(); };
 $('aiFile').onchange = async () => {
   const f = $('aiFile').files[0];
   $('aiFile').value = '';
   if (!f || !aiStart()) return;
-  editNote('subs.ai.working');
+  aiNote('subs.ai.working');
   try {
     if (/^video\//.test(f.type)) await copyFromVideo(f);
     else { const fr = await frameFrom(f); await askStyleAi(fr.blob, false, fr.w, fr.h); }
   } catch (e) {
-    if (e.message !== 'login') editNote('subs.ai.err');
+    if (e.message !== 'login') aiNote('subs.ai.err');
   } finally { aiEnd(); }
 };
 $('aiLinkGo').onclick = async () => {
   const link = $('aiLink').value.trim();
   if (!link) { $('aiLink').focus(); return; }
   if (!aiStart()) return;
-  editNote('subs.link.working');
+  aiNote('subs.link.working');
   try {
     const h = await headers(); h['Content-Type'] = 'application/json';
-    const r = await fetch('/api/sub-style-link', { method: 'POST', headers: h, body: JSON.stringify({ url: link }) });
+    const ac = new AbortController(); const tm = setTimeout(() => ac.abort(), 150000);
+    const r = await fetch('/api/sub-style-link', { method: 'POST', headers: h, body: JSON.stringify({ url: link }), signal: ac.signal }).finally(() => clearTimeout(tm));
     if (!r.ok) {
       const j = await r.json().catch(() => ({}));
-      if (r.status === 402) { editNote('subs.ed.paid', true); return; }
-      if (r.status === 429) { editNote('subs.ai.many'); return; }
-      editNote({ link_bad: 'subs.link.bad', link_long: 'subs.link.long', link_busy: 'subs.link.busy' }[j.code] || 'subs.link.fail');
+      if (r.status === 402) { aiNote('subs.ed.paid', true); return; }
+      if (r.status === 429) { aiNote('subs.ai.many'); return; }
+      aiNote({ link_bad: 'subs.link.bad', link_long: 'subs.link.long', link_busy: 'subs.link.busy' }[j.code] || 'subs.link.fail');
       return;
     }
     const blob = await r.blob();
-    editNote('subs.ai.working');
+    aiNote('subs.ai.working');
     await copyFromVideo(blob);
   } catch (e) {
-    if (e.message !== 'login') editNote(e.message === 'frame' ? 'subs.link.fail' : 'subs.ai.err');
+    if (e.message !== 'login') aiNote(e.message === 'frame' || e.name === 'AbortError' ? 'subs.link.fail' : 'subs.ai.err');
   } finally { aiEnd(); }
 };
 $('aiLink').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('aiLinkGo').click(); });
@@ -646,14 +701,16 @@ $('cancel').onclick = () => { if (exporting) exporting.abort(); };
 $('again').onclick = () => {
   if (exporting) return;
   $('video').pause();
-  $('step2').hidden = true; $('step1').hidden = false;
-  file = null; seconds = 0; audio = null; project = null; groups = [];
+  file = null; seconds = 0; audio = null;
   $('file').value = ''; renderInfo(); setStatus(null); $('go').disabled = true;
+  enterDemo();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 window.addEventListener('beforeunload', (e) => { if (exporting) { e.preventDefault(); e.returnValue = ''; } });
 
 document.addEventListener('langchange', () => {
   fillLangs(); renderInfo(); renderTrial();
+  if (project && demo) { project.words = demoWords(); regroup(); }
   if (statusKey) setStatus(statusKey, $('status').className === 'err', null, statusVars);
 });
 
@@ -669,6 +726,7 @@ document.addEventListener('langchange', () => {
   $('linkRow').hidden = !config.styleLinkOn;
   $('logout').hidden = false;
   $('logout').onclick = async () => { await Auth.signOut(); location.replace('/'); };
+  enterDemo();
   loadMe();
   loadStyles();
 })();
